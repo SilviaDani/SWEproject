@@ -1,11 +1,19 @@
 package com.sweproject.main;
 
 public class CovidTest extends Type {
-    private boolean isPositive;
-    private float sensitivity;
+    private boolean isPositive = false;
+    private float sensitivity = 0f;
 
-    public CovidTest(boolean isPositive, float sensitivity) {
+    public CovidTest(CovidTestType type) {
+        if (type == CovidTestType.ANTIGEN)
+            sensitivity = 0.653f;
+        else if (type == CovidTestType.MOLECULAR)
+            sensitivity = 0.918f;
+    }
+    public CovidTest(CovidTestType type, boolean isPositive){
+        this(type);
         this.isPositive = isPositive;
-        this.sensitivity = sensitivity;
     }
 }
+
+
