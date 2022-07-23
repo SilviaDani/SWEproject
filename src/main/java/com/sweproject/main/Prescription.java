@@ -12,4 +12,20 @@ public class Prescription {
         this.covidTest = covidTest;
         this.tracer = tracer;
     }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public CovidTest getCovidTest() {
+        return covidTest;
+    }
+
+    public Tracer getTracer() {
+        return tracer;
+    }
 }

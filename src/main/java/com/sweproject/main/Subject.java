@@ -24,4 +24,12 @@ public class Subject {
     public void getProbabilityOfBeingInfected(){
         //TODO
     }
+
+    public ArrayList<Observation> getObservationRecord() {
+        return observationRecord;
+    }
+
+    public ArrayList<Prescription> getPrescriptionRecord() {
+        return prescriptionRecord;
+    }
 }

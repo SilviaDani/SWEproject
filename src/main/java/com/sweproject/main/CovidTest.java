@@ -14,6 +14,12 @@ public class CovidTest extends Type {
         this(type);
         this.isPositive = isPositive;
     }
+    public float getSensitivity(){
+        return sensitivity;
+    }
+    public boolean getPositivity(){
+        return isPositive;
+    }
 }
 
 

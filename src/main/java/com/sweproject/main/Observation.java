@@ -19,4 +19,20 @@ public class Observation {
         isRelevant = !isRelevant;
         //XXX serve che lo status da non rilevante torni rilevante?
     }
+
+    public TimeRecord getTimeRecord() {
+        return timeRecord;
+    }
+
+    public boolean isRelevant() {
+        return isRelevant;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public ArrayList<Subject> getSubjects() {
+        return subjects;
+    }
 }

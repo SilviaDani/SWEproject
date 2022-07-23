@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class Main {
-    //TODO fare i test
     public static void main(String[] args) {
         Notifier foo = new Notifier();
         ArrayList<Subject> bar = new ArrayList<>();
