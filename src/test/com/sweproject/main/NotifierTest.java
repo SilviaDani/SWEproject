@@ -1,6 +1,7 @@
 package com.sweproject.main;
 
-import org.checkerframework.checker.units.qual.A;
+import com.sweproject.controller.Notifier;
+import com.sweproject.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

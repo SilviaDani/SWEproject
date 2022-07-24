@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.model;
 //XXX TimeRecord serve?
 public class TimeRecord {
     

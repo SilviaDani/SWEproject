@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.model;
 import java.util.ArrayList;
 
 public class Observation {
@@ -15,9 +15,8 @@ public class Observation {
     }
 
 
-    public void changeStatus(){
-        isRelevant = !isRelevant;
-        //XXX serve che lo status da non rilevante torni rilevante?
+    public void setAsIrrelevant(){
+        isRelevant = false;
     }
 
     public TimeRecord getTimeRecord() {

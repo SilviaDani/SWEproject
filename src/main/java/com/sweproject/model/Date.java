@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.model;
 import java.time.LocalDateTime;
 
 public class Date extends TimeRecord{

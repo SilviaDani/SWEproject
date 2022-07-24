@@ -1,6 +1,4 @@
-package com.sweproject.main;
-
-import org.checkerframework.checker.units.qual.A;
+package com.sweproject.model;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.model;
 
 public class CovidTest extends Type {
     private boolean isPositive = false;

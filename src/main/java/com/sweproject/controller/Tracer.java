@@ -1,17 +1,17 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
-import java.util.ArrayList;
+import com.sweproject.model.*;
 
 public class Tracer extends Notifier{
 
-    public void createPrescription(Subject subject,  Date date, CovidTest covidTest){
+    public void createPrescription(Subject subject, Date date, CovidTest covidTest){
         Prescription prescription = new Prescription(subject, date, covidTest, this);
         subject.addPrescription(prescription);
     }
 
     public void editObservation(Observation observation){
         //TODO
-        observation.changeStatus();
+        observation.setAsIrrelevant();
     }
 
     public void getProbabilityOfBeingInfected(Subject subject){//FIXME

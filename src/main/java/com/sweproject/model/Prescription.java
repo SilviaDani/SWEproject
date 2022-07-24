@@ -1,4 +1,6 @@
-package com.sweproject.main;
+package com.sweproject.model;
+
+import com.sweproject.controller.Tracer;
 
 public class Prescription {
     private Subject subject;

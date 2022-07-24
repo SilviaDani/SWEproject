@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.model;
 
 public class TimeInterval extends TimeRecord{
     private Date initialDate;
