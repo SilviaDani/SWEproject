@@ -31,6 +31,8 @@ public class Controller {
     }
 
 
+    public void enterClicked(MouseEvent mouseEvent) {
+    }
 }
 
 

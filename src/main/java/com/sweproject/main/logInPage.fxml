@@ -22,4 +22,6 @@
     <PasswordField fx:id="passwordField"
                    GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
+    <Button fx:id="enter" GridPane.columnIndex="0" GridPane.rowIndex="4" onMouseClicked="#enterClicked">Enter</Button>
+
 </GridPane>
