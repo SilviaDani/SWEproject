@@ -1,12 +1,5 @@
 package com.sweproject.main;
 
-import com.sweproject.controller.Notifier;
-import com.sweproject.controller.Tracer;
-import com.sweproject.model.*;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -29,7 +22,7 @@ public class Main extends Application {
     }*/
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("index.fxml"));
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
