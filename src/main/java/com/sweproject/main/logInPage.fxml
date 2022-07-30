@@ -6,22 +6,25 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.sweproject.main.Controller" alignment="center"
-            prefHeight="400.0" prefWidth="600.0" hgap="10" vgap="10">
-    <Label text="User Name:"
-           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+<GridPane alignment="center" hgap="10" prefHeight="400.0" prefWidth="600.0" vgap="10" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.logInPageController">
+    <Label text="User Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 
-    <TextField
-            GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <TextField GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-    <Label text="Password:"
-           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+    <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
 
-    <PasswordField fx:id="passwordField"
-                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-    <Button fx:id="enter" GridPane.columnIndex="0" GridPane.rowIndex="4" onMouseClicked="#enterClicked">Enter</Button>
+    <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+   <Button mnemonicParsing="false" onAction="#logIn" prefHeight="26.0" prefWidth="151.0" text="Log in" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+   <columnConstraints>
+      <ColumnConstraints />
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+   </rowConstraints>
 
 </GridPane>

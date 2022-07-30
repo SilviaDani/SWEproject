@@ -1,38 +1,27 @@
 package com.sweproject.main;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.Label;
 import javafx.stage.Stage;
-import javafx.scene.control.Button;
 
 import java.io.IOException;
 
-public class Controller {
-
+public class logInPageController {
     private Stage stage;
     private Scene scene;
     private Parent root;
 
-    public void logInClicked(MouseEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("logInPage.fxml"));
+    public void logIn(ActionEvent event) throws IOException {
+        //TODO if user exists:
+        Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
-
-    public void signInClicked(MouseEvent event) {
-    }
-
-
-    public void enterClicked(MouseEvent mouseEvent) {
-    }
 }
-
-

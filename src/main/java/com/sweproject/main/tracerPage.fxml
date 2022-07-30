@@ -7,9 +7,9 @@
 <?import javafx.scene.text.Font?>
 
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.TracerPageController">
+<VBox prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.TracerPageController">
    <children>
-      <AnchorPane prefHeight="422.0" prefWidth="600.0">
+      <AnchorPane VBox.vgrow="ALWAYS">
          <children>
             <Button layoutX="14.0" layoutY="361.0" mnemonicParsing="false" onAction="#goBack" text="Back" />
             <Button layoutX="239.0" layoutY="199.0" mnemonicParsing="false" text="Fill new prescription" />
