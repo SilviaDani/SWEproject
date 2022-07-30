@@ -23,13 +23,20 @@ public class UserPageController implements Initializable {
 
     @FXML
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        System.out.println("prova");
-        String name = "Pippo";
+        String name = "Prova";
         welcome_user.setText("Welcome " + name);
     }
 
     public void enterRestrictedArea(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("tracerPage.fxml"));
+        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void addObservation(ActionEvent event) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("addObservationPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);

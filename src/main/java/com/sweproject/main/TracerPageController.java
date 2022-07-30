@@ -27,4 +27,20 @@ public class TracerPageController{
         this.stage.setScene(this.scene);
         this.stage.show();
     }
+
+    public void fillPrescription(ActionEvent event) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("fillPrescriptionPage.fxml"));
+        this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        this.scene = new Scene(root);
+        this.stage.setScene(this.scene);
+        this.stage.show();
+    }
+
+    public void editObservation(ActionEvent event) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("editObservationPage.fxml"));
+        this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        this.scene = new Scene(root);
+        this.stage.setScene(this.scene);
+        this.stage.show();
+    }
 }
