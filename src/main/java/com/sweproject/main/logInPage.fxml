@@ -17,16 +17,5 @@
 
     <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
    <Button mnemonicParsing="false" onAction="#logIn" prefHeight="26.0" prefWidth="151.0" text="Log in" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-   <columnConstraints>
-      <ColumnConstraints />
-      <ColumnConstraints />
-   </columnConstraints>
-   <rowConstraints>
-      <RowConstraints />
-      <RowConstraints />
-      <RowConstraints />
-      <RowConstraints />
-      <RowConstraints />
-   </rowConstraints>
 
 </GridPane>
