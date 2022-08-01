@@ -31,8 +31,6 @@ public class IndexController {
     }
 
 
-    public void enterClicked(MouseEvent mouseEvent) {
-    }
 }
 
 

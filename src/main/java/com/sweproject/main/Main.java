@@ -7,7 +7,30 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+
 public class Main extends Application {
+    /* CODICE PER USARE DB
+    *
+    * LOGIN
+    *   String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
+        String user = "b7911f8c83c59f";
+        String password = "4b132502";
+        Connection myConn = DriverManager.getConnection(url, user, password);
+        Statement myStmt = myConn.createStatement();
+        *
+        * PER FARE RICHIESTE
+        String sql = "INSERT INTO `users` (`fiscalCode`, `firstName`, `surname`, `psw`) VALUES ('NCCNCL00P07D612X', 'Niccolò', 'Niccoli', 'password')";
+        myStmt.execute(sql);
+        ResultSet rs1 = myStmt.executeQuery("select * from users");
+
+            * PER STAMPARE
+        while(rs1.next())
+            System.out.println(rs1.getString("firstName"));
+    *
+    *
+    */
+
+
     /*public static void main(String[] args) {
         Notifier foo = new Notifier();
         ArrayList<Subject> bar = new ArrayList<>();
