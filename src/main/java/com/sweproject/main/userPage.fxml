@@ -9,6 +9,8 @@
 <VBox prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.UserPageController">
   <children>
     <AnchorPane  VBox.vgrow="ALWAYS">
+        <Label text="WELCOME "/>
+        <Label fx:id="name" layoutX="283.0" layoutY="145.0" text="NAME" />
          <children>
             <Button layoutX="269.0" layoutY="91.0" mnemonicParsing="false" onAction="#addObservation" text="Add obervation" />
             <Button layoutX="281.0" layoutY="157.0" mnemonicParsing="false" text="Add cluster" />

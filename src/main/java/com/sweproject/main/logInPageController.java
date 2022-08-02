@@ -6,22 +6,68 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
+import javafx.scene.control.TextField;
+import org.w3c.dom.Text;
 
+import java.awt.*;
 import java.io.IOException;
+import java.sql.*;
+import java.util.Objects;
 
 public class logInPageController {
     private Stage stage;
     private Scene scene;
     private Parent root;
+    @FXML
+    TextField fiscalCode;
+    @FXML
+    TextField passwordField;
+    @FXML
+    Label name;
 
-    public void logIn(ActionEvent event) throws IOException {
-        //TODO if user exists:
-        Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
-        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+    public ResultSet isThereFC(String FC) throws SQLException {
+        System.out.println("isThereFC?");
+        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
+        String user = "b7911f8c83c59f";
+        String password = "4b132502";
+        Connection myConn = DriverManager.getConnection(url, user, password);
+        Statement myStmt = myConn.createStatement();
+        String query = "SELECT * FROM `Users` where `fiscalCode` =" + "'" + FC + "'"; //c'è un problema con sql
+        System.out.println(query);
+        ResultSet rs = myStmt.executeQuery(query);
+        return rs;
+    }
+
+    public void logIn(ActionEvent event) throws IOException, SQLException {
+        String FC = fiscalCode.getText();
+        System.out.println(FC);
+        String password = passwordField.getText();
+        System.out.println(password);
+        ResultSet user = isThereFC(FC);
+        System.out.println(user);
+        if(user.next()){ //user.next() = true se non è vuoto, = false se è vuoto
+            //TODO fa le operazioni
+        }else{
+            //TODO gestire il caso in cui non esista corrispondenza sul db
+        }
+        String DBName = user.getString("firstName");
+        System.out.println(DBName);
+        String DBPassword = user.getString("psw");
+        System.out.println(DBPassword);
+        if(Objects.equals(DBPassword, password)) {
+            System.out.println("coiao");
+            //FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
+            //Parent root = loader.load();
+
+            Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
+            //UserPageController UserPageController = loader.getController();
+            //UserPageController.setName(DBName);
+
+            stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        }
     }
 }

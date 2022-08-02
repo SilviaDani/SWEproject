@@ -13,18 +13,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
-public class UserPageController implements Initializable {
+public class UserPageController{
     private Stage stage;
     private Scene scene;
     private Parent root;
+
     @FXML
     Label welcome_user;
-
-
     @FXML
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        String name = "Prova";
-        welcome_user.setText("Welcome " + name);
+    Label name;
+
+    public void setName(String firstName){
+        name.setText(firstName);
     }
 
     public void enterRestrictedArea(ActionEvent event) throws IOException {

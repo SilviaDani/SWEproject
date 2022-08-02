@@ -9,13 +9,14 @@
 <?import javafx.scene.layout.RowConstraints?>
 
 <GridPane alignment="center" hgap="10" prefHeight="400.0" prefWidth="600.0" vgap="10" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.logInPageController">
-    <Label text="User Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Label text="Fiscal Code:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 
-    <TextField GridPane.columnIndex="1" GridPane.rowIndex="0" />
+    <TextField fx:id="fiscalCode" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
     <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
 
     <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
    <Button mnemonicParsing="false" onAction="#logIn" prefHeight="26.0" prefWidth="151.0" text="Log in" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
 </GridPane>
