@@ -19,6 +19,7 @@ public class logInPageController {
     private Stage stage;
     private Scene scene;
     private Parent root;
+
     @FXML
     TextField fiscalCode;
     @FXML
