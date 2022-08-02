@@ -26,7 +26,7 @@ public class logInPageController {
     @FXML
     Label name;
 
-    public ResultSet isThereFC(String FC) throws SQLException {
+    public ResultSet isThereFC(String FC) throws SQLException{
         System.out.println("isThereFC?");
         String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
         String user = "b7911f8c83c59f";
