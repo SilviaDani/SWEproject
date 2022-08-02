@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.stage.Stage;
@@ -19,6 +20,7 @@ public class signInPageController {
     private Stage stage;
     private Scene scene;
     private Parent root;
+    @FXML private Label errorText;
 
     @FXML
     TextField fiscalCode;
@@ -53,14 +55,17 @@ public class signInPageController {
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
         if (isThereFC(FC)){
-            //TODO ACCOUNT ALREADY EXISTS
+            errorText.setText("This account already exists");
+            //fixme ACCOUNT ALREADY EXISTS
         }
         else{
             if (firstName.length() == 0 || lastName.length() == 0 || password.length() == 0 || confirmPassword.length() == 0){
-                //TODO RIEMPIRE TUTTI I CAMPI
+                errorText.setText("Please enter all fields");
+                //fixme RIEMPIRE TUTTI I CAMPI
             }
             else if (!Objects.equals(confirmPassword, password)){
-                //TODO LE PASSWORD SONO DIVERSE
+                errorText.setText("Passwords do not match");
+                //fixme LE PASSWORD SONO DIVERSE
             }
             else {
                 String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";

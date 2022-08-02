@@ -21,6 +21,7 @@ public class logInPageController {
     private Scene scene;
     private Parent root;
 
+    @FXML private javafx.scene.control.Label errorText;
     @FXML
     TextField fiscalCode;
     @FXML
@@ -52,7 +53,6 @@ public class logInPageController {
             String DBPassword = user.getString("psw");
             System.out.println(DBPassword);
             if(Objects.equals(DBPassword, password)) {
-                System.out.println("coiao");
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
                 Parent root = loader.load();
 
@@ -64,8 +64,11 @@ public class logInPageController {
                 scene = new Scene(root);
                 stage.setScene(scene);
                 stage.show();
+            }else{
+                errorText.setText("Password is not correct");
             }
         }else{
+            errorText.setText("This account does not exist");
             //TODO gestire il caso in cui non esista corrispondenza sul db
         }
     }
