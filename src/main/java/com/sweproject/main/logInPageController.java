@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.control.TextField;
+import javafx.scene.control.PasswordField;
 import org.w3c.dom.Text;
 
 import java.awt.*;
@@ -23,7 +24,7 @@ public class logInPageController {
     @FXML
     TextField fiscalCode;
     @FXML
-    TextField passwordField;
+    PasswordField passwordField;
     @FXML
     Label name;
 
@@ -34,7 +35,7 @@ public class logInPageController {
         String password = "4b132502";
         Connection myConn = DriverManager.getConnection(url, user, password);
         Statement myStmt = myConn.createStatement();
-        String query = "SELECT * FROM `Users` where `fiscalCode` =" + "'" + FC + "'"; //c'è un problema con sql
+        String query = "SELECT * FROM `Users` where `fiscalCode` =" + "'" + FC + "'";
         System.out.println(query);
         ResultSet rs = myStmt.executeQuery(query);
         return rs;
@@ -42,33 +43,30 @@ public class logInPageController {
 
     public void logIn(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
-        System.out.println(FC);
         String password = passwordField.getText();
-        System.out.println(password);
         ResultSet user = isThereFC(FC);
         System.out.println(user);
         if(user.next()){ //user.next() = true se non è vuoto, = false se è vuoto
-            //TODO fa le operazioni
+            String DBName = user.getString("firstName");
+            System.out.println(DBName);
+            String DBPassword = user.getString("psw");
+            System.out.println(DBPassword);
+            if(Objects.equals(DBPassword, password)) {
+                System.out.println("coiao");
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
+                Parent root = loader.load();
+
+                //Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
+                UserPageController UserPageController = loader.getController();
+                UserPageController.setName("Welcome " + DBName);
+
+                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                scene = new Scene(root);
+                stage.setScene(scene);
+                stage.show();
+            }
         }else{
             //TODO gestire il caso in cui non esista corrispondenza sul db
-        }
-        String DBName = user.getString("firstName");
-        System.out.println(DBName);
-        String DBPassword = user.getString("psw");
-        System.out.println(DBPassword);
-        if(Objects.equals(DBPassword, password)) {
-            System.out.println("coiao");
-            //FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
-            //Parent root = loader.load();
-
-            Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
-            //UserPageController UserPageController = loader.getController();
-            //UserPageController.setName(DBName);
-
-            stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
         }
     }
 }
