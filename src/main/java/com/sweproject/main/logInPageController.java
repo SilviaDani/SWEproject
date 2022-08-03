@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.w3c.dom.Text;
 
 import java.awt.*;
@@ -44,10 +45,10 @@ public class logInPageController {
 
     public void logIn(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
-        String password = passwordField.getText();
         ResultSet user = isThereFC(FC);
         System.out.println(user);
         if(user.next()){ //user.next() = true se non è vuoto, = false se è vuoto
+            String password = BCrypt.hashpw(passwordField.getText(), user.getString("salt"));
             String DBName = user.getString("firstName");
             System.out.println(DBName);
             String DBPassword = user.getString("psw");

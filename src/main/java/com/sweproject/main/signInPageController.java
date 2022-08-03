@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.stage.Stage;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.io.IOException;
 import java.sql.*;
@@ -52,8 +53,9 @@ public class signInPageController {
         String FC = fiscalCode.getText();
         String firstName = name.getText();
         String lastName = surname.getText();
-        String password = passwordField.getText();
-        String confirmPassword = confirmPasswordField.getText();
+        String salt = BCrypt.gensalt();
+        String password = BCrypt.hashpw(passwordField.getText(), salt);
+        String confirmPassword = BCrypt.hashpw(confirmPasswordField.getText(), salt);
         if (isThereFC(FC)){
             errorText.setText("This account already exists");
             //fixme ACCOUNT ALREADY EXISTS
@@ -73,7 +75,7 @@ public class signInPageController {
                 String passwordDB = "4b132502";
                 Connection myConn = DriverManager.getConnection(url, user, passwordDB);
                 Statement myStmt = myConn.createStatement();
-                String query = "INSERT INTO `users` (`fiscalCode`, `firstName`, `surname`, `psw`) VALUES ('" + FC + "', '" + firstName + "', '" + lastName +"', '" + password + "')";
+                String query = "INSERT INTO `users` (`fiscalCode`, `firstName`, `surname`, `psw`, `salt`) VALUES ('" + FC + "', '" + firstName + "', '" + lastName +"', '" + password + "', '" + salt + "')";
                 myStmt.execute(query);
 
                 Parent root = FXMLLoader.load(getClass().getResource("index.fxml"));
