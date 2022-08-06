@@ -11,7 +11,7 @@
   <children>
     <AnchorPane VBox.vgrow="ALWAYS">
          <children>
-            <Button layoutX="269.0" layoutY="91.0" mnemonicParsing="false" onAction="#addObservation" text="Add obervation" />
+            <Button layoutX="269.0" layoutY="91.0" mnemonicParsing="false" onAction="#addObservation" text="Add observation" />
             <Button layoutX="281.0" layoutY="157.0" mnemonicParsing="false" text="Add cluster" />
             <Button layoutX="225.0" layoutY="228.0" mnemonicParsing="false" text="Get probability of being infected" />
             <Button layoutX="256.0" layoutY="291.0" mnemonicParsing="false" onAction="#enterRestrictedArea" text="Access reserved area" />

@@ -6,9 +6,17 @@ public class Subject {
     private ArrayList<Observation> observationRecord;
     private ArrayList<Prescription> prescriptionRecord;
     //TODO add infos about the subject (ie name...)
-    public Subject() {
+    private String fiscalCode;
+    private String name;
+    private String surname;
+
+    public Subject(String fiscalCode) {
         observationRecord = new ArrayList<>();
         prescriptionRecord = new ArrayList<>();
+        this.fiscalCode = fiscalCode;
+    }
+    public Subject(){
+       this("RSSMRA80A01H501U"); //TODO va tolto
     }
 
     public void addObservation(Observation observation){
@@ -29,5 +37,9 @@ public class Subject {
 
     public ArrayList<Prescription> getPrescriptionRecord() {
         return prescriptionRecord;
+    }
+
+    public String getFiscalCode() {
+        return this.fiscalCode;
     }
 }

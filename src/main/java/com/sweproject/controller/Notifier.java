@@ -11,7 +11,8 @@ public class Notifier {
     private Subject subject;
 
     public Notifier() {
-        subject = new Subject();
+        //TODO: È NECESSARIO SAPERE IL CODICE FISCALE DELL'UTENTE UNA VOLTA CHE È ENTRATO NELL'APP
+        subject = new Subject("RSSMRA80A01H501U");
     }
 
     public void createObservation(ArrayList<Subject> cluster, Type type, TimeRecord timeRecord){

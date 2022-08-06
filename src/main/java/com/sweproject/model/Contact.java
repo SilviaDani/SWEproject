@@ -10,4 +10,9 @@ public class Contact extends Type{
         this.trasmissionChance = trasmissionChance;
         this.subjects = subjects;
     }
+
+    @Override
+    public String getName() {
+        return "Contact";
+    }
 }

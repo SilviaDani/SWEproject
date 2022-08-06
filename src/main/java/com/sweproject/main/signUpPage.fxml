@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane alignment="center" hgap="10" prefHeight="400.0" prefWidth="600.0" vgap="10" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.signInPageController">
+<GridPane alignment="center" hgap="10" prefHeight="400.0" prefWidth="600.0" vgap="10" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.main.SignUpPageController">
     <Label text="Fiscal Code:" GridPane.rowIndex="1" />
 
     <TextField fx:id="fiscalCode" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -17,7 +17,7 @@
 
     <TextField fx:id="name" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-    <Label text="Surame:" GridPane.rowIndex="5" />
+    <Label text="Surname:" GridPane.rowIndex="5" />
 
     <TextField fx:id="surname" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
@@ -29,7 +29,7 @@
 
     <PasswordField fx:id="confirmPasswordField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
 
-    <Button mnemonicParsing="false" onAction="#signIn" prefHeight="26.0" prefWidth="151.0" text="Sign in" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+    <Button mnemonicParsing="false" onAction="#signIn" prefHeight="26.0" prefWidth="151.0" text="Sign up" GridPane.columnIndex="1" GridPane.rowIndex="11" />
    <Label fx:id="errorText" textFill="RED" GridPane.columnIndex="1" />
    <columnConstraints>
       <ColumnConstraints />

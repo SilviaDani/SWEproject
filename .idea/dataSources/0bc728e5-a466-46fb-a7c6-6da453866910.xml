@@ -733,49 +733,102 @@ heroku_f233c9395cfa736|schema||b7911f8c83c59f||UPDATE|G</Grants>
     <table id="224" parent="2" name="doctors">
       <Collation>utf8_general_ci</Collation>
     </table>
-    <table id="225" parent="2" name="users">
+    <table id="225" parent="2" name="events"/>
+    <table id="226" parent="2" name="observations"/>
+    <table id="227" parent="2" name="users">
       <Collation>utf8_general_ci</Collation>
     </table>
-    <column id="226" parent="224" name="doctorFiscalCode">
+    <column id="228" parent="224" name="doctorFiscalCode">
       <Position>1</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>&apos;&apos;</DefaultExpression>
     </column>
-    <column id="227" parent="224" name="patientFiscalCode">
+    <column id="229" parent="224" name="patientFiscalCode">
       <Position>2</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>&apos;&apos;</DefaultExpression>
     </column>
-    <key id="228" parent="224" name="PRIMARY">
+    <key id="230" parent="224" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>doctorFiscalCode
 patientFiscalCode</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="229" parent="225" name="fiscalCode">
+    <column id="231" parent="225" name="ID">
+      <Position>1</Position>
+      <DataType>int(11)|0s</DataType>
+      <NotNull>1</NotNull>
+      <SequenceIdentity>null</SequenceIdentity>
+    </column>
+    <column id="232" parent="225" name="is_relevant">
+      <Position>2</Position>
+      <DataType>tinyint(1)|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="233" parent="225" name="type">
+      <Position>3</Position>
+      <DataType>varchar(255)|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="234" parent="225" name="start_date">
+      <Position>4</Position>
+      <DataType>datetime|0s</DataType>
+    </column>
+    <column id="235" parent="225" name="end_date">
+      <Position>5</Position>
+      <DataType>datetime|0s</DataType>
+    </column>
+    <key id="236" parent="225" name="PRIMARY">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>ID</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="237" parent="226" name="id">
+      <Position>1</Position>
+      <DataType>int(11)|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="238" parent="226" name="fiscalCode">
+      <Position>2</Position>
+      <DataType>varchar(255)|0s</DataType>
+      <NotNull>1</NotNull>
+      <Collation>utf8_unicode_520_ci</Collation>
+    </column>
+    <key id="239" parent="226" name="PRIMARY">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>id
+fiscalCode</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="240" parent="227" name="fiscalCode">
       <Position>1</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
       <DefaultExpression>&apos;&apos;</DefaultExpression>
     </column>
-    <column id="230" parent="225" name="firstName">
+    <column id="241" parent="227" name="firstName">
       <Position>2</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="231" parent="225" name="surname">
+    <column id="242" parent="227" name="surname">
       <Position>3</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="232" parent="225" name="psw">
+    <column id="243" parent="227" name="psw">
       <Position>4</Position>
       <DataType>varchar(255)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <key id="233" parent="225" name="PRIMARY">
+    <column id="244" parent="227" name="salt">
+      <Position>5</Position>
+      <DataType>varchar(255)|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <key id="245" parent="227" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>fiscalCode</ColNames>
       <Primary>1</Primary>

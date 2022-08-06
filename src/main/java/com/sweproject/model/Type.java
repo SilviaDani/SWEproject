@@ -1,4 +1,6 @@
 package com.sweproject.model;
 
-public class Type {
+public abstract class Type {
+
+    public abstract String getName();
 }

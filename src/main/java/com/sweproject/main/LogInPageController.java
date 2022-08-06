@@ -1,5 +1,6 @@
 package com.sweproject.main;
 
+import com.sweproject.dao.AccessDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,17 +11,17 @@ import javafx.stage.Stage;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.w3c.dom.Text;
 
 import java.awt.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Objects;
 
-public class logInPageController {
+public class LogInPageController {
     private Stage stage;
     private Scene scene;
     private Parent root;
+    private AccessDAO accessDAO;
 
     @FXML private javafx.scene.control.Label errorText;
     @FXML
@@ -30,29 +31,17 @@ public class logInPageController {
     @FXML
     Label name;
 
-    public ResultSet isThereFC(String FC) throws SQLException{
-        System.out.println("isThereFC?");
-        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-        String user = "b7911f8c83c59f";
-        String password = "4b132502";
-        Connection myConn = DriverManager.getConnection(url, user, password);
-        Statement myStmt = myConn.createStatement();
-        String query = "SELECT * FROM `Users` where `fiscalCode` =" + "'" + FC + "'";
-        System.out.println(query);
-        ResultSet rs = myStmt.executeQuery(query);
-        return rs;
+    public LogInPageController() {
+        accessDAO = new AccessDAO();
     }
 
     public void logIn(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
-        ResultSet user = isThereFC(FC);
-        System.out.println(user);
+        ResultSet user = accessDAO.selectUser(FC);
         if(user.next()){ //user.next() = true se non è vuoto, = false se è vuoto
             String password = BCrypt.hashpw(passwordField.getText(), user.getString("salt"));
             String DBName = user.getString("firstName");
-            System.out.println(DBName);
             String DBPassword = user.getString("psw");
-            System.out.println(DBPassword);
             if(Objects.equals(DBPassword, password)) {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
                 Parent root = loader.load();
@@ -70,7 +59,6 @@ public class logInPageController {
             }
         }else{
             errorText.setText("This account does not exist");
-            //TODO gestire il caso in cui non esista corrispondenza sul db
         }
     }
 }

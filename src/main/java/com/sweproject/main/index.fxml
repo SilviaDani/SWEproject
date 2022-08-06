@@ -5,6 +5,6 @@
 <?import javafx.scene.control.Label?>
 <GridPane prefHeight="400.0" prefWidth="600.0" fx:controller="com.sweproject.main.IndexController"
           xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">
-    <Button GridPane.columnIndex="0" GridPane.rowIndex="1" onAction="#signInClicked" mnemonicParsing="false" prefHeight="26.0" prefWidth="151.0" text="Sign in"/>
+    <Button GridPane.columnIndex="0" GridPane.rowIndex="1" onAction="#signInClicked" mnemonicParsing="false" prefHeight="26.0" prefWidth="151.0" text="Sign up"/>
     <Button GridPane.columnIndex="0" GridPane.rowIndex="3" onAction="#logInClicked" mnemonicParsing="false" prefHeight="26.0" prefWidth="151.0" text="Log in"/>
 </GridPane>
