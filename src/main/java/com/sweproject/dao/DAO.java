@@ -11,13 +11,17 @@ public class DAO {
     protected String password = "4b132502";
     protected Connection connection;
     protected Statement statement;
-    
-    public DAO() {
+
+
+    protected void setConnction(){
         try {
             connection = DriverManager.getConnection(this.url, this.user, this.password);
             statement = connection.createStatement();
         }catch (Exception e){
             System.out.println("Si è verificato un problema durante la connessione al database.");
         }
+    }
+    public DAO() {
+        setConnction();
     }
 }

@@ -15,6 +15,7 @@ public class ObservationDAO extends DAO {
     }
 
     public void insertObservation(ArrayList<Subject> subjects, Type type, LocalDateTime startDate, LocalDateTime endDate) throws SQLException {
+        setConnction();
         if (startDate == null){
             //it's a covid test
             statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `end_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + endDate + "')");

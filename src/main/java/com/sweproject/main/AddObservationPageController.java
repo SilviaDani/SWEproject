@@ -125,7 +125,7 @@ public class AddObservationPageController implements Initializable {
                 isSymptomatic = true;
         }
         Parent root;
-        if(eventType.equals("Contact") || (eventType.equals("Symptomatic") && !isSymptomatic)) {
+        if(eventType.equals("Contact") || (eventType.equals("Symptoms") && !isSymptomatic)) {
             root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseInterval.fxml"));
         }else{
             root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseDate.fxml"));
