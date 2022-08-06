@@ -28,8 +28,6 @@ public class LogInPageController {
     TextField fiscalCode;
     @FXML
     PasswordField passwordField;
-    @FXML
-    Label name;
 
     public LogInPageController() {
         accessDAO = new AccessDAO();
@@ -46,9 +44,9 @@ public class LogInPageController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
                 Parent root = loader.load();
 
-                //Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
                 UserPageController UserPageController = loader.getController();
                 UserPageController.setName("Welcome " + DBName);
+                UserPageController.setFC(FC);
 
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);

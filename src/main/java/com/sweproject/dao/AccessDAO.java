@@ -12,4 +12,8 @@ public class AccessDAO extends DAO{
     public void insertNewUser(String fiscalCode, String firstName, String lastName, String password, String salt) throws SQLException {
         statement.execute("INSERT INTO `users` (`fiscalCode`, `firstName`, `surname`, `psw`, `salt`) VALUES ('" + fiscalCode + "', '" + firstName + "', '" + lastName +"', '" + password + "', '" + salt + "')");
     }
+
+    public ResultSet selectDoctor(String fiscalCode) throws SQLException {
+        return statement.executeQuery("SELECT * FROM `doctors` where `doctorFiscalCode` =" + "'" + fiscalCode + "'");
+    }
 }

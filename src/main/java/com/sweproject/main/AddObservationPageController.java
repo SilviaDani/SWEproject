@@ -44,6 +44,7 @@ public class AddObservationPageController implements Initializable {
     private static LocalDateTime endDate;
     private static CovidTestType testType;
     public static boolean positiveTest;
+    private String FC;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -61,6 +62,10 @@ public class AddObservationPageController implements Initializable {
             //TODO scegliere quale cluster mostrare in base a quelli relativi all'utente
             select_cluster_menu.getItems().addAll("Cluster1","Cluster2"); //TODO in base ai cluster dell'utente, mostrare i cluster opportuni
         }
+    }
+
+    public void setFC(String fiscalCode){
+        FC = fiscalCode;
     }
 
     public void confirm(ActionEvent event) throws SQLException, IOException {
