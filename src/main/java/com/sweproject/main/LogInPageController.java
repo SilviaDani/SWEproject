@@ -13,7 +13,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
-import java.awt.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Objects;
