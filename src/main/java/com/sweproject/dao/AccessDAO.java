@@ -19,4 +19,5 @@ public class AccessDAO extends DAO{
         setConnction();
         return statement.executeQuery("SELECT * FROM `doctors` where `doctorFiscalCode` =" + "'" + fiscalCode + "'");
     }
+
 }

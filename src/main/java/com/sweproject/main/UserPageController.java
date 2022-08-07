@@ -33,7 +33,11 @@ public class UserPageController extends UIController implements Initializable{
     }
 
     public void enterRestrictedArea(ActionEvent event) throws IOException, SQLException {
-        Parent root = FXMLLoader.load(getClass().getResource("tracerPage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("patientsPage.fxml"));
+        Parent root = loader.load();
+        PatientsPageController PatientsPageController = loader.getController();
+        PatientsPageController.addLabel(user.getFiscalCode());
+
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
