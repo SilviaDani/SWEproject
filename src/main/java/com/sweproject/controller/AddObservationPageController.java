@@ -37,7 +37,6 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private TextField trasmission_rate;
     @FXML private Label error_interval;
     private boolean dateError;
-    private ObservationDAO observationDAO;
     private Stage stage;
     private Scene scene;
     private Parent root;
@@ -49,7 +48,6 @@ public class AddObservationPageController extends UIController implements Initia
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        observationDAO = new ObservationDAO();
         if(observation_type_menu != null) {
             observation_type_menu.getItems().clear();
             observation_type_menu.getItems().addAll("Contact", "Symptoms", "Covid test");
@@ -89,7 +87,7 @@ public class AddObservationPageController extends UIController implements Initia
             default:
                 System.out.println("Invalid type");
         }
-        observationDAO.insertObservation(subjects, type, startDate, endDate);
+        user.addObservation(subjects, type, startDate, endDate);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
         Parent root = loader.load();
@@ -141,10 +139,8 @@ public class AddObservationPageController extends UIController implements Initia
     }
 
     public void confirmInterval(ActionEvent event) throws IOException, SQLException {
-        System.out.println(eventType);
         startDate = start_datePicker_menu.getValue().atTime(Integer.parseInt(start_date_hour.getText()), Integer.parseInt(start_date_minute.getText()));
         endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
-        //CONTROLLO AMMISSIBILITÀ DATA E ORARIO INSERITI
         if(startDate.isBefore(endDate) && !dateError) {
             Parent root;
             if (eventType.equals("Contact")) {
@@ -198,22 +194,28 @@ public class AddObservationPageController extends UIController implements Initia
     }
 
     public void validateHourSelected(){
-        int start_hour = start_date_hour != null ? Integer.parseInt(start_date_hour.getText()) : 0;
-        int end_hour = end_date_hour != null ? Integer.parseInt(end_date_hour.getText()) : 0;
-        dateError = true;
-        if (0 > start_hour || start_hour > 23){
-            error_interval.setText("Insert valid start hour");
-        } else if (0 > end_hour || end_hour > 23){
-            error_interval.setText("Insert valid end hour");
-        }else{
-            dateError = false;
+        try {
+            int start_hour = start_date_hour != null ? Integer.parseInt(start_date_hour.getText()) : 0;
+            int end_hour = end_date_hour != null ? Integer.parseInt(end_date_hour.getText()) : 0;
+            dateError = true;
+            if (0 > start_hour || start_hour > 23) {
+                error_interval.setText("Insert valid start hour");
+            } else if (0 > end_hour || end_hour > 23) {
+                error_interval.setText("Insert valid end hour");
+            } else {
+                dateError = false;
+            }
+        }catch(Exception e){
+            error_interval.setText("Insert a number, not a text");
+            dateError = true;
         }
-        if(dateError)
+        if (dateError)
             error_interval.setVisible(true);
         else
             error_interval.setVisible(false);
     }
     public void validateMinutesSelected(){
+        try{
         int start_minutes = start_date_minute != null ? Integer.parseInt(start_date_minute.getText()) : 0;
         int end_minutes = end_date_minute != null ? Integer.parseInt(end_date_minute.getText()) : 0;
         dateError = true;
@@ -224,7 +226,11 @@ public class AddObservationPageController extends UIController implements Initia
         }else{
             dateError = false;
         }
-        if(dateError)
+        }catch(Exception e){
+            error_interval.setText("Insert a number, not a text");
+            dateError = true;
+        }
+        if (dateError)
             error_interval.setVisible(true);
         else
             error_interval.setVisible(false);
