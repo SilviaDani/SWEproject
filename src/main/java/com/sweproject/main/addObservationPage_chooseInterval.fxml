@@ -15,8 +15,9 @@
         <AnchorPane VBox.vgrow="ALWAYS">
 
             <children>
-            <VBox layoutX="97.0" layoutY="49.0" prefHeight="288.0" prefWidth="390.0">
+            <VBox layoutX="150.0" layoutY="56.0" prefHeight="288.0" prefWidth="298.0">
                <children>
+                  <Label fx:id="error_interval" alignment="TOP_LEFT" prefHeight="18.0" prefWidth="184.0" text="Insert valid date interval" textFill="RED" visible="false" />
                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                      <children>
                               <Label text="Choose start date">
@@ -37,13 +38,13 @@
                                    <Insets right="20.0" />
                                </HBox.margin>
                            </Label>
-                        <TextField fx:id="start_date_hour" prefHeight="25.0" prefWidth="64.0" />
+                        <TextField fx:id="start_date_hour" onAction="#validateHourSelected" prefHeight="25.0" prefWidth="64.0" />
                            <Label text=":">
                                <HBox.margin>
                                    <Insets left="5.0" right="5.0" />
                                </HBox.margin>
                            </Label>
-                        <TextField fx:id="start_date_minute" prefHeight="25.0" prefWidth="64.0" />
+                        <TextField fx:id="start_date_minute" onAction="#validateMinutesSelected" prefHeight="25.0" prefWidth="64.0" />
                        </children>
                    </HBox>
                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
@@ -66,13 +67,13 @@
                               <Insets right="20.0" />
                            </HBox.margin>
                         </Label>
-                        <TextField fx:id="end_date_hour" prefHeight="25.0" prefWidth="64.0" />
+                        <TextField fx:id="end_date_hour" onAction="#validateHourSelected" prefHeight="25.0" prefWidth="64.0" />
                         <Label text=":">
                            <HBox.margin>
                               <Insets left="5.0" right="5.0" />
                            </HBox.margin>
                         </Label>
-                        <TextField fx:id="end_date_minute" prefHeight="25.0" prefWidth="64.0" />
+                        <TextField fx:id="end_date_minute" onAction="#validateMinutesSelected" prefHeight="25.0" prefWidth="64.0" />
                      </children>
                   </HBox>
                </children>

@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.ResourceBundle;
 
 public class FillPrescriptionPageController extends UIController implements Initializable {

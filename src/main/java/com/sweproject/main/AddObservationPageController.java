@@ -35,6 +35,8 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private TextField end_date_hour;
     @FXML private TextField end_date_minute;
     @FXML private TextField trasmission_rate;
+    @FXML private Label error_interval;
+    private boolean dateError;
     private ObservationDAO observationDAO;
     private Stage stage;
     private Scene scene;
@@ -43,7 +45,7 @@ public class AddObservationPageController extends UIController implements Initia
     private static LocalDateTime startDate;
     private static LocalDateTime endDate;
     private static CovidTestType testType;
-    public static boolean positiveTest;
+    private static boolean positiveTest;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -128,6 +130,7 @@ public class AddObservationPageController extends UIController implements Initia
     }
 
     public void confirmDate(ActionEvent event) throws IOException, SQLException {
+        if(!dateError){
         endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
         if(eventType.equals("Symptoms")){
             startDate = endDate;
@@ -135,21 +138,27 @@ public class AddObservationPageController extends UIController implements Initia
         }
         confirm(event);
     }
+    }
 
     public void confirmInterval(ActionEvent event) throws IOException, SQLException {
         System.out.println(eventType);
-        //TODO Fare controlli sull'ora inserita dall'utente - deve essere un'ora ammissibile! -
         startDate = start_datePicker_menu.getValue().atTime(Integer.parseInt(start_date_hour.getText()), Integer.parseInt(start_date_minute.getText()));
         endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
-        Parent root;
-        if(eventType.equals("Contact")) {
-            root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseCluster.fxml"));
-            stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-            scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+        //CONTROLLO AMMISSIBILITÀ DATA E ORARIO INSERITI
+        if(startDate.isBefore(endDate) && !dateError) {
+            Parent root;
+            if (eventType.equals("Contact")) {
+                root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseCluster.fxml"));
+                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                scene = new Scene(root);
+                stage.setScene(scene);
+                stage.show();
+            } else {
+                confirm(event);
+            }
         }else{
-            confirm(event);
+            error_interval.setText("Insert valid date interval");
+            error_interval.setVisible(true);
         }
 
     }
@@ -186,5 +195,38 @@ public class AddObservationPageController extends UIController implements Initia
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
         }
+    }
+
+    public void validateHourSelected(){
+        int start_hour = start_date_hour != null ? Integer.parseInt(start_date_hour.getText()) : 0;
+        int end_hour = end_date_hour != null ? Integer.parseInt(end_date_hour.getText()) : 0;
+        dateError = true;
+        if (0 > start_hour || start_hour > 23){
+            error_interval.setText("Insert valid start hour");
+        } else if (0 > end_hour || end_hour > 23){
+            error_interval.setText("Insert valid end hour");
+        }else{
+            dateError = false;
+        }
+        if(dateError)
+            error_interval.setVisible(true);
+        else
+            error_interval.setVisible(false);
+    }
+    public void validateMinutesSelected(){
+        int start_minutes = start_date_minute != null ? Integer.parseInt(start_date_minute.getText()) : 0;
+        int end_minutes = end_date_minute != null ? Integer.parseInt(end_date_minute.getText()) : 0;
+        dateError = true;
+        if (0 > start_minutes|| start_minutes  > 59){
+            error_interval.setText("Insert valid start minute");
+        } else if (0 > end_minutes || end_minutes > 59){
+            error_interval.setText("Insert valid end minutes");
+        }else{
+            dateError = false;
+        }
+        if(dateError)
+            error_interval.setVisible(true);
+        else
+            error_interval.setVisible(false);
     }
 }
