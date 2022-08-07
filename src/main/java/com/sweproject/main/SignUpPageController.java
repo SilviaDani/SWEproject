@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Objects;
 
-public class SignUpPageController {
+public class SignUpPageController extends UIController {
 
     private Stage stage;
     private Scene scene;
@@ -40,7 +40,7 @@ public class SignUpPageController {
         accessDAO = new AccessDAO();
     }
 
-    public void signIn(ActionEvent event) throws IOException, SQLException {
+    public void signUp(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
         String firstName = name.getText();
         String lastName = surname.getText();

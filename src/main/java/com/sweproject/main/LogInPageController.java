@@ -1,5 +1,6 @@
 package com.sweproject.main;
 
+import com.sweproject.controller.Notifier;
 import com.sweproject.dao.AccessDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,7 +18,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Objects;
 
-public class LogInPageController {
+public class LogInPageController extends UIController{
     private Stage stage;
     private Scene scene;
     private Parent root;
@@ -41,12 +42,9 @@ public class LogInPageController {
             String DBName = user.getString("firstName");
             String DBPassword = user.getString("psw");
             if(Objects.equals(DBPassword, password)) {
+                UIController.user = new Notifier(FC, DBName, user.getString("surname"));
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
                 Parent root = loader.load();
-
-                UserPageController UserPageController = loader.getController();
-                UserPageController.setName("Welcome " + DBName);
-                UserPageController.setFC(FC);
 
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);

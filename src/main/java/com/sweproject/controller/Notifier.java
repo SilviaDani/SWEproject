@@ -10,9 +10,8 @@ import java.util.ArrayList;
 public class Notifier {
     private Subject subject;
 
-    public Notifier() {
-        //TODO: È NECESSARIO SAPERE IL CODICE FISCALE DELL'UTENTE UNA VOLTA CHE È ENTRATO NELL'APP
-        subject = new Subject("RSSMRA80A01H501U");
+    public Notifier(String fiscalCode, String name, String surname) {
+        subject = new Subject(fiscalCode, name,surname);
     }
 
     public void createObservation(ArrayList<Subject> cluster, Type type, TimeRecord timeRecord){
@@ -26,5 +25,12 @@ public class Notifier {
     //for testing
     public Subject getSubject() {
         return subject;
+    }
+
+    public String getName() {
+        return subject.getName();
+    }
+    public String getFiscalCode(){
+        return subject.getFiscalCode();
     }
 }

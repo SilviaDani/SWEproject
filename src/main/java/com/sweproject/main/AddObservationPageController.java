@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
-public class AddObservationPageController implements Initializable {
+public class AddObservationPageController extends UIController implements Initializable{
     @FXML private ComboBox observation_type_menu;
     @FXML private ComboBox select_cluster_menu;
     @FXML private HBox test_type_box;
@@ -44,7 +44,6 @@ public class AddObservationPageController implements Initializable {
     private static LocalDateTime endDate;
     private static CovidTestType testType;
     public static boolean positiveTest;
-    private String FC;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -64,29 +63,26 @@ public class AddObservationPageController implements Initializable {
         }
     }
 
-    public void setFC(String fiscalCode){
-        FC = fiscalCode;
-    }
 
     public void confirm(ActionEvent event) throws SQLException, IOException {
         //TODO Trovare il notifier opportuno e fare addObservation con i dati presi sopra
-        // XXX INIZIO CODICE CHE VA RIMOSSO
         ArrayList<Subject> subjects = new ArrayList<>();
-        subjects.add(new Subject("NCCNCL00P07D612X"));
-        // XXX FINE CODICE CHE VA RIMOSSO
         Type type = null;
         //FIXME i parametri sono un po'a caso
         switch (eventType){
             case "Contact":
+                // XXX INIZIO CODICE CHE VA RIMOSSO
+                subjects.add(new Subject("NCCNCL00P07D612X","Niccolò","Niccoli"));
+                // XXX FINE CODICE CHE VA RIMOSSO
                 type = new Contact(subjects, Integer.parseInt(trasmission_rate.getText()));
                 break;
             case "Symptoms":
-                //TODO subjects dovrebbe avere solo il codice fiscale del notifier
+                subjects.add(user.getSubject());
                 type = new Symptoms();
                 break;
             case "Covid test":
+                subjects.add(user.getSubject());
                 type = new CovidTest(testType, positiveTest);
-                //TODO subjects dovrebbe avere solo il codice fiscale del notifier
                 break;
             default:
                 System.out.println("Invalid type");
@@ -95,11 +91,6 @@ public class AddObservationPageController implements Initializable {
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
         Parent root = loader.load();
-
-        //Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
-        UserPageController UserPageController = loader.getController();
-        //TODO ci sarebbe da sapere il nome dell'utente UserPageController.setName("Welcome " + DBName);
-
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
@@ -137,7 +128,6 @@ public class AddObservationPageController implements Initializable {
     }
 
     public void confirmDate(ActionEvent event) throws IOException, SQLException {
-        //TODO come back to dashboard + add observation
         endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
         if(eventType.equals("Symptoms")){
             startDate = endDate;

@@ -7,7 +7,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 
-public class FillPrescriptionPageController implements Initializable {
+public class FillPrescriptionPageController extends UIController implements Initializable {
     @FXML
     private ComboBox covid_test_menu;
     @FXML

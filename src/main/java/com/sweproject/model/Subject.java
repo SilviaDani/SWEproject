@@ -10,13 +10,12 @@ public class Subject {
     private String name;
     private String surname;
 
-    public Subject(String fiscalCode) {
+    public Subject(String fiscalCode, String name, String surname) {
         observationRecord = new ArrayList<>();
         prescriptionRecord = new ArrayList<>();
         this.fiscalCode = fiscalCode;
-    }
-    public Subject(){
-       this("RSSMRA80A01H501U"); //TODO va tolto
+        this.name = name;
+        this.surname = surname;
     }
 
     public void addObservation(Observation observation){
@@ -41,5 +40,9 @@ public class Subject {
 
     public String getFiscalCode() {
         return this.fiscalCode;
+    }
+
+    public String getName() {
+        return name;
     }
 }

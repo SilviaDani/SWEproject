@@ -29,7 +29,7 @@
 
     <PasswordField fx:id="confirmPasswordField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
 
-    <Button mnemonicParsing="false" onAction="#signIn" prefHeight="26.0" prefWidth="151.0" text="Sign up" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+    <Button mnemonicParsing="false" onAction="#signUp" prefHeight="26.0" prefWidth="151.0" text="Sign up" GridPane.columnIndex="1" GridPane.rowIndex="11" />
    <Label fx:id="errorText" textFill="RED" GridPane.columnIndex="1" />
    <columnConstraints>
       <ColumnConstraints />

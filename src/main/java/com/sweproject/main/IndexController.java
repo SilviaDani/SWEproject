@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class IndexController {
+public class IndexController extends UIController{
 
     private Stage stage;
     private Scene scene;
