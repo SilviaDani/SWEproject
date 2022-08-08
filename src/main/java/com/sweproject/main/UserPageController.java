@@ -33,7 +33,7 @@ public class UserPageController extends UIController implements Initializable{
     }
 
     public void enterRestrictedArea(ActionEvent event) throws IOException, SQLException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("patientsPage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/patientsPage.fxml"));
         Parent root = loader.load();
         PatientsPageController PatientsPageController = loader.getController();
         PatientsPageController.addLabel(user.getFiscalCode());
@@ -45,7 +45,7 @@ public class UserPageController extends UIController implements Initializable{
     }
 
     public void addObservation(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("addObservationPage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/addObservationPage.fxml"));
         Parent root = loader.load();
 
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();

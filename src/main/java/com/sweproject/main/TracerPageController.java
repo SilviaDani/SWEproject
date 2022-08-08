@@ -1,12 +1,10 @@
 package com.sweproject.main;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -21,7 +19,7 @@ public class TracerPageController{
     Label welcome_user;
 
     public void goBack(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("userPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("../../../../res/com/sweproject/FXML/userPage.fxml"));
         this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         this.scene = new Scene(root);
         this.stage.setScene(this.scene);
@@ -29,7 +27,7 @@ public class TracerPageController{
     }
 
     public void fillPrescription(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("fillPrescriptionPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("../../../../res/com/sweproject/FXML/fillPrescriptionPage.fxml"));
         this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         this.scene = new Scene(root);
         this.stage.setScene(this.scene);
@@ -37,7 +35,7 @@ public class TracerPageController{
     }
 
     public void editObservation(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("editObservationPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/editObservationPage.fxml"));
         this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         this.scene = new Scene(root);
         this.stage.setScene(this.scene);

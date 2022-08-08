@@ -42,7 +42,7 @@ public class LogInPageController extends UIController{
             String DBPassword = user.getString("psw");
             if(Objects.equals(DBPassword, password)) {
                 UIController.user = new Notifier(FC, DBName, user.getString("surname"));
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
                 Parent root = loader.load();
 
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

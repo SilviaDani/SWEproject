@@ -59,7 +59,7 @@ public class SignUpPageController extends UIController {
             }
             else {
                 accessDAO.insertNewUser(FC, firstName, lastName, password, salt);
-                Parent root = FXMLLoader.load(getClass().getResource("index.fxml"));
+                Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/index.fxml"));
                 stage = (Stage)((Node)event.getSource()).getScene().getWindow();
                 scene = new Scene(root);
                 stage.setScene(scene);

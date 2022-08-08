@@ -16,7 +16,7 @@ public class IndexController extends UIController{
     private Parent root;
 
     public void logInClicked(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("logInPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/logInPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
@@ -24,7 +24,7 @@ public class IndexController extends UIController{
     }
 
     public void signInClicked(ActionEvent event) throws IOException{
-        Parent root = FXMLLoader.load(getClass().getResource("signUpPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/signUpPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);

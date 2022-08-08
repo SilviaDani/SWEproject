@@ -9,7 +9,6 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.nio.file.Paths;
 
 
 public class Main extends Application {
@@ -49,7 +48,7 @@ public class Main extends Application {
     }*/
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("index.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/index.fxml"));
         primaryStage.setTitle("Covid Tracing App");
         primaryStage.getIcons().add(new Image(new File("src/main/res/icon.png").toURI().toString()));
         primaryStage.setScene(new Scene(root));

@@ -91,7 +91,7 @@ public class AddObservationPageController extends UIController implements Initia
         }
         observationDAO.insertObservation(subjects, type, startDate, endDate);
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("userPage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
         Parent root = loader.load();
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
@@ -119,9 +119,9 @@ public class AddObservationPageController extends UIController implements Initia
         }
         Parent root;
         if(eventType.equals("Contact") || (eventType.equals("Symptoms") && !isSymptomatic)) {
-            root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseInterval.fxml"));
+            root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseInterval.fxml"));
         }else{
-            root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseDate.fxml"));
+            root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseDate.fxml"));
         }
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
@@ -148,7 +148,7 @@ public class AddObservationPageController extends UIController implements Initia
         if(startDate.isBefore(endDate) && !dateError) {
             Parent root;
             if (eventType.equals("Contact")) {
-                root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseCluster.fxml"));
+                root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseCluster.fxml"));
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);
                 stage.setScene(scene);
@@ -163,7 +163,7 @@ public class AddObservationPageController extends UIController implements Initia
 
     }
     public void backToTypeSelection(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("addObservationPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
@@ -171,7 +171,7 @@ public class AddObservationPageController extends UIController implements Initia
     }
 
     public void backToIntervalSelection(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("addObservationPage_chooseInterval.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseInterval.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
