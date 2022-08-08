@@ -2,7 +2,6 @@ package com.sweproject.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DAO {
@@ -13,7 +12,7 @@ public class DAO {
     protected Statement statement;
 
 
-    protected void setConnction(){
+    protected void setConnection(){
         try {
             connection = DriverManager.getConnection(this.url, this.user, this.password);
             statement = connection.createStatement();
@@ -22,6 +21,6 @@ public class DAO {
         }
     }
     public DAO() {
-        setConnction();
+        setConnection();
     }
 }

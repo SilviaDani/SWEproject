@@ -4,19 +4,14 @@ import com.sweproject.model.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class ObservationDAO extends DAO {
 
     public void insertObservation(ArrayList<Subject> subjects, Type type, LocalDateTime startDate, LocalDateTime endDate) throws SQLException {
-        setConnction();
-        if (startDate == null){
-            //it's a covid test
-            statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `end_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + endDate + "')");
-        } else if (endDate == null){
-            //subject is still symptomatic
+        setConnection();
+        if (endDate == null){
             statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "')");
         }else{
             statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "')");
@@ -33,7 +28,7 @@ public class ObservationDAO extends DAO {
     }
 
     public ResultSet getRelevantObservations(String FC) throws SQLException {
-        setConnction();
+        setConnection();
         return statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = " + "'" + FC + "' and `is_relevant` = 1");
     }
 

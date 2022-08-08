@@ -140,13 +140,10 @@ public class AddObservationPageController extends UIController implements Initia
 
     public void confirmDate(ActionEvent event) throws IOException, SQLException {
         if(!dateError){
-        endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
-        if(eventType.equals("Symptoms")){
-            startDate = endDate;
-            endDate = null;
-        }
+        startDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
+        endDate = null;
         confirm(event);
-    }
+        }
     }
 
     public void confirmInterval(ActionEvent event) throws IOException, SQLException {
