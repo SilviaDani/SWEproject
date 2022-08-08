@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.model.*;

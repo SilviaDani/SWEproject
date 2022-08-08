@@ -1,6 +1,6 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
-import com.sweproject.controller.Notifier;
+import com.sweproject.model.Notifier;
 import com.sweproject.dao.AccessDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

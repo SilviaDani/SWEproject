@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;

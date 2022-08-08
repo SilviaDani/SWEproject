@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
 import java.io.IOException;
 import java.net.URL;

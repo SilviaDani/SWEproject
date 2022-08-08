@@ -1,4 +1,4 @@
-package com.sweproject.controller;
+package com.sweproject.model;
 
 import com.sweproject.model.Observation;
 import com.sweproject.model.Subject;

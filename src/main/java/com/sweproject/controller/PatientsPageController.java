@@ -1,4 +1,4 @@
-package com.sweproject.main;
+package com.sweproject.controller;
 
 import com.sweproject.dao.AccessDAO;
 import javafx.collections.FXCollections;

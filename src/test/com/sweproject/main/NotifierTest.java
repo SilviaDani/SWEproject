@@ -1,6 +1,6 @@
 package com.sweproject.main;
 
-import com.sweproject.controller.Notifier;
+import com.sweproject.model.Notifier;
 import com.sweproject.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

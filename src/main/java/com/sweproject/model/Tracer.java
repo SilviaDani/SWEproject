@@ -1,6 +1,4 @@
-package com.sweproject.controller;
-
-import com.sweproject.model.*;
+package com.sweproject.model;
 
 public class Tracer extends Notifier{
 

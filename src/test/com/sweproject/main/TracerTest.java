@@ -1,6 +1,6 @@
 package com.sweproject.main;
 
-import com.sweproject.controller.Tracer;
+import com.sweproject.model.Tracer;
 import com.sweproject.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
