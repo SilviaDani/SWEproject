@@ -19,7 +19,7 @@ public class TracerPageController{
     Label welcome_user;
 
     public void goBack(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("../../../../res/com/sweproject/FXML/userPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
         this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         this.scene = new Scene(root);
         this.stage.setScene(this.scene);
@@ -27,7 +27,7 @@ public class TracerPageController{
     }
 
     public void fillPrescription(ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("../../../../res/com/sweproject/FXML/fillPrescriptionPage.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/fillPrescriptionPage.fxml"));
         this.stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         this.scene = new Scene(root);
         this.stage.setScene(this.scene);
