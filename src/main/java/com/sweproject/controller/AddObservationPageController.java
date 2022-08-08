@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class AddObservationPageController extends UIController implements Initializable{
+    @FXML private Label error_observation;
     @FXML private ComboBox observation_type_menu;
     @FXML private ComboBox select_cluster_menu;
     @FXML private HBox test_type_box;
@@ -101,30 +102,40 @@ public class AddObservationPageController extends UIController implements Initia
 
     public void confirmType(ActionEvent event) throws IOException {
         boolean isSymptomatic = false;
-        eventType = observation_type_menu.getValue().toString();
-        if(test_type_box.isVisible()) {
-            positiveTest = positive_checkbox.isSelected();
-            if(test_type_menu.getValue() == "Antigen")
-                testType = CovidTestType.ANTIGEN;
-            else if(test_type_menu.getValue() == "Molecular")
-                testType = CovidTestType.MOLECULAR;
-            else
-                System.out.println("Errore: non è stato selezionato alcun tipo di test");
+        try {
+            try {
+                eventType = observation_type_menu.getValue().toString();
+            }catch (NullPointerException npe){
+                throw new NullPointerException("Please select an observation type");
+            }
+            if (test_type_box.isVisible()) {
+                positiveTest = positive_checkbox.isSelected();
+                if (test_type_menu.getValue() == "Antigen")
+                    testType = CovidTestType.ANTIGEN;
+                else if (test_type_menu.getValue() == "Molecular")
+                    testType = CovidTestType.MOLECULAR;
+                else {
+                    throw new NullPointerException("Please select a test type");
+                }
+            }
+            if (symptomatic_box.isVisible()) {
+                if (symptomatic_checkbox.isSelected())
+                    isSymptomatic = true;
+            }
+            Parent root;
+            if (eventType.equals("Contact") || (eventType.equals("Symptoms") && !isSymptomatic)) {
+                root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseInterval.fxml"));
+            } else {
+                root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseDate.fxml"));
+            }
+            stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        }catch(NullPointerException e){
+            error_observation.setText(e.getMessage());
+            error_observation.setVisible(true);
         }
-        if(symptomatic_box.isVisible()) {
-            if(symptomatic_checkbox.isSelected())
-                isSymptomatic = true;
-        }
-        Parent root;
-        if(eventType.equals("Contact") || (eventType.equals("Symptoms") && !isSymptomatic)) {
-            root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseInterval.fxml"));
-        }else{
-            root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseDate.fxml"));
-        }
-        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
     }
 
     public void confirmDate(ActionEvent event) throws IOException, SQLException {

@@ -36,7 +36,7 @@ public class UserPageController extends UIController implements Initializable{
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/patientsPage.fxml"));
         Parent root = loader.load();
         PatientsPageController PatientsPageController = loader.getController();
-        PatientsPageController.addLabel(user.getFiscalCode());
+        PatientsPageController.addPatients(user.getFiscalCode());
 
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
