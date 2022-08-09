@@ -20,9 +20,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PatientsObservationsController extends UIController {
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
     private ObservationDAO observationDAO;
 
     @FXML

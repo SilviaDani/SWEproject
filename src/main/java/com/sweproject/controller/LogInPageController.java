@@ -18,10 +18,6 @@ import java.sql.*;
 import java.util.Objects;
 
 public class LogInPageController extends UIController{
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-    private AccessDAO accessDAO;
 
     @FXML private javafx.scene.control.Label errorText;
     @FXML

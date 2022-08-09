@@ -17,11 +17,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PatientsPageController extends UIController{
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-    private AccessDAO accessDAO;
-
     @FXML
     ListView<String> patients;
 

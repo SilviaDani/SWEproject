@@ -11,10 +11,6 @@ import java.io.IOException;
 
 public class IndexController extends UIController{
 
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-
     public void logInClicked(ActionEvent event) throws IOException{
         Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/logInPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();

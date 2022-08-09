@@ -38,9 +38,6 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private TextField trasmission_rate;
     @FXML private Label error_interval;
     private boolean dateError;
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
     private static String eventType;
     private static LocalDateTime startDate;
     private static LocalDateTime endDate;

@@ -18,11 +18,6 @@ import java.sql.*;
 import java.util.Objects;
 
 public class SignUpPageController extends UIController {
-
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-    private AccessDAO accessDAO;
     @FXML private Label errorText;
 
     @FXML

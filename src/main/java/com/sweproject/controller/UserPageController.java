@@ -19,11 +19,6 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class UserPageController extends UIController implements Initializable{
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-    private AccessDAO accessDAO;
-
     @FXML
     Label name;
     @FXML private Button reservedArea_button;

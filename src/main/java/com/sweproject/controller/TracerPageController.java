@@ -11,10 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
-public class TracerPageController{
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
+public class TracerPageController extends UIController{
     @FXML
     Label welcome_user;
 
