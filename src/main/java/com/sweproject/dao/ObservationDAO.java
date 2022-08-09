@@ -32,4 +32,8 @@ public class ObservationDAO extends DAO {
         return statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = " + "'" + FC + "' and `is_relevant` = 1");
     }
 
+    public void changeRelevance(String selectedObservationID) throws SQLException {
+        setConnection();
+        statement.execute("update `events` set is_relevant = 0 where ID = " + "'" + selectedObservationID + "'");
+    }
 }

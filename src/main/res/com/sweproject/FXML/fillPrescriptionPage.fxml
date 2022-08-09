@@ -27,12 +27,10 @@
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
-                        <Label text="Insert subject ID" />
                         <Label text="Choose date" GridPane.rowIndex="1" />
                         <Label layoutX="10.0" layoutY="61.0" text="Choose Covid Test" GridPane.rowIndex="2" />
                         <DatePicker prefHeight="37.0" prefWidth="194.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                         <ComboBox fx:id="covid_test_menu" prefHeight="26.0" prefWidth="198.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <TextField GridPane.columnIndex="1" />
                     </children>
                 </GridPane>
                 <Label alignment="CENTER" layoutX="230.0" layoutY="14.0" text="Fill new prescription" textAlignment="CENTER">

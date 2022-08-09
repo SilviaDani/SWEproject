@@ -55,6 +55,7 @@ public class PatientsPageController extends UIController{
         Parent root = loader.load();
         PatientsObservationsController PatientsObservationsController = loader.getController();
         PatientsObservationsController.addObservations(selectedPatient);
+        System.out.println(selectedPatient);
 
         stage = (Stage)((Node)mouseEvent.getSource()).getScene().getWindow();
         scene = new Scene(root);
