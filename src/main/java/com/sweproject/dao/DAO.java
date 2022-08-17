@@ -1,8 +1,11 @@
 package com.sweproject.dao;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
+import com.sweproject.model.Observation;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class DAO {
     protected String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
@@ -22,5 +25,51 @@ public class DAO {
     }
     public DAO() {
         setConnection();
+    }
+
+    protected void closeConnection(ResultSet resultSet){
+        if(resultSet!=null) {
+            try {
+                resultSet.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        closeConnection();
+    }
+
+    protected void closeConnection(){
+        if(statement!=null) {
+            try {
+                statement.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        if(connection!=null) {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+    }
+
+    protected ArrayList<HashMap<String, Object>> convertResultSet(ResultSet rs){
+        ArrayList<HashMap<String, Object>> arrayList = new ArrayList<>();
+        try {
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int cols = rsmd.getColumnCount();
+            while(rs.next()){
+                HashMap<String, Object> hashMap = new HashMap<>();
+                for(int i = 1; i<=cols; i++){
+                    hashMap.put(rsmd.getColumnName(i) ,rs.getObject(i));
+                }
+                arrayList.add(hashMap);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return arrayList;
     }
 }

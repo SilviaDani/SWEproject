@@ -13,8 +13,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PatientsPageController extends UIController{
     @FXML
@@ -25,11 +26,11 @@ public class PatientsPageController extends UIController{
     }
 
     public ObservableList<String> getPatients(String FC) throws SQLException {
-        ResultSet rs = accessDAO.selectDoctor(FC);
+        ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectDoctor(FC);
         ObservableList <String> patientsObservableList = FXCollections.observableArrayList();
 
-        while(rs.next()){
-            String patientFC = rs.getString("patientFiscalCode");
+        for(int i = 0; i<arrayList.size(); i++){
+            String patientFC = arrayList.get(i).get("patientFiscalCode").toString();
             patientsObservableList.add(patientFC);
         }
 

@@ -1,7 +1,5 @@
 package com.sweproject.controller;
 
-import com.sweproject.controller.UIController;
-import com.sweproject.dao.AccessDAO;
 import com.sweproject.dao.ObservationDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,8 +14,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PatientsObservationsController extends UIController {
     private ObservationDAO observationDAO;
@@ -48,20 +47,20 @@ public class PatientsObservationsController extends UIController {
         observationsId.setPrefHeight(observableListObservationsId.size() * ROW_HEIGHT + 2);
     }
 
-    public ObservableList<String>[] getObservations(String FC) throws SQLException {
-        ResultSet rs = observationDAO.getRelevantObservations(FC);
+    public ObservableList<String>[] getObservations(String FC){
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(FC);
         ObservableList <String> observationsObservableList = FXCollections.observableArrayList();
         ObservableList <String> observationsIdObservableList = FXCollections.observableArrayList();
 
-        while(rs.next()){
-            String observationType = rs.getString("type");
-            String observationDate = rs.getString("start_date");
-            String observationsId = rs.getString("ID");
+        for(int i = 0; i<arrayList.size(); i++){
+            String observationType = arrayList.get(i).get("type").toString();
+            String observationDate = arrayList.get(i).get("start_date").toString();
+            String observationsId = arrayList.get(i).get("ID").toString();
 
             observationsObservableList.add(observationType + " " + observationDate);
             observationsIdObservableList.add(observationsId);
         }
-        return new ObservableList[]{observationsObservableList, observationsIdObservableList};
+       return new ObservableList[]{observationsObservableList, observationsIdObservableList};
     }
 
     public void handleObservationClick(MouseEvent mouseEvent) throws IOException, SQLException {

@@ -2,8 +2,9 @@ package com.sweproject.controller;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 import com.sweproject.dao.AccessDAO;
@@ -53,8 +54,8 @@ public class UserPageController extends UIController implements Initializable{
     public void initialize(URL url, ResourceBundle resourceBundle) {
         name.setText("Welcome "+user.getName());
         try{
-        ResultSet user = accessDAO.selectDoctor(UIController.user.getFiscalCode());
-        if(!user.next()) {
+            ArrayList<HashMap<String, Object>> user = accessDAO.selectDoctor(UIController.user.getFiscalCode());
+        if(user.size() == 0) {
             reservedArea_button.setVisible(false);
         }else{
             reservedArea_button.setVisible(true);

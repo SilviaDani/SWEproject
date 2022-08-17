@@ -42,7 +42,7 @@ public class SignUpPageController extends UIController {
         String salt = BCrypt.gensalt();
         String password = BCrypt.hashpw(passwordField.getText(), salt);
         String confirmPassword = BCrypt.hashpw(confirmPasswordField.getText(), salt);
-        if (accessDAO.selectUser(FC).next()){
+        if (accessDAO.selectUser(FC).size()>0){
             errorText.setText("This account already exists");
         }
         else{

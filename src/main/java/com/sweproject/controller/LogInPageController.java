@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class LogInPageController extends UIController{
@@ -31,13 +33,13 @@ public class LogInPageController extends UIController{
 
     public void logIn(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
-        ResultSet user = accessDAO.selectUser(FC);
-        if(user.next()){ //user.next() = true se non è vuoto, = false se è vuoto
-            String password = BCrypt.hashpw(passwordField.getText(), user.getString("salt"));
-            String DBName = user.getString("firstName");
-            String DBPassword = user.getString("psw");
+        ArrayList<HashMap<String, Object>> user = accessDAO.selectUser(FC);
+        if(user.size() > 0){ //user.next() = true se non è vuoto, = false se è vuoto
+            String password = BCrypt.hashpw(passwordField.getText(), user.get(0).get("salt").toString());
+            String DBName = user.get(0).get("firstName").toString();
+            String DBPassword = user.get(0).get("psw").toString();
             if(Objects.equals(DBPassword, password)) {
-                UIController.user = new Notifier(FC, DBName, user.getString("surname"));
+                UIController.user = new Notifier(FC, DBName, user.get(0).get("surname").toString());
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
                 Parent root = loader.load();
 

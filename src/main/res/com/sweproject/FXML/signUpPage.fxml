@@ -11,25 +11,25 @@
 <GridPane alignment="center" hgap="10" prefHeight="400.0" prefWidth="600.0" vgap="10" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.controller.SignUpPageController">
     <Label text="Fiscal Code:" GridPane.rowIndex="1" />
 
-    <TextField fx:id="fiscalCode" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+    <TextField fx:id="fiscalCode" GridPane.columnIndex="1" GridPane.rowIndex="1" id="fiscal_code"/>
 
     <Label text="Name:" GridPane.rowIndex="3" />
 
-    <TextField fx:id="name" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    <TextField fx:id="name" GridPane.columnIndex="1" GridPane.rowIndex="3" id="name"/>
 
     <Label text="Surname:" GridPane.rowIndex="5" />
 
-    <TextField fx:id="surname" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+    <TextField fx:id="surname" GridPane.columnIndex="1" GridPane.rowIndex="5" id="surname"/>
 
     <Label text="Password:" GridPane.rowIndex="7" />
 
-    <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+    <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="7" id="password"/>
 
     <Label text="Confirm Password:" GridPane.rowIndex="9" />
 
-    <PasswordField fx:id="confirmPasswordField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+    <PasswordField fx:id="confirmPasswordField" GridPane.columnIndex="1" GridPane.rowIndex="9" id="confirm_password"/>
 
-    <Button mnemonicParsing="false" onAction="#signUp" prefHeight="26.0" prefWidth="151.0" text="Sign up" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+    <Button mnemonicParsing="false" onAction="#signUp" prefHeight="26.0" prefWidth="151.0" text="Sign up" GridPane.columnIndex="1" GridPane.rowIndex="11" id="sign_up"/>
    <Label fx:id="errorText" textFill="RED" GridPane.columnIndex="1" />
    <columnConstraints>
       <ColumnConstraints />
