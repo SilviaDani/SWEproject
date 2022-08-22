@@ -31,7 +31,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <ComboBox fx:id="observation_type_menu" onAction="#checkObservationType" prefHeight="26.0" prefWidth="198.0" />
+            <ComboBox fx:id="observation_type_menu" onAction="#checkObservationType" prefHeight="26.0" prefWidth="198.0" id="observation_type_menu"/>
          </children>
       </HBox>
       <HBox fx:id="test_type_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
@@ -41,7 +41,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <ComboBox fx:id="test_type_menu" prefHeight="26.0" prefWidth="198.0" />
+            <ComboBox fx:id="test_type_menu" prefHeight="26.0" prefWidth="198.0" id="test_type_menu"/>
             <CheckBox fx:id="positive_checkbox" mnemonicParsing="false" text="Positive">
                <HBox.margin>
                   <Insets left="10.0" />
@@ -51,10 +51,10 @@
       </HBox>
       <HBox fx:id="symptomatic_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
          <children>
-            <CheckBox fx:id="symptomatic_checkbox" mnemonicParsing="false" text="Still symptomatic?" />
+            <CheckBox fx:id="symptomatic_checkbox" mnemonicParsing="false" text="Still symptomatic?" id="still_symptomatic"/>
          </children>
       </HBox>
-      <Button mnemonicParsing="false" onAction="#confirmType" text="Next" textAlignment="CENTER">
+      <Button mnemonicParsing="false" onAction="#confirmType" text="Next" textAlignment="CENTER" id="next">
          <padding>
             <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
          </padding>

@@ -28,7 +28,7 @@
                     </rowConstraints>
                     <children>
                         <Label text="Choose date" />
-                        <DatePicker fx:id="end_datePicker_menu" prefHeight="37.0" prefWidth="194.0" GridPane.columnIndex="1" />
+                        <DatePicker fx:id="end_datePicker_menu" prefHeight="37.0" prefWidth="194.0" GridPane.columnIndex="1" id="end_datePicker_menu"/>
                     </children>
                 </GridPane>
             <HBox alignment="CENTER" layoutX="94.0" layoutY="212.0" prefHeight="67.0" prefWidth="390.0">
@@ -38,13 +38,13 @@
                         <Insets right="20.0" />
                      </HBox.margin>
                   </Label>
-                  <TextField fx:id="end_date_hour" onAction="#validateHourSelected" onKeyTyped="#validateHourSelected" prefHeight="25.0" prefWidth="64.0" />
+                  <TextField fx:id="end_date_hour" onAction="#validateHourSelected" onKeyTyped="#validateHourSelected" prefHeight="25.0" prefWidth="64.0" id="end_date_hour"/>
                   <Label text=":">
                      <HBox.margin>
                         <Insets left="5.0" right="5.0" />
                      </HBox.margin>
                   </Label>
-                  <TextField fx:id="end_date_minute" onAction="#validateMinutesSelected" onKeyTyped="#validateMinutesSelected" prefHeight="26.0" prefWidth="63.0" />
+                  <TextField fx:id="end_date_minute" onAction="#validateMinutesSelected" onKeyTyped="#validateMinutesSelected" prefHeight="26.0" prefWidth="63.0" id="end_date_minute"/>
                </children>
             </HBox>
                 <Label fx:id="welcome_user" alignment="CENTER" layoutX="230.0" layoutY="14.0" text="Add observation" textAlignment="CENTER">
@@ -52,11 +52,11 @@
                         <Font size="24.0" />
                     </font>
                 </Label>
-                <Button layoutX="318.0" layoutY="344.0" mnemonicParsing="false" onAction="#confirmDate" text="Next" textAlignment="CENTER">
+                <Button layoutX="318.0" layoutY="344.0" mnemonicParsing="false" onAction="#confirmDate" text="Next" textAlignment="CENTER" id="next">
                     <padding>
                         <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
                     </padding></Button>
-            <Button layoutX="177.0" layoutY="344.0" mnemonicParsing="false" onAction="#backToTypeSelection" text="Back" textAlignment="CENTER">
+            <Button layoutX="177.0" layoutY="344.0" mnemonicParsing="false" onAction="#backToTypeSelection" text="Back" textAlignment="CENTER" id="back">
                <padding>
                   <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
                </padding>

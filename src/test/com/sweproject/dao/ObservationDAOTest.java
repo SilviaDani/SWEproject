@@ -15,7 +15,7 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ObservationDAOTest {
+public class ObservationDAOTest {
 
 
     @Test
@@ -72,7 +72,7 @@ class ObservationDAOTest {
             fail(e.getMessage());
         }
     }
-    void deleteObservation(String id) throws SQLException{
+    public static void deleteObservation(String id){
         String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
         String user = "b7911f8c83c59f";
         String password = "4b132502";
