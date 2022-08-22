@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DAO {
-    protected String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-    protected String user = "b7911f8c83c59f";
-    protected String password = "4b132502";
+    protected String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+    protected String user = "admin";
+    protected String password = "password";
     protected Connection connection;
     protected Statement statement;
 
@@ -19,6 +19,7 @@ public class DAO {
         try {
             connection = DriverManager.getConnection(this.url, this.user, this.password);
             statement = connection.createStatement();
+            statement.execute("use `tracing-app`");
         }catch (Exception e){
             System.out.println("Si è verificato un problema durante la connessione al database.");
         }

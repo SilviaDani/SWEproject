@@ -71,15 +71,16 @@ public class AccessDAOTest {
     }
 
     public static void deleteUser(String fiscalCode) {
-        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-        String user = "b7911f8c83c59f";
-        String password = "4b132502";
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String user = "admin";
+        String password = "password";
         Connection connection = null;
         Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
-            statement.execute("DELETE FROM `Users` WHERE `fiscalCode` = '" + fiscalCode + "'");
+            statement.execute("use `tracing-app`");
+            statement.execute("DELETE FROM `users` WHERE `fiscalCode` = '" + fiscalCode + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
         }finally {
@@ -102,17 +103,18 @@ public class AccessDAOTest {
     }
 
     void insertDoctor(String fiscalCode, ArrayList<String> patients){
-        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-        String user = "b7911f8c83c59f";
-        String password = "4b132502";
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String user = "admin";
+        String password = "password";
         Connection connection;
         Statement statement;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
+            statement.execute("use `tracing-app`");
             patients.forEach((patient) -> {
                 try {
-                    statement.execute("INSERT INTO `Doctors` (`doctorFiscalCode`, `patientFiscalCode`) VALUES ('" + fiscalCode + "', '" + patient + "')");
+                    statement.execute("INSERT INTO `doctors` (`doctorFiscalCode`, `patientFiscalCode`) VALUES ('" + fiscalCode + "', '" + patient + "')");
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                     fail(throwables.getMessage());
@@ -125,15 +127,16 @@ public class AccessDAOTest {
     }
 
     void deleteDoctor(String fiscalCode){
-        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-        String user = "b7911f8c83c59f";
-        String password = "4b132502";
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String user = "admin";
+        String password = "password";
         Connection connection;
         Statement statement;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
-            statement.execute("DELETE FROM `Doctors` WHERE `doctorFiscalCode` = '" + fiscalCode + "'");
+            statement.execute("use `tracing-app`");
+            statement.execute("DELETE FROM `doctors` WHERE `doctorFiscalCode` = '" + fiscalCode + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
         }

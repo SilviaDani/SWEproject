@@ -12,7 +12,7 @@ public class AccessDAO extends DAO{
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
             setConnection();
-            rs = statement.executeQuery("SELECT * FROM `Users` where `fiscalCode` =" + "'" + fiscalCode + "'");
+            rs = statement.executeQuery("SELECT * FROM `users` where `fiscalCode` =" + "'" + fiscalCode + "'");
             arrayList = convertResultSet(rs);
         }catch(SQLException e){
             e.printStackTrace();

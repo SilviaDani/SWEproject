@@ -73,14 +73,15 @@ public class ObservationDAOTest {
         }
     }
     public static void deleteObservation(String id){
-        String url = "jdbc:mysql://eu-cdbr-west-03.cleardb.net/heroku_f233c9395cfa736?reconnect=true";
-        String user = "b7911f8c83c59f";
-        String password = "4b132502";
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String user = "admin";
+        String password = "password";
         Connection connection = null;
         Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
+            statement.execute("use `tracing-app`");
             statement.execute("DELETE FROM `events` WHERE `ID` = '" + id + "'");
             statement.execute("DELETE FROM `observations` WHERE `id` = '" + id + "'");
         } catch (Exception e) {
