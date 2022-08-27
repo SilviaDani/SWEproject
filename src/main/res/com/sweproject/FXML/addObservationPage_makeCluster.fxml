@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sweproject.controller.AddObservationPageController">
+    <children>
+        <Label fx:id="welcome_user" alignment="CENTER" prefHeight="74.0" prefWidth="497.0" text="Insert the fiscal code of the other people&#10;you have met" textAlignment="CENTER" wrapText="true">
+            <font>
+                <Font size="24.0" />
+            </font>
+            <VBox.margin>
+                <Insets top="15.0" />
+            </VBox.margin>
+        </Label>
+        <Label fx:id="error_observation" alignment="TOP_LEFT" prefHeight="18.0" prefWidth="346.0" textFill="RED" visible="false">
+            <VBox.margin>
+                <Insets top="15.0" />
+            </VBox.margin>
+        </Label>
+      <VBox fx:id="add_cluster_vbox" alignment="TOP_CENTER" prefHeight="243.0" prefWidth="600.0">
+         <children>
+              <HBox id="hbox1" alignment="CENTER" prefHeight="50.0" prefWidth="600.0">
+               <children>
+                  <Label id="label1" text="1.">
+                     <HBox.margin>
+                        <Insets right="15.0" />
+                     </HBox.margin>
+                  </Label>
+                  <TextField id="text1">
+                     <HBox.margin>
+                        <Insets right="15.0" />
+                     </HBox.margin>
+                  </TextField>
+                  <Button id="add1" fx:id="add_to_cluster" mnemonicParsing="false" onAction="#addToCluster" text="Add">
+                     <HBox.margin>
+                        <Insets right="15.0" />
+                     </HBox.margin>
+                  </Button>
+                  <Button id="remove1" fx:id="remove_from_cluster" mnemonicParsing="false" text="Remove" />
+               </children>
+              </HBox>
+         </children>
+      </VBox>
+      <HBox alignment="CENTER" prefHeight="45.0" prefWidth="600.0">
+         <children>
+            <Button id="back" mnemonicParsing="false" onAction="#backToIntervalSelection" text="Back" textAlignment="CENTER">
+               <padding>
+                  <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
+               </padding>
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin>
+            </Button>
+              <Button id="next" mnemonicParsing="false" onAction="#confirm" text="Confirm" textAlignment="CENTER">
+                  <padding>
+                      <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
+                  </padding>
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin>
+              </Button>
+         </children>
+      </HBox>
+    </children>
+</VBox>

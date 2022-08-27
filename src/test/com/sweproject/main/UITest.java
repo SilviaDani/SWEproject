@@ -96,7 +96,7 @@ public class UITest extends Application {
        logIn(robot);
        FxAssert.verifyThat("#add_observation", LabeledMatchers.hasText("Add observation"));
        FxAssert.verifyThat("#welcome_text", LabeledMatchers.hasText("Welcome "+name));
-       for(int i = 1; i<3; i++) {
+       for(int i = 0; i<3; i++) {
            robot.clickOn("#add_observation");
            robot.clickOn("#observation_type_menu");
            robot.type(KeyCode.DOWN, i+1);
@@ -105,21 +105,31 @@ public class UITest extends Application {
                case 0:
                    robot.clickOn("#next");
                    robot.clickOn("#start_datePicker_menu");
-                   robot.write("01/01/1980");
+                   robot.write("01/01/2021");
                    robot.type(KeyCode.ENTER);
                    robot.clickOn("#start_date_hour");
                    robot.write("0");
                    robot.clickOn("#start_date_minute");
                    robot.write("0");
                    robot.clickOn("#end_datePicker_menu");
-                   robot.write("31/12/1980");
+                   robot.write("31/12/2021");
                    robot.type(KeyCode.ENTER);
                    robot.clickOn("#end_date_hour");
                    robot.write("23");
                    robot.clickOn("#end_date_minute");
                    robot.write("59");
-                   //TODO choose cluster robot.clickOn("#next");
-                   robot.clickOn("#back");
+                   robot.clickOn("#next");
+                   robot.clickOn("#text1");
+                   robot.write("FC1");
+                   robot.clickOn("#add1");
+                   robot.clickOn("#remove1");
+                   for(int j = 1; j < 5; j++){
+                       robot.clickOn("#text"+j);
+                       robot.write("FC"+j);
+                       robot.clickOn("#add"+j);
+                   }
+                   robot.clickOn("#remove3");
+                   robot.clickOn("#next");
                    break;
                case 1:
                    //case not symptomatic
@@ -176,7 +186,7 @@ public class UITest extends Application {
 
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(fiscalCode);
-        assertEquals(3, arrayList.size());//FIXME
+        assertEquals(4, arrayList.size());//FIXME
         IDs = new ArrayList<>();
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
         LocalDateTime endDate = LocalDateTime.of(2021,12,31,23,59);
@@ -184,15 +194,21 @@ public class UITest extends Application {
             IDs.add(arrayList.get(i).get("ID").toString());
             switch (i){//FIXME
                 case 0:
+                    assertEquals(4, ObservationDAOTest.findObservation(arrayList.get(i).get("ID").toString()));
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
+                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
+                    assertEquals("Contact", arrayList.get(i).get("type"));
+                    break;
+                case 1:
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
                     assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
                     assertEquals("Symptoms", arrayList.get(i).get("type"));
                     break;
-                case 1:
+                case 2:
                     assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
                     assertEquals("Symptoms", arrayList.get(i).get("type"));
                     break;
-                case 2:
+                case 3:
                     assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
                     assertEquals("Covid_test-ANTIGEN-false", arrayList.get(i).get("type"));
                     break;

@@ -6,12 +6,16 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,12 +41,16 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private TextField end_date_minute;
     @FXML private TextField trasmission_rate;
     @FXML private Label error_interval;
+    @FXML private VBox add_cluster_vbox;
+    @FXML private Button add_to_cluster;
+    @FXML private Button remove_from_cluster;
     private boolean dateError;
     private static String eventType;
     private static LocalDateTime startDate;
     private static LocalDateTime endDate;
     private static CovidTestType testType;
     private static boolean positiveTest;
+    private ArrayList<String> cluster;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -54,32 +62,37 @@ public class AddObservationPageController extends UIController implements Initia
             test_type_menu.getItems().addAll("Antigen", "Molecular");
             symptomatic_box.setManaged(false);
         }
-        if(select_cluster_menu != null){
+       /* if(select_cluster_menu != null){
             select_cluster_menu.getItems().clear();
             //TODO scegliere quale cluster mostrare in base a quelli relativi all'utente
             select_cluster_menu.getItems().addAll("Cluster1","Cluster2"); //TODO in base ai cluster dell'utente, mostrare i cluster opportuni
+        }*/
+        if(add_cluster_vbox != null){
+            cluster = new ArrayList<>();
+            remove_from_cluster.setOnAction(e->removeFromCluster(1));
+            remove_from_cluster.setDisable(true);
         }
     }
 
 
     public void confirm(ActionEvent event) throws SQLException, IOException {
         //TODO Trovare il notifier opportuno e fare addObservation con i dati presi sopra
-        ArrayList<Subject> subjects = new ArrayList<>();
+        ArrayList<String> subjects = new ArrayList<>();
         Type type = null;
         //FIXME i parametri sono un po'a caso
         switch (eventType){
             case "Contact":
-                // XXX INIZIO CODICE CHE VA RIMOSSO
-                subjects.add(new Subject("NCCNCL00P07D612X","Niccolò","Niccoli"));
-                // XXX FINE CODICE CHE VA RIMOSSO
-                type = new Contact(subjects, Integer.parseInt(trasmission_rate.getText()));
+                subjects = cluster;
+                subjects.add(user.getSubject().getFiscalCode());
+                type = new Contact(subjects);
+                //type = new Contact(subjects, Integer.parseInt(trasmission_rate.getText()));
                 break;
             case "Symptoms":
-                subjects.add(user.getSubject());
+                subjects.add(user.getSubject().getFiscalCode());
                 type = new Symptoms();
                 break;
             case "Covid test":
-                subjects.add(user.getSubject());
+                subjects.add(user.getSubject().getFiscalCode());
                 type = new CovidTest(testType, positiveTest);
                 break;
             default:
@@ -149,7 +162,7 @@ public class AddObservationPageController extends UIController implements Initia
         if(startDate.isBefore(endDate) && !dateError) {
             Parent root;
             if (eventType.equals("Contact")) {
-                root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseCluster.fxml"));
+                root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_makeCluster.fxml"));
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);
                 stage.setScene(scene);
@@ -196,6 +209,60 @@ public class AddObservationPageController extends UIController implements Initia
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
         }
+    }
+
+    public void addToCluster(){//TODO x silvia: fare scorrere se ci sono troppi membri del cluster
+        int i = cluster.size()+1;
+        System.out.println(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
+        add_cluster_vbox.lookup("#add"+i).setDisable(true);
+        add_cluster_vbox.lookup("#remove"+i).setDisable(false);
+        cluster.add(((TextField) add_cluster_vbox.lookup("#text"+i)).getText()); //TODO controllare che il codice fiscale sia realmente esistente(?)
+        i = cluster.size()+1;
+        HBox newSubjectHbox = new HBox();
+        newSubjectHbox.setAlignment(Pos.CENTER);
+        newSubjectHbox.setId("hbox"+i);
+        Label label = new Label(i+".");
+        label.setId("label"+i);
+        newSubjectHbox.getChildren().add(label);
+        TextField textField = new TextField();
+        textField.setId("text"+i);
+        newSubjectHbox.getChildren().add(textField);
+        Button add = new Button();
+        add.setText("Add");
+        add.setId("add"+i);
+        add.setOnAction(e -> addToCluster());
+        Button remove = new Button();
+        remove.setText("Remove");
+        remove.setId("remove"+i);
+        remove.setDisable(true);
+        int finalI = i;
+        remove.setOnAction(e -> removeFromCluster(finalI));
+        newSubjectHbox.getChildren().add(add);
+        newSubjectHbox.getChildren().add(remove);
+        HBox.setMargin(add, new Insets(0, 15, 0, 0));
+        HBox.setMargin(remove, new Insets(0, 15, 0, 0));
+        HBox.setMargin(textField, new Insets(0, 15, 0, 15));
+        newSubjectHbox.setPrefHeight(50);
+        add_cluster_vbox.getChildren().add(newSubjectHbox);
+        System.out.println(cluster.size());
+    }
+
+    public void removeFromCluster(int index){
+        int clSize = cluster.size() + 1;
+        add_cluster_vbox.getChildren().remove(add_cluster_vbox.lookup("#hbox"+index));
+        String removed = cluster.remove(index-1);
+        System.out.println(removed);
+        for(int i = index+1; i <= clSize; i++){
+            int tmp = i-1;
+            add_cluster_vbox.lookup("#hbox"+i).setId("hbox"+tmp);
+            add_cluster_vbox.lookup("#label"+i).setId("label"+tmp);
+            ((Label)add_cluster_vbox.lookup("#label"+tmp)).setText(tmp+".");
+            add_cluster_vbox.lookup("#text"+i).setId("text"+tmp);
+            add_cluster_vbox.lookup("#add"+i).setId("add"+tmp);
+            add_cluster_vbox.lookup("#remove"+i).setId("remove"+tmp);
+            ((Button)add_cluster_vbox.lookup("#remove"+tmp)).setOnAction(e->removeFromCluster(tmp));
+        }
+        System.out.println(cluster.size());
     }
 
     public void validateHourSelected(){

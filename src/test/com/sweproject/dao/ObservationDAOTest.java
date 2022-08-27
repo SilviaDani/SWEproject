@@ -21,9 +21,9 @@ public class ObservationDAOTest {
     @Test
     void AllFunctionsTest_insertWithEndDate() {
         ObservationDAO observationDAO = new ObservationDAO();
-        ArrayList<Subject> subjects = new ArrayList<>();
+        ArrayList<String> subjects = new ArrayList<>();
         String fiscalCode = "RSSMRA80A41H501Y";
-        subjects.add(new Subject(fiscalCode, "Maria", "Rossi"));
+        subjects.add(fiscalCode);
         Type type = new Symptoms();
         LocalDateTime startDate = LocalDateTime.of(1980, 1, 1,0, 0), endDate = LocalDateTime.of(2022, 12, 31, 23, 59);
         try {
@@ -49,9 +49,9 @@ public class ObservationDAOTest {
     @Test
     void AllFunctionsTest_insertWithoutEndDate() {
         ObservationDAO observationDAO = new ObservationDAO();
-        ArrayList<Subject> subjects = new ArrayList<>();
+        ArrayList<String> subjects = new ArrayList<>();
         String fiscalCode = "RSSMRA80A41H501Y";
-        subjects.add(new Subject(fiscalCode, "Maria", "Rossi"));
+        subjects.add(fiscalCode);
         Type type = new Symptoms();
         LocalDateTime startDate = LocalDateTime.of(1980, 1, 1,0, 0);
         try {
@@ -72,6 +72,42 @@ public class ObservationDAOTest {
             fail(e.getMessage());
         }
     }
+    public static int findObservation(String id){
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String user = "admin";
+        String password = "password";
+        Connection connection = null;
+        Statement statement = null;
+        int count = -1;
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            statement = connection.createStatement();
+            statement.execute("use `tracing-app`");
+            ResultSet rs = statement.executeQuery("SELECT count(*) AS `clusterCount` FROM `observations` WHERE `id` = '"+id+"'");
+            rs.next();
+            count = rs.getInt("clusterCount");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Si è verificato un problema durante l'eliminazione delle osservazioni");
+        }finally {
+            if(statement!=null) {
+                try {
+                    statement.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+            if(connection!=null) {
+                try {
+                    connection.close();
+                }catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+        }
+        return count;
+    }
+
     public static void deleteObservation(String id){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
         String user = "admin";

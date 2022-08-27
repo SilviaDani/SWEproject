@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 public class ObservationDAO extends DAO {
 
-    public void insertObservation(ArrayList<Subject> subjects, Type type, LocalDateTime startDate, LocalDateTime endDate){
+    public void insertObservation(ArrayList<String> subjects, Type type, LocalDateTime startDate, LocalDateTime endDate){
         ResultSet rs = null;
         try {
             setConnection();
@@ -23,8 +23,8 @@ public class ObservationDAO extends DAO {
             rs = statement.executeQuery("SELECT max(`id`) as `id` FROM `events`");
             if (rs.next()) {
                 int id = rs.getInt("id");
-                for (Subject sub : subjects)
-                    statement.execute("INSERT INTO `observations` (`id`, `fiscalCode`) VALUES ('" + id + "', '" + sub.getFiscalCode() + "')");
+                for (String sub : subjects)
+                    statement.execute("INSERT INTO `observations` (`id`, `fiscalCode`) VALUES ('" + id + "', '" + sub+ "')");
             } else {
                 System.out.println("Errore");//FIXME
             }

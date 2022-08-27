@@ -19,7 +19,7 @@ public class Notifier {
         observationDAO = new ObservationDAO();
     }
 
-    public void addObservation(ArrayList<Subject> cluster, Type eventType, LocalDateTime startDate, LocalDateTime endDate) throws SQLException {
+    public void addObservation(ArrayList<String> cluster, Type eventType, LocalDateTime startDate, LocalDateTime endDate) throws SQLException {
         /* Observation observation = new Observation(cluster, type, timeRecord);
         subject.addObservation(observation);*/
         observationDAO.insertObservation(cluster, eventType, startDate, endDate);
