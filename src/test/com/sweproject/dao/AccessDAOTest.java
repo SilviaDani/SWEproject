@@ -102,7 +102,7 @@ public class AccessDAOTest {
         }
     }
 
-    void insertDoctor(String fiscalCode, ArrayList<String> patients){
+    public static void insertDoctor(String fiscalCode, ArrayList<String> patients){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
         String user = "admin";
         String password = "password";
@@ -126,7 +126,7 @@ public class AccessDAOTest {
         }
     }
 
-    void deleteDoctor(String fiscalCode){
+    public static void deleteDoctor(String fiscalCode){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
         String user = "admin";
         String password = "password";

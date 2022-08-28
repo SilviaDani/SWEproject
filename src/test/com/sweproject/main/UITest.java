@@ -12,8 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.testfx.api.FxAssert;
@@ -34,11 +33,9 @@ import java.util.HashMap;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(ApplicationExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UITest extends Application {
     private ResultSet resultSet;
-    private static String fiscalCode;
-    private static String password;
-    private static String name;
     private static ArrayList<String> IDs;
 
     /**
@@ -58,44 +55,51 @@ public class UITest extends Application {
     /**
      * @param robot - Will be injected by the test runner.
      */
-    @Test
-    void UC_sign_up(FxRobot robot){
-        //click on "sign up" button
-        FxAssert.verifyThat("#sign_up", LabeledMatchers.hasText("Sign up"));
-        robot.clickOn("#sign_up");
 
-        fiscalCode = "RSSMRA80A41H501Y";
-        name = "Maria";
-        String surname = "Rossi";
-        password = "password";
+    void signUp(FxRobot robot, String FC, String firstName, String lastName, String psw){
+        robot.clickOn("#sign_up");
 
         //fill the fields
         robot.clickOn("#fiscal_code");
-        robot.write(fiscalCode);
+        robot.write(FC);
         robot.clickOn("#name");
-        robot.write(name);
+        robot.write(firstName);
         robot.clickOn("#surname");
-        robot.write(surname);
+        robot.write(lastName);
         robot.clickOn("#password");
-        robot.write(password);
+        robot.write(psw);
         robot.clickOn("#confirm_password");
-        robot.write(password);
+        robot.write(psw);
         robot.clickOn("#sign_up");
-
-        AccessDAO accessDAO = new AccessDAO();
-        ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectUser(fiscalCode);
-        assertNotEquals(0, arrayList.size());
-        assertEquals(fiscalCode, arrayList.get(0).get("fiscalCode"));
-        assertEquals(name, arrayList.get(0).get("firstName"));
-        assertEquals(surname, arrayList.get(0).get("surname"));
-        assertEquals(BCrypt.hashpw(password, arrayList.get(0).get("salt").toString()), arrayList.get(0).get("psw"));
     }
 
     @Test
+    @Order(1)
+    void UC_sign_up(FxRobot robot){
+        //click on "sign up" button
+        FxAssert.verifyThat("#sign_up", LabeledMatchers.hasText("Sign up"));
+        String FC = "RSSMRA80A41H501Y";
+        String    firstName = "Maria";
+        String    lastName = "Rossi";
+        String    psw = "password";
+
+        signUp(robot, FC,firstName, lastName, psw);
+
+        AccessDAO accessDAO = new AccessDAO();
+        ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectUser(FC);
+        assertNotEquals(0, arrayList.size());
+        assertEquals(FC, arrayList.get(0).get("fiscalCode"));
+        assertEquals(firstName, arrayList.get(0).get("firstName"));
+        assertEquals(lastName, arrayList.get(0).get("surname"));
+        assertEquals(BCrypt.hashpw(psw, arrayList.get(0).get("salt").toString()), arrayList.get(0).get("psw"));
+    }
+
+    @Test
+    @Order(2)
     void UC_add_observation(FxRobot robot){
-       logIn(robot);
+       logIn(robot, "RSSMRA80A41H501Y", "password", "Maria");
        FxAssert.verifyThat("#add_observation", LabeledMatchers.hasText("Add observation"));
-       FxAssert.verifyThat("#welcome_text", LabeledMatchers.hasText("Welcome "+name));
+       FxAssert.verifyThat("#welcome_text", LabeledMatchers.hasText("Welcome Maria"));
        for(int i = 0; i<3; i++) {
            robot.clickOn("#add_observation");
            robot.clickOn("#observation_type_menu");
@@ -185,7 +189,7 @@ public class UITest extends Application {
        }
 
         ObservationDAO observationDAO = new ObservationDAO();
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(fiscalCode);
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations("RSSMRA80A41H501Y");
         assertEquals(4, arrayList.size());//FIXME
         IDs = new ArrayList<>();
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
@@ -218,14 +222,35 @@ public class UITest extends Application {
         }
     }
 
-    private void logIn(FxRobot robot){
+    @Test
+    @Order(3)
+    void UC_changeObservationRelevance(FxRobot robot){
+        ArrayList<String> patients = new ArrayList<>();
+        String patientCode = "RSSMRA80A41H501Y";
+        patients.add(patientCode);
+        AccessDAOTest.insertDoctor("DoctorFiscalCode", patients);
+        ObservationDAO observationDAO = new ObservationDAO();
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(patientCode);
+        assertEquals(4, arrayList.size());
+        signUp(robot, "DoctorFiscalCode", "DoctorName", "DoctorSurname", "password");
+        logIn(robot, "DoctorFiscalCode", "password", "DoctorName");
+        robot.clickOn("#reserved_area");
+        robot.clickOn("#listView");
+        robot.clickOn("#observations");
+        arrayList = observationDAO.getRelevantObservations(patientCode);
+        assertEquals(3, arrayList.size());
+
+
+    }
+
+    private void logIn(FxRobot robot, String FC, String psw, String name){
         FxAssert.verifyThat("#log_in", LabeledMatchers.hasText("Log in"));
         robot.clickOn("#log_in");
 
         robot.clickOn("#fiscal_code");
-        robot.write(fiscalCode);
+        robot.write(FC);
         robot.clickOn("#password");
-        robot.write(password);
+        robot.write(psw);
         robot.clickOn("#log_in");
     }
 
@@ -235,7 +260,9 @@ public class UITest extends Application {
     static void close(){
         for(String id : IDs)
             ObservationDAOTest.deleteObservation(id);
-        AccessDAOTest.deleteUser(fiscalCode);
+        AccessDAOTest.deleteUser("RSSMRA80A41H501Y");
+        AccessDAOTest.deleteUser("DoctorFiscalCode");
+        AccessDAOTest.deleteDoctor("DoctorFiscalCode");
         Platform.exit();
     }
 

@@ -16,7 +16,7 @@
             </font>
         </Label>
         <ListView fx:id="observationsId" prefWidth="20" visible="false" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-        <ListView fx:id="observations" onMouseClicked="#handleObservationClick" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <ListView id = "observations" fx:id="observations" onMouseClicked="#handleObservationClick" GridPane.columnIndex="1" GridPane.rowIndex="3" />
         <Button mnemonicParsing="false" onAction="#fillPrescription" prefHeight="26.0" prefWidth="151.0" text="Fill prescription" GridPane.rowIndex="5" />
     </children>
    <columnConstraints>

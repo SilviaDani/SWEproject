@@ -17,6 +17,6 @@
                 <Font size="24.0" />
             </font>
         </Label>
-        <ListView fx:id="patients" GridPane.rowIndex="3" onMouseClicked="#handlePatientClick" />
+        <ListView fx:id="patients" GridPane.rowIndex="3" onMouseClicked="#handlePatientClick" id="listView"/>
     </children>
 </GridPane>
