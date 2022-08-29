@@ -61,4 +61,41 @@ public class ObservationDAO extends DAO {
             closeConnection();
         }
     }
+
+    public ArrayList<HashMap<String, Object>> getObservations(String FC){
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        try {
+            setConnection();
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = " + "'" + FC + "'");
+            arrayList = convertResultSet(rs);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
+
+    public ArrayList<HashMap<String, Object>> getRelatedObservations(String FC, String id){
+        //dato un FC cerca tutti i cluster dove tale FC compare e restituisce le osservazioni dei membri dei cluster
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        try {
+            arrayList = new ArrayList<>();
+            setConnection();
+            rs = statement.executeQuery("SELECT `fiscalCode` FROM `observations` where `fiscalCode` != '"+ FC +"' and `id` = '" + id+ "'");
+            ArrayList<HashMap<String, Object>> fiscalCodes = convertResultSet(rs);
+            for(int i = 0; i < fiscalCodes.size(); i++){
+                ArrayList<HashMap<String, Object>> obs = getObservations(fiscalCodes.get(i).get("fiscalCode").toString());
+                if(obs != null)
+                    arrayList.addAll(obs);
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
 }
