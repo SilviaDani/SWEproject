@@ -64,4 +64,14 @@ public class UserPageController extends UIController implements Initializable{
             System.out.println("Errore in UserPageController.initialize()");
         }
     }
+
+    public void analysisPage(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/analysisPage.fxml"));
+        Parent root = loader.load();
+
+        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
 }

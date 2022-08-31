@@ -49,9 +49,11 @@ public class STPNAnalyzer {
                 //TODO model covid test
             }
         }
+        System.out.println("Model created");
     }
 
     public void analyze(){
         //TODO
+        System.out.println("Sto analizzando");
     }
 }

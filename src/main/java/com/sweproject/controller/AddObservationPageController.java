@@ -211,7 +211,7 @@ public class AddObservationPageController extends UIController implements Initia
         }
     }
 
-    public void addToCluster(){//TODO x silvia: fare scorrere se ci sono troppi membri del cluster
+    public void addToCluster(){//TODO x Silvia: fare scorrere se ci sono troppi membri del cluster
         int i = cluster.size()+1;
         System.out.println(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
         add_cluster_vbox.lookup("#add"+i).setDisable(true);

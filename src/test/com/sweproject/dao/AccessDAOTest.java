@@ -123,15 +123,16 @@ public class AccessDAOTest {
         }
         String user = prop.getProperty("db.user");
         String password = prop.getProperty("db.password");
-        Connection connection;
-        Statement statement;
+        Connection connection = null;
+        Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
             statement.execute("use `tracing-app`");
+            Statement finalStatement = statement;
             patients.forEach((patient) -> {
                 try {
-                    statement.execute("INSERT INTO `doctors` (`doctorFiscalCode`, `patientFiscalCode`) VALUES ('" + fiscalCode + "', '" + patient + "')");
+                    finalStatement.execute("INSERT INTO `doctors` (`doctorFiscalCode`, `patientFiscalCode`) VALUES ('" + fiscalCode + "', '" + patient + "')");
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                     fail(throwables.getMessage());
@@ -140,15 +141,38 @@ public class AccessDAOTest {
 
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
+        }finally {
+            if(statement!=null) {
+                try {
+                    statement.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+            if(connection!=null) {
+                try {
+                    connection.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+
         }
     }
 
     public static void deleteDoctor(String fiscalCode){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "user";
-        String password = "password";
-        Connection connection;
-        Statement statement;
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
+        Connection connection = null;
+        Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
@@ -156,6 +180,22 @@ public class AccessDAOTest {
             statement.execute("DELETE FROM `doctors` WHERE `doctorFiscalCode` = '" + fiscalCode + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
+        }finally {
+            if(statement!=null) {
+                try {
+                    statement.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+            if(connection!=null) {
+                try {
+                    connection.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+
         }
     }
 }
