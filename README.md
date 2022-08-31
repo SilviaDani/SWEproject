@@ -1,0 +1,1 @@
+You have to rename [database_login.config.example](database_login.config.example) to **database_login.config** and then edit its content replacing **user** and **password** with their actual values.

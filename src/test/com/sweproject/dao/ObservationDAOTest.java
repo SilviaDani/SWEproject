@@ -6,12 +6,15 @@ import com.sweproject.model.Type;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.transform.Result;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,8 +77,15 @@ public class ObservationDAOTest {
     }
     public static int findObservation(String id){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "admin";
-        String password = "password";
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         int count = -1;
@@ -110,8 +120,15 @@ public class ObservationDAOTest {
 
     public static void deleteObservation(String id){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "admin";
-        String password = "password";
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         try {

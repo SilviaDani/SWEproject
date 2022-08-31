@@ -2,17 +2,22 @@ package com.sweproject.dao;
 
 import com.sweproject.model.Observation;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOError;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 public class DAO {
     protected String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-    protected String user = "admin";
-    protected String password = "password";
     protected Connection connection;
     protected Statement statement;
+    protected static String user;
+    protected static String password;
 
 
     protected void setConnection(){
@@ -25,8 +30,18 @@ public class DAO {
         }
     }
     public DAO() {
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        user = prop.getProperty("db.user");
+        password = prop.getProperty("db.password");
         setConnection();
     }
+
 
     protected void closeConnection(ResultSet resultSet){
         if(resultSet!=null) {

@@ -3,9 +3,12 @@ package com.sweproject.dao;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -72,8 +75,15 @@ public class AccessDAOTest {
 
     public static void deleteUser(String fiscalCode) {
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "admin";
-        String password = "password";
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         try {
@@ -104,8 +114,15 @@ public class AccessDAOTest {
 
     public static void insertDoctor(String fiscalCode, ArrayList<String> patients){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "admin";
-        String password = "password";
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
         Connection connection;
         Statement statement;
         try {
@@ -128,7 +145,7 @@ public class AccessDAOTest {
 
     public static void deleteDoctor(String fiscalCode){
         String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-        String user = "admin";
+        String user = "user";
         String password = "password";
         Connection connection;
         Statement statement;
