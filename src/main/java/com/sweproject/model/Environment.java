@@ -20,8 +20,12 @@ public class Environment extends Type{
         //TODO mettere valori plausibili
     }
 
+    public float getRiskLevel(){
+        return riskLevel;
+    }
+
     @Override
     public String getName() {
-        return "Environment "+ riskLevel;
+        return "Environment";
     }
 }

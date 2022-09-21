@@ -4,6 +4,8 @@ import com.sweproject.dao.AccessDAO;
 import com.sweproject.dao.AccessDAOTest;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
+import com.sweproject.model.Environment;
+import com.sweproject.model.Type;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -136,6 +138,154 @@ public class UITest extends Application {
                    robot.clickOn("#next");
                    break;
                case 1:
+                   //low risk without mask
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 1);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+
+                   //low risk with mask
+                   robot.clickOn("#add_observation");
+                   robot.clickOn("#observation_type_menu");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 1);
+                   robot.clickOn("#mask_used");
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+
+                   //medium risk without mask
+                   robot.clickOn("#add_observation");
+                   robot.clickOn("#observation_type_menu");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+
+                   //medium risk with mask
+                   robot.clickOn("#add_observation");
+                   robot.clickOn("#observation_type_menu");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.clickOn("#mask_used");
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+
+                   //high risk without mask
+                   robot.clickOn("#add_observation");
+                   robot.clickOn("#observation_type_menu");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 3);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+
+                   //high risk with mask
+                   robot.clickOn("#add_observation");
+                   robot.clickOn("#observation_type_menu");
+                   robot.type(KeyCode.DOWN, 2);
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 3);
+                   robot.clickOn("#mask_used");
+                   robot.clickOn("#next");
+                   robot.clickOn("#start_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#start_date_hour");
+                   robot.write("0");
+                   robot.clickOn("#start_date_minute");
+                   robot.write("0");
+                   robot.clickOn("#end_datePicker_menu");
+                   robot.write("01/01/2021");
+                   robot.type(KeyCode.ENTER);
+                   robot.clickOn("#end_date_hour");
+                   robot.write("1");
+                   robot.clickOn("#end_date_minute");
+                   robot.write("30");
+                   robot.clickOn("#next");
+                   break;
+
+               case 2:
                    //case not symptomatic
                    robot.clickOn("#next");
                    robot.clickOn("#start_datePicker_menu");
@@ -157,7 +307,7 @@ public class UITest extends Application {
                    //case symptomatic
                    robot.clickOn("#add_observation");
                    robot.clickOn("#observation_type_menu");
-                   robot.type(KeyCode.DOWN, i+1);
+                   robot.type(KeyCode.DOWN, 3);
                    robot.type(KeyCode.ENTER);
                    robot.clickOn("#still_symptomatic");
                    robot.clickOn("#next");
@@ -170,7 +320,7 @@ public class UITest extends Application {
                    robot.write("59");
                    robot.clickOn("#next");
                    break;
-               case 2:
+               case 3:
                    robot.clickOn("#test_type_menu");
                    robot.type(KeyCode.DOWN);robot.type(KeyCode.ENTER);
                    robot.clickOn("#next");
@@ -190,10 +340,11 @@ public class UITest extends Application {
 
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations("RSSMRA80A41H501Y");
-        assertEquals(4, arrayList.size());//FIXME
+        assertEquals(9, arrayList.size());//FIXME
         IDs = new ArrayList<>();
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
         LocalDateTime endDate = LocalDateTime.of(2021,12,31,23,59);
+        LocalDateTime end_date = LocalDateTime.of(2021, 1, 1, 1, 30);
         for(int i = 0; i<arrayList.size(); i++){
             IDs.add(arrayList.get(i).get("ID").toString());
             switch (i){//FIXME
@@ -205,16 +356,60 @@ public class UITest extends Application {
                     break;
                 case 1:
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
-                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
-                    assertEquals("Symptoms", arrayList.get(i).get("type"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i).get("type"));
+                    Environment type1 = (Environment) arrayList.get(i).get("type");
+                    float risk1 = type1.getRiskLevel();
+
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+1).get("start_date"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+1).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i+1).get("type"));
+                    Environment type2 = (Environment) arrayList.get(i+1).get("type");
+                    float risk2 = type2.getRiskLevel();
+                    assertTrue(risk1 > risk2);
+
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+2).get("start_date"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+2).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i+2).get("type"));
+                    Environment type3 = (Environment) arrayList.get(i+2).get("type");
+                    float risk3 = type3.getRiskLevel();
+                    assertTrue(risk3 > risk1);
+
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+3).get("start_date"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+3).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i+3).get("type"));
+                    Environment type4 = (Environment) arrayList.get(i+3).get("type");
+                    float risk4 = type4.getRiskLevel();
+                    assertTrue(risk3 > risk4 && risk4 > risk2);
+
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+4).get("start_date"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+4).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i+4).get("type"));
+                    Environment type5 = (Environment) arrayList.get(i+4).get("type");
+                    float risk5 = type5.getRiskLevel();
+                    assertTrue(risk5 > risk3);
+
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+5).get("start_date"));
+                    assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+5).get("end_date"));
+                    assertEquals("Environment", arrayList.get(i+5).get("type"));
+                    Environment type6 = (Environment) arrayList.get(i+5).get("type");
+                    float risk6 = type6.getRiskLevel();
+                    assertTrue(risk5 > risk6 && risk6 > risk4);
+
                     break;
+
                 case 2:
-                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
-                    assertEquals("Symptoms", arrayList.get(i).get("type"));
+                    assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(7).get("start_date"));
+                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(7).get("end_date"));
+                    assertEquals("Symptoms", arrayList.get(7).get("type"));
                     break;
                 case 3:
-                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
-                    assertEquals("Covid_test-ANTIGEN-false", arrayList.get(i).get("type"));
+                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(8).get("start_date"));
+                    assertEquals("Symptoms", arrayList.get(8).get("type"));
+                    break;
+                case 4:
+                    assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(9).get("start_date"));
+                    assertEquals("Covid_test-ANTIGEN-false", arrayList.get(9).get("type"));
                     break;
                 default:
                     fail("Non dovrebbe passare da qui");
@@ -231,7 +426,7 @@ public class UITest extends Application {
         AccessDAOTest.insertDoctor("DoctorFiscalCode", patients);
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(patientCode);
-        assertEquals(4, arrayList.size());
+        assertEquals(9, arrayList.size());
         signUp(robot, "DoctorFiscalCode", "DoctorName", "DoctorSurname", "password");
         logIn(robot, "DoctorFiscalCode", "password", "DoctorName");
         robot.clickOn("#reserved_area");
