@@ -16,7 +16,10 @@ public class ObservationDAO extends DAO {
             setConnection();
             if (endDate == null) {
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "')");
-            } else {
+            } else if(type.getName().equals("Environment")){
+                statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`, `risk_level`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "','" + ((Environment)type).getRiskLevel()+"')");
+            }
+            else{
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "')");
             }
 

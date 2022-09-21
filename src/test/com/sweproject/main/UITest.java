@@ -102,7 +102,7 @@ public class UITest extends Application {
        logIn(robot, "RSSMRA80A41H501Y", "password", "Maria");
        FxAssert.verifyThat("#add_observation", LabeledMatchers.hasText("Add observation"));
        FxAssert.verifyThat("#welcome_text", LabeledMatchers.hasText("Welcome Maria"));
-       for(int i = 0; i<3; i++) {
+       for(int i = 0; i<4; i++) {
            robot.clickOn("#add_observation");
            robot.clickOn("#observation_type_menu");
            robot.type(KeyCode.DOWN, i+1);
@@ -340,12 +340,12 @@ public class UITest extends Application {
 
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations("RSSMRA80A41H501Y");
-        assertEquals(9, arrayList.size());//FIXME
+        assertEquals(10, arrayList.size());//FIXME
         IDs = new ArrayList<>();
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
         LocalDateTime endDate = LocalDateTime.of(2021,12,31,23,59);
         LocalDateTime end_date = LocalDateTime.of(2021, 1, 1, 1, 30);
-        for(int i = 0; i<arrayList.size(); i++){
+        for(int i = 0; i<5; i++){
             IDs.add(arrayList.get(i).get("ID").toString());
             switch (i){//FIXME
                 case 0:
@@ -358,42 +358,36 @@ public class UITest extends Application {
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
                     assertEquals("Environment", arrayList.get(i).get("type"));
-                    Environment type1 = (Environment) arrayList.get(i).get("type");
-                    float risk1 = type1.getRiskLevel();
+                    float risk1 = (float) arrayList.get(i).get("risk_level");
 
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+1).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+1).get("end_date"));
                     assertEquals("Environment", arrayList.get(i+1).get("type"));
-                    Environment type2 = (Environment) arrayList.get(i+1).get("type");
-                    float risk2 = type2.getRiskLevel();
+                    float risk2 = (float) arrayList.get(i+1).get("risk_level");
                     assertTrue(risk1 > risk2);
 
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+2).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+2).get("end_date"));
                     assertEquals("Environment", arrayList.get(i+2).get("type"));
-                    Environment type3 = (Environment) arrayList.get(i+2).get("type");
-                    float risk3 = type3.getRiskLevel();
+                    float risk3 = (float) arrayList.get(i+2).get("risk_level");
                     assertTrue(risk3 > risk1);
 
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+3).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+3).get("end_date"));
                     assertEquals("Environment", arrayList.get(i+3).get("type"));
-                    Environment type4 = (Environment) arrayList.get(i+3).get("type");
-                    float risk4 = type4.getRiskLevel();
+                    float risk4 = (float) arrayList.get(i+3).get("risk_level");
                     assertTrue(risk3 > risk4 && risk4 > risk2);
 
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+4).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+4).get("end_date"));
                     assertEquals("Environment", arrayList.get(i+4).get("type"));
-                    Environment type5 = (Environment) arrayList.get(i+4).get("type");
-                    float risk5 = type5.getRiskLevel();
+                    float risk5 = (float) arrayList.get(i+4).get("risk_level");
                     assertTrue(risk5 > risk3);
 
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+5).get("start_date"));
                     assertEquals(end_date.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i+5).get("end_date"));
                     assertEquals("Environment", arrayList.get(i+5).get("type"));
-                    Environment type6 = (Environment) arrayList.get(i+5).get("type");
-                    float risk6 = type6.getRiskLevel();
+                    float risk6 = (float) arrayList.get(i+5).get("risk_level");
                     assertTrue(risk5 > risk6 && risk6 > risk4);
 
                     break;
@@ -426,14 +420,14 @@ public class UITest extends Application {
         AccessDAOTest.insertDoctor("DoctorFiscalCode", patients);
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(patientCode);
-        assertEquals(9, arrayList.size());
+        assertEquals(10, arrayList.size());
         signUp(robot, "DoctorFiscalCode", "DoctorName", "DoctorSurname", "password");
         logIn(robot, "DoctorFiscalCode", "password", "DoctorName");
         robot.clickOn("#reserved_area");
         robot.clickOn("#listView");
         robot.clickOn("#observations");
         arrayList = observationDAO.getRelevantObservations(patientCode);
-        assertEquals(3, arrayList.size());
+        assertEquals(9, arrayList.size());
     }
 
     private void logIn(FxRobot robot, String FC, String psw, String name){
