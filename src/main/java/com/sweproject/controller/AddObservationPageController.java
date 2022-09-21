@@ -1,3 +1,5 @@
+//TODO mettere in modo ordinato la checkbox della mascherina (NICCOLÒ)
+
 package com.sweproject.controller;
 
 import com.sweproject.dao.ObservationDAO;
@@ -33,6 +35,9 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private CheckBox positive_checkbox;
     @FXML private HBox symptomatic_box;
     @FXML private CheckBox symptomatic_checkbox;
+    @FXML private HBox environment_box;
+    @FXML private ComboBox risk_combobox;
+    @FXML private CheckBox mask_checkbox;
     @FXML private DatePicker start_datePicker_menu;
     @FXML private DatePicker end_datePicker_menu;
     @FXML private TextField start_date_hour;
@@ -51,22 +56,23 @@ public class AddObservationPageController extends UIController implements Initia
     private static CovidTestType testType;
     private static boolean positiveTest;
     private ArrayList<String> cluster;
+    private static boolean mask_used;
+    private static String risk_level;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if(observation_type_menu != null) {
             observation_type_menu.getItems().clear();
-            observation_type_menu.getItems().addAll("Contact", "Symptoms", "Covid test");
+            observation_type_menu.getItems().addAll("Contact with people", "Contact with environment", "Symptoms", "Covid test");
             test_type_box.setManaged(false);
             test_type_menu.getItems().clear();
             test_type_menu.getItems().addAll("Antigen", "Molecular");
             symptomatic_box.setManaged(false);
+            risk_combobox.getItems().clear();
+            risk_combobox.getItems().addAll("Low", "Medium", "High");
+            environment_box.setManaged(false);
         }
-       /* if(select_cluster_menu != null){
-            select_cluster_menu.getItems().clear();
-            //TODO scegliere quale cluster mostrare in base a quelli relativi all'utente
-            select_cluster_menu.getItems().addAll("Cluster1","Cluster2"); //TODO in base ai cluster dell'utente, mostrare i cluster opportuni
-        }*/
+       
         if(add_cluster_vbox != null){
             cluster = new ArrayList<>();
             remove_from_cluster.setOnAction(e->removeFromCluster(1));
@@ -76,16 +82,18 @@ public class AddObservationPageController extends UIController implements Initia
 
 
     public void confirm(ActionEvent event) throws SQLException, IOException {
-        //TODO Trovare il notifier opportuno e fare addObservation con i dati presi sopra
         ArrayList<String> subjects = new ArrayList<>();
         Type type = null;
-        //FIXME i parametri sono un po'a caso
         switch (eventType){
-            case "Contact":
+            case "Contact with people":
                 subjects = cluster;
                 subjects.add(user.getSubject().getFiscalCode());
                 type = new Contact(subjects);
                 //type = new Contact(subjects, Integer.parseInt(trasmission_rate.getText()));
+                break;
+            case "Contact with environment":
+                subjects.add(user.getSubject().getFiscalCode());
+                type = new Environment(mask_used, risk_level, startDate, endDate);
                 break;
             case "Symptoms":
                 subjects.add(user.getSubject().getFiscalCode());
@@ -106,7 +114,6 @@ public class AddObservationPageController extends UIController implements Initia
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
-        //TODO aggiungere feedback visivo
         System.out.println("Aggiunta una nuova osservazione sul database");
     }
 
@@ -132,8 +139,19 @@ public class AddObservationPageController extends UIController implements Initia
                 if (symptomatic_checkbox.isSelected())
                     isSymptomatic = true;
             }
+            if (environment_box.isVisible()) {
+                if (risk_combobox.getValue() != null)
+                    risk_level = risk_combobox.getValue().toString();
+                else {
+                    throw new NullPointerException("Please select a risk level");
+                }
+                if (mask_checkbox.isSelected())
+                    mask_used = true;
+                else
+                    mask_used = false;
+            }
             Parent root;
-            if (eventType.equals("Contact") || (eventType.equals("Symptoms") && !isSymptomatic)) {
+            if (eventType.equals("Contact with people") || (eventType.equals("Symptoms") && !isSymptomatic) || eventType.equals("Contact with environment")) {
                 root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseInterval.fxml"));
             } else {
                 root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_chooseDate.fxml"));
@@ -161,7 +179,7 @@ public class AddObservationPageController extends UIController implements Initia
         endDate = end_datePicker_menu.getValue().atTime(Integer.parseInt(end_date_hour.getText()), Integer.parseInt(end_date_minute.getText()));
         if(startDate.isBefore(endDate) && !dateError) {
             Parent root;
-            if (eventType.equals("Contact")) {
+            if (eventType.equals("Contact with people")) {
                 root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/addObservationPage_makeCluster.fxml"));
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 scene = new Scene(root);
@@ -198,16 +216,29 @@ public class AddObservationPageController extends UIController implements Initia
             test_type_box.setManaged(true);
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
-        }else if(observation_type_menu.getValue().toString().equals("Symptoms")){
+            environment_box.setManaged(false);
+            environment_box.setVisible(false);
+        }else if(observation_type_menu.getValue().toString().equals("Symptoms")) {
             symptomatic_box.setVisible(true);
             symptomatic_box.setManaged(true);
             test_type_box.setVisible(false);
             test_type_box.setManaged(false);
+            environment_box.setManaged(false);
+            environment_box.setVisible(false);
+        }else if (observation_type_menu.getValue().toString().equals("Contact with environment")) {
+            test_type_box.setVisible(false);
+            test_type_box.setManaged(false);
+            symptomatic_box.setVisible(false);
+            symptomatic_box.setManaged(false);
+            environment_box.setManaged(true);
+            environment_box.setVisible(true);
         }else {
             test_type_box.setVisible(false);
             test_type_box.setManaged(false);
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
+            environment_box.setManaged(false);
+            environment_box.setVisible(false);
         }
     }
 
@@ -286,6 +317,7 @@ public class AddObservationPageController extends UIController implements Initia
         else
             error_interval.setVisible(false);
     }
+
     public void validateMinutesSelected(){
         try{
         int start_minutes = start_date_minute != null ? Integer.parseInt(start_date_minute.getText()) : 0;
@@ -306,5 +338,9 @@ public class AddObservationPageController extends UIController implements Initia
             error_interval.setVisible(true);
         else
             error_interval.setVisible(false);
+    }
+
+    public void checkRiskLevel(ActionEvent actionEvent) {
+
     }
 }

@@ -54,6 +54,24 @@
             <CheckBox fx:id="symptomatic_checkbox" mnemonicParsing="false" text="Still symptomatic?" id="still_symptomatic"/>
          </children>
       </HBox>
+      <HBox fx:id="environment_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
+         <children>
+             <Label text="Choose risk level of the environment">
+                 <HBox.margin>
+                     <Insets right="10.0" />
+                 </HBox.margin>
+             </Label>
+
+
+
+
+             <ComboBox fx:id="risk_combobox" onAction="#checkRiskLevel" prefHeight="26.0" prefWidth="150.0" id="risk_combobox"/>
+
+
+
+             <CheckBox fx:id="mask_checkbox" mnemonicParsing="false" text="Were you wearing a mask?" id="mask_used"/>
+         </children>
+      </HBox>
       <Button mnemonicParsing="false" onAction="#confirmType" text="Next" textAlignment="CENTER" id="next">
          <padding>
             <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />

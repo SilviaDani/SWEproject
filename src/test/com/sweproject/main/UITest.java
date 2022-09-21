@@ -239,8 +239,6 @@ public class UITest extends Application {
         robot.clickOn("#observations");
         arrayList = observationDAO.getRelevantObservations(patientCode);
         assertEquals(3, arrayList.size());
-
-
     }
 
     private void logIn(FxRobot robot, String FC, String psw, String name){
