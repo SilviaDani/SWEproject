@@ -345,8 +345,10 @@ public class UITest extends Application {
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
         LocalDateTime endDate = LocalDateTime.of(2021,12,31,23,59);
         LocalDateTime end_date = LocalDateTime.of(2021, 1, 1, 1, 30);
-        for(int i = 0; i<5; i++){
+        for(int i = 0; i<10; i++) {
             IDs.add(arrayList.get(i).get("ID").toString());
+        }
+        for(int i = 0; i<5; i++){
             switch (i){//FIXME
                 case 0:
                     assertEquals(4, ObservationDAOTest.findObservation(arrayList.get(i).get("ID").toString()));
