@@ -1,10 +1,28 @@
 package com.sweproject.main;
 
 import com.sweproject.dao.ObservationDAO;
+import org.oristool.math.OmegaBigDecimal;
+import org.oristool.math.domain.DBMZone;
+import org.oristool.math.expression.Expolynomial;
+import org.oristool.math.expression.Variable;
+import org.oristool.math.function.GEN;
+import org.oristool.math.function.PartitionedGEN;
+import org.oristool.models.pn.Priority;
+import org.oristool.models.stpn.MarkingExpr;
+import org.oristool.models.stpn.TransientSolution;
+import org.oristool.models.stpn.TransientSolutionViewer;
+import org.oristool.models.stpn.trans.RegTransient;
+import org.oristool.models.stpn.trees.DeterministicEnablingState;
+import org.oristool.models.stpn.trees.StochasticTransitionFeature;
+import org.oristool.petrinet.Marking;
 import org.oristool.petrinet.PetriNet;
+import org.oristool.petrinet.Place;
 import org.oristool.petrinet.Transition;
-
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 
 public class STPNAnalyzer {
@@ -24,36 +42,161 @@ public class STPNAnalyzer {
         return false;
     }
 
-    public void makeModel(String fiscalCode){
+    public void makeModel(String fiscalCode, LocalDateTime initialDate){
         PetriNet pn = new PetriNet();
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getObservations(fiscalCode);
-        ArrayList<HashMap<String, Object>> obs = new ArrayList<>();
-        for(int i = 0; i < arrayList.size(); i++){
-            if (arrayList.get(i).get("type").toString().equals("Contact") && !haveAlreadyBeenAnalized(arrayList.get(i).get("fiscalCode").toString())) {
-                 obs.addAll(observationDAO.getRelatedObservations(arrayList.get(i).get("fiscalCode").toString(), arrayList.get(i).get("id").toString()));
-            }
+        //retrieving data from DB
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
+        //creating the central node
+        Place contagious = pn.addPlace("A_contagio");
+        Marking m = new Marking();
+        buildContagionEvolutionSection(pn,m,contagious);
+        //making first module
+        Place initialCondition = pn.addPlace("Condizione_iniziale");
+        m.addTokens(initialCondition, 1);
+        Place firstContact = pn.addPlace("Contatto_1");
+        Transition t0 = pn.addTransition("t0");
+        pn.addPrecondition(initialCondition, t0);
+        pn.addPostcondition(t0, firstContact);
+        long delta = ChronoUnit.MINUTES.between(initialDate, (LocalDateTime)arrayList.get(0).get("start_date"));
+        t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
+        Transition effective0 = pn.addTransition("Efficace_0");
+        pn.addPrecondition(firstContact, effective0);
+        pn.addPostcondition(effective0, contagious);
+        effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+        Place lastPlace = firstContact;
+        for(int i = 1; i<arrayList.size()-1;i++){
+            Place iCondition = pn.addPlace("Condizione_"+i);
+            Transition uneffectiveLast = pn.addTransition("Non-efficace"+ i);
+            pn.addPrecondition(lastPlace, uneffectiveLast);
+            pn.addPostcondition(uneffectiveLast, iCondition);
+            uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+            Place iContact = pn.addPlace("Contatto_"+i);
+            Transition ti = pn.addTransition("t"+i);
+            pn.addPrecondition(iCondition, ti);
+            pn.addPostcondition(ti,iContact);
+            delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(i-1).get("start_date"),(LocalDateTime)arrayList.get(i).get("start_date"));
+            ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
+            Transition effectiveLast = pn.addTransition("Efficace_"+i);
+            pn.addPrecondition(iContact, effectiveLast);
+            pn.addPostcondition(effectiveLast, contagious);
+            effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+            lastPlace = iContact;
         }
-        arrayList.addAll(obs);
-        for(int i = 0; i<arrayList.size(); i++){
-            System.out.println(arrayList.get(i).get("fiscalCode")+" "+arrayList.get(i).get("type"));
-            if (arrayList.get(i).get("type").toString().equals("Contact")){
-                Transition transitionContact = pn.addTransition("transition"+i);
-                //transitionContact.addFeature();
-                //pn.addPrecondition(,transitionContact);
-                //pn.addPostcondition(transitionContact, );
-                //TODO model contact as transition(?)
-            }
-            else if (arrayList.get(i).get("type").toString().equals("Symptoms")){
-                //TODO model symptoms
-            }else {
-                //TODO model covid test
-            }
+        //making the last module
+        if(arrayList.size() > 1){
+            int index = arrayList.size();
+            Place finalCondition = pn.addPlace("Condizione_"+index);
+            Transition uneffectiveLast1 = pn.addTransition("Non-efficace"+ (index - 1));
+            pn.addPrecondition(lastPlace, uneffectiveLast1);
+            pn.addPostcondition(uneffectiveLast1, finalCondition);
+            uneffectiveLast1.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+            Place lastContact = pn.addPlace("Contatto_"+index);
+            Transition tFinal = pn.addTransition("t"+index);
+            pn.addPrecondition(finalCondition, tFinal);
+            pn.addPostcondition(tFinal,lastContact);
+            delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(index-2).get("start_date"),(LocalDateTime)arrayList.get(index-1).get("start_date"));
+            tFinal.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
+            Transition effectiveLast = pn.addTransition("Efficace_"+index);
+            pn.addPrecondition(lastContact, effectiveLast);
+            pn.addPostcondition(effectiveLast, contagious);
+            effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+            Transition drop = pn.addTransition("Non-efficace"+index);
+            pn.addPrecondition(lastContact, drop);
+            drop.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
         }
+
+        // transient until time=12, error 0.005 (per epoch), integration step=0.02
+        RegTransient analysis = RegTransient.builder()
+                .greedyPolicy(new BigDecimal("4000"), new BigDecimal("0.005"))
+                .timeStep(new BigDecimal("5")).build();
+
+        TransientSolution<DeterministicEnablingState, Marking> solution =
+                analysis.compute(pn, m);
+
+        // display transient probabilities
+        new TransientSolutionViewer(solution);
+
         System.out.println("Model created");
     }
 
     public void analyze(){
         //TODO
         System.out.println("Sto analizzando");
+    }
+
+    private void buildContagionEvolutionSection(PetriNet net, Marking marking, Place A_Contagio){
+            //Generating Node
+            Place A_Asintomatico = net.addPlace("A_Asintomatico");
+            Place A_ConSintomi = net.addPlace("A_ConSintomi");
+            Place A_Contagio1 = net.addPlace("A_Contagio1");
+            Place A_Contagio2 = net.addPlace("A_Contagio2");
+            Place A_Contagioso = net.addPlace("A_Contagioso");
+            Place A_Quarantenato = net.addPlace("A_Quarantenato");
+            Place A_Sintomatico = net.addPlace("A_Sintomatico");
+            Transition a_inContagioso = net.addTransition("a_inContagioso");
+            Transition a_inSintomatico = net.addTransition("a_inSintomatico");
+            Transition a_t0 = net.addTransition("a_t0");
+            Transition a_t1 = net.addTransition("a_t1");
+            Transition a_t2 = net.addTransition("a_t2");
+            Transition t12 = net.addTransition("t12");
+            //Generating Connctors
+            net.addPostcondition(t12, A_Quarantenato);
+            net.addPrecondition(A_Contagio, a_t2);
+            net.addPrecondition(A_Contagio2, a_t0);
+            net.addPrecondition(A_Contagio2, a_t1);
+            net.addPostcondition(a_t2, A_Contagio2);
+            net.addPrecondition(A_Asintomatico, t12);
+            net.addPostcondition(a_t1, A_Asintomatico);
+            net.addPostcondition(a_inContagioso, A_Contagioso);
+            net.addPostcondition(a_inSintomatico, A_Sintomatico);
+            net.addPrecondition(A_Contagio1, a_inContagioso);
+            net.addPostcondition(a_t2, A_Contagio1);
+            net.addPrecondition(A_ConSintomi, a_inSintomatico);
+            net.addPostcondition(a_t0, A_ConSintomi);
+            //Generating Proprties
+            marking.setTokens(A_Asintomatico, 0);
+            marking.setTokens(A_ConSintomi, 0);
+            marking.setTokens(A_Contagio, 0);
+            marking.setTokens(A_Contagio1, 0);
+            marking.setTokens(A_Contagio2, 0);
+            marking.setTokens(A_Contagioso, 0);
+            marking.setTokens(A_Quarantenato, 0);
+            marking.setTokens(A_Sintomatico, 0);
+            List<GEN> a_inContagioso_gens = new ArrayList<>();
+        DBMZone a_inContagioso_d_0 = new DBMZone(new Variable("x"));
+        Expolynomial a_inContagioso_e_0 = Expolynomial.fromString("48 * x^1 + -1* x^2 + -432 * x^0");
+        //Normalization
+        a_inContagioso_e_0.multiply(new BigDecimal(4.3402777777777775E-4));
+        a_inContagioso_d_0.setCoefficient(new Variable("x"), new Variable("t*"), new OmegaBigDecimal("36"));
+        a_inContagioso_d_0.setCoefficient(new Variable("t*"), new Variable("x"), new OmegaBigDecimal("-12"));
+        GEN a_inContagioso_gen_0 = new GEN(a_inContagioso_d_0, a_inContagioso_e_0);
+        a_inContagioso_gens.add(a_inContagioso_gen_0);
+
+        PartitionedGEN a_inContagioso_pFunction = new PartitionedGEN(a_inContagioso_gens);
+        StochasticTransitionFeature a_inContagioso_feature = StochasticTransitionFeature.of(a_inContagioso_pFunction);
+        a_inContagioso.addFeature(a_inContagioso_feature);
+
+        List<GEN> a_inSintomatico_gens = new ArrayList<>();
+
+        DBMZone a_inSintomatico_d_0 = new DBMZone(new Variable("x"));
+        Expolynomial a_inSintomatico_e_0 = Expolynomial.fromString("x^1 * Exp[-0.24 x] + -24*Exp[-0.24 x]");
+        //Normalization
+        a_inSintomatico_e_0.multiply(new BigDecimal(18.677114570749897));
+        a_inSintomatico_d_0.setCoefficient(new Variable("x"), new Variable("t*"), new OmegaBigDecimal("48"));
+        a_inSintomatico_d_0.setCoefficient(new Variable("t*"), new Variable("x"), new OmegaBigDecimal("-24"));
+        GEN a_inSintomatico_gen_0 = new GEN(a_inSintomatico_d_0, a_inSintomatico_e_0);
+        a_inSintomatico_gens.add(a_inSintomatico_gen_0);
+
+        PartitionedGEN a_inSintomatico_pFunction = new PartitionedGEN(a_inSintomatico_gens);
+        StochasticTransitionFeature a_inSintomatico_feature = StochasticTransitionFeature.of(a_inSintomatico_pFunction);
+        a_inSintomatico.addFeature(a_inSintomatico_feature);
+
+        a_t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("9", net)));
+        a_t0.addFeature(new Priority(0));
+        a_t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("1", net)));
+        a_t1.addFeature(new Priority(0));
+        a_t2.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("1", net)));
+        a_t2.addFeature(new Priority(0));
+        t12.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.040", net)));
     }
 }
