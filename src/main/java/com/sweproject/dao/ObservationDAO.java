@@ -101,4 +101,19 @@ public class ObservationDAO extends DAO {
         }
         return arrayList;
     }
+
+    public ArrayList<HashMap<String, Object>> getEnvironmentObservation(String FC){
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        try {
+            setConnection();
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` = 'Environment'");
+            arrayList = convertResultSet(rs);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
 }
