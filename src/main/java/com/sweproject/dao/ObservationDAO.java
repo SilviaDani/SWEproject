@@ -5,6 +5,7 @@ import com.sweproject.model.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -29,7 +30,7 @@ public class ObservationDAO extends DAO {
                 for (String sub : subjects)
                     statement.execute("INSERT INTO `observations` (`id`, `fiscalCode`) VALUES ('" + id + "', '" + sub+ "')");
             } else {
-                System.out.println("Errore");//FIXME
+                System.out.println("Errore");
             }
         }catch (SQLException e){
             e.printStackTrace();
@@ -103,11 +104,14 @@ public class ObservationDAO extends DAO {
     }
 
     public ArrayList<HashMap<String, Object>> getEnvironmentObservation(String FC){
+        LocalDateTime right_now = LocalDateTime.now();
+        LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime start_time_analysis = now.minusDays(6);
         ResultSet rs = null;
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
             setConnection();
-            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` = 'Environment'");
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` = 'Environment' and start_date > '" + start_time_analysis + "'");
             arrayList = convertResultSet(rs);
         }catch(SQLException e){
             e.printStackTrace();
