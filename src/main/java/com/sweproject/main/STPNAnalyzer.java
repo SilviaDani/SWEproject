@@ -1,6 +1,9 @@
 package com.sweproject.main;
 
 import com.sweproject.dao.ObservationDAO;
+import javafx.scene.chart.XYChart;
+import org.checkerframework.checker.units.qual.A;
+import org.oristool.analyzer.log.AnalysisLogger;
 import org.oristool.math.OmegaBigDecimal;
 import org.oristool.math.domain.DBMZone;
 import org.oristool.math.expression.Expolynomial;
@@ -9,6 +12,7 @@ import org.oristool.math.function.GEN;
 import org.oristool.math.function.PartitionedGEN;
 import org.oristool.models.pn.Priority;
 import org.oristool.models.stpn.MarkingExpr;
+import org.oristool.models.stpn.RewardRate;
 import org.oristool.models.stpn.TransientSolution;
 import org.oristool.models.stpn.TransientSolutionViewer;
 import org.oristool.models.stpn.trans.RegTransient;
@@ -25,7 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
-public class STPNAnalyzer {
+import static org.oristool.models.stpn.TransientSolutionViewer.solutionChart;
+
+public class STPNAnalyzer<R,S> {
     private ObservationDAO observationDAO;
     private ArrayList<String> alreadyAnalizedCodes = new ArrayList<>();
 
@@ -42,13 +48,13 @@ public class STPNAnalyzer {
         return false;
     }
 
-    public void makeModel(String fiscalCode, LocalDateTime initialDate){
+    public TransientSolution<R,S> makeModel (String fiscalCode){
         //retrieving data from DB
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
         if (arrayList.size() > 0){
             PetriNet pn = new PetriNet();
             //creating the central node
-            Place contagious = pn.addPlace("A_contagio");
+            Place contagious = pn.addPlace("Contagio");
             Marking m = new Marking();
             buildContagionEvolutionSection(pn,m,contagious);
             //making first module
@@ -58,14 +64,17 @@ public class STPNAnalyzer {
             Transition t0 = pn.addTransition("t0");
             pn.addPrecondition(initialCondition, t0);
             pn.addPostcondition(t0, firstContact);
-            long delta = ChronoUnit.MINUTES.between(initialDate, (LocalDateTime)arrayList.get(0).get("start_date"));
+            double delta = ChronoUnit.MINUTES.between(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime)arrayList.get(0).get("start_date"))/60;
+            System.out.println(delta);
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
             Transition effective0 = pn.addTransition("Efficace_0");
             pn.addPrecondition(firstContact, effective0);
             pn.addPostcondition(effective0, contagious);
             effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
             Place lastPlace = firstContact;
-
+            for(int i =0; i<arrayList.size();i++){
+                System.out.println(arrayList.get(i).get("start_date"));
+            }
             for(int i = 1; i<arrayList.size()-1; i++){
                 Place iCondition = pn.addPlace("Condizione_"+i);
                 Transition uneffectiveLast = pn.addTransition("Non-efficace"+ i);
@@ -76,7 +85,8 @@ public class STPNAnalyzer {
                 Transition ti = pn.addTransition("t"+i);
                 pn.addPrecondition(iCondition, ti);
                 pn.addPostcondition(ti,iContact);
-                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(i-1).get("start_date"),(LocalDateTime)arrayList.get(i).get("start_date"));
+                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(i-1).get("start_date"),(LocalDateTime)arrayList.get(i).get("start_date"))/60;
+                System.out.println(i+" "+delta);
                 ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
                 Transition effectiveLast = pn.addTransition("Efficace_"+i);
                 pn.addPrecondition(iContact, effectiveLast);
@@ -96,7 +106,7 @@ public class STPNAnalyzer {
                 Transition tFinal = pn.addTransition("t"+index);
                 pn.addPrecondition(finalCondition, tFinal);
                 pn.addPostcondition(tFinal,lastContact);
-                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(index-2).get("start_date"),(LocalDateTime)arrayList.get(index-1).get("start_date"));
+                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(index-2).get("start_date"),(LocalDateTime)arrayList.get(index-1).get("start_date"))/60;
                 tFinal.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
                 Transition effectiveLast = pn.addTransition("Efficace_"+index);
                 pn.addPrecondition(lastContact, effectiveLast);
@@ -107,44 +117,56 @@ public class STPNAnalyzer {
                 drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(index-1).get("risk_level")))), pn)));
             }
 
-            // transient until time=12, error 0.005 (per epoch), integration step=0.02
+            // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal("4000"), new BigDecimal("0.005"))
-                    .timeStep(new BigDecimal("5")).build();
+                    .greedyPolicy(new BigDecimal("200"), new BigDecimal("0.005"))
+                    .timeStep(new BigDecimal("2")).build();
+
+            var rewardRates = TransientSolution.rewardRates("If(Contagioso>0&&Sintomatico==0,1,0)");
 
             TransientSolution<DeterministicEnablingState, Marking> solution =
                     analysis.compute(pn, m);
 
-            // display transient probabilities
-            new TransientSolutionViewer(solution);
+            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
 
-            System.out.println("Model created");
+            return (TransientSolution<R, S>) rewardedSolution;
         }
-        else
+        else {
             System.out.println("The subject has no Environment observations");
+            return null;
+        }
 
     }
 
-    public void analyze(){
-        //TODO
-        System.out.println("Sto analizzando");
+    public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s ){
+        XYChart.Series<String, Float> series = new XYChart.Series();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m=0; m<s.getColumnStates().size(); m++){
+            double step = s.getStep().doubleValue();
+            for(int i=0, size = s.getSamplesNumber(); i<size; i++){
+                series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), (float)(s.getSolution()[i][r][m])));
+            }
+        }
+        System.out.println(series.getData().get(20));
+        return series;
     }
+
 
     private void buildContagionEvolutionSection(PetriNet net, Marking marking, Place A_Contagio){
-            //Generating Node
-            Place A_Asintomatico = net.addPlace("A_Asintomatico");
-            Place A_ConSintomi = net.addPlace("A_ConSintomi");
-            Place A_Contagio1 = net.addPlace("A_Contagio1");
-            Place A_Contagio2 = net.addPlace("A_Contagio2");
-            Place A_Contagioso = net.addPlace("A_Contagioso");
-            Place A_Quarantenato = net.addPlace("A_Quarantenato");
-            Place A_Sintomatico = net.addPlace("A_Sintomatico");
-            Transition a_inContagioso = net.addTransition("a_inContagioso");
-            Transition a_inSintomatico = net.addTransition("a_inSintomatico");
-            Transition a_t0 = net.addTransition("a_t0");
-            Transition a_t1 = net.addTransition("a_t1");
-            Transition a_t2 = net.addTransition("a_t2");
-            Transition t12 = net.addTransition("t12");
+           //Generating Node
+            Place A_Asintomatico = net.addPlace("Asintomatico");
+            Place A_ConSintomi = net.addPlace("ConSintomi");
+            Place A_Contagio1 = net.addPlace("Contagio1");
+            Place A_Contagio2 = net.addPlace("Contagio2");
+            Place A_Contagioso = net.addPlace("Contagioso");
+            Place A_Quarantenato = net.addPlace("Quarantenato");
+            Place A_Sintomatico = net.addPlace("Sintomatico");
+            Transition a_inContagioso = net.addTransition("inContagioso");
+            Transition a_inSintomatico = net.addTransition("inSintomatico");
+            Transition a_t0 = net.addTransition("_t0");
+            Transition a_t1 = net.addTransition("_t1");
+            Transition a_t2 = net.addTransition("_t2");
+            Transition t12 = net.addTransition("_t12");
             //Generating Connctors
             net.addPostcondition(t12, A_Quarantenato);
             net.addPrecondition(A_Contagio, a_t2);

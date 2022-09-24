@@ -1,13 +1,26 @@
 package com.sweproject.controller;
 
 import com.sweproject.main.STPNAnalyzer;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.chart.Chart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 public class AnalysisPageController extends UIController implements Initializable {
+    @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
 
     public AnalysisPageController(){
@@ -15,9 +28,24 @@ public class AnalysisPageController extends UIController implements Initializabl
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        LocalDateTime localDateTime = LocalDateTime.of(2021,1,1,1,0);
-        stpnAnalyzer.makeModel(user.getFiscalCode(), localDateTime);
-        stpnAnalyzer.analyze();
+        var analysis = stpnAnalyzer.makeModel(user.getFiscalCode());
+        XYChart.Series series = stpnAnalyzer.makeChart(analysis);
+        series.setName("Risk level");
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Minutes");
+        yAxis.setLabel("Risk level");
+        chart.setTitle("Risk level during the last 6 days");
+        chart.setCreateSymbols(false);
+        chart.getData().add(series);
+    }
+
+    public void back(ActionEvent event) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
+        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
     }
     //TODO everything
 

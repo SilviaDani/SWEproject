@@ -31,7 +31,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <ComboBox fx:id="observation_type_menu" onAction="#checkObservationType" prefHeight="26.0" prefWidth="198.0" id="observation_type_menu"/>
+            <ComboBox id="observation_type_menu" fx:id="observation_type_menu" onAction="#checkObservationType" prefHeight="26.0" prefWidth="198.0" />
          </children>
       </HBox>
       <HBox fx:id="test_type_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
@@ -41,7 +41,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <ComboBox fx:id="test_type_menu" prefHeight="26.0" prefWidth="198.0" id="test_type_menu"/>
+            <ComboBox id="test_type_menu" fx:id="test_type_menu" prefHeight="26.0" prefWidth="198.0" />
             <CheckBox fx:id="positive_checkbox" mnemonicParsing="false" text="Positive">
                <HBox.margin>
                   <Insets left="10.0" />
@@ -51,7 +51,7 @@
       </HBox>
       <HBox fx:id="symptomatic_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
          <children>
-            <CheckBox fx:id="symptomatic_checkbox" mnemonicParsing="false" text="Still symptomatic?" id="still_symptomatic"/>
+            <CheckBox id="still_symptomatic" fx:id="symptomatic_checkbox" mnemonicParsing="false" text="Still symptomatic?" />
          </children>
       </HBox>
       <HBox fx:id="environment_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
@@ -65,17 +65,26 @@
 
 
 
-             <ComboBox fx:id="risk_combobox" onAction="#checkRiskLevel" prefHeight="26.0" prefWidth="150.0" id="risk_combobox"/>
+             <ComboBox id="risk_combobox" fx:id="risk_combobox" onAction="#checkRiskLevel" prefHeight="26.0" prefWidth="150.0" />
 
 
 
-             <CheckBox fx:id="mask_checkbox" mnemonicParsing="false" text="Were you wearing a mask?" id="mask_used"/>
+             <CheckBox id="mask_used" fx:id="mask_checkbox" mnemonicParsing="false" text="Were you wearing a mask?" />
          </children>
       </HBox>
-      <Button mnemonicParsing="false" onAction="#confirmType" text="Next" textAlignment="CENTER" id="next">
-         <padding>
-            <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
-         </padding>
-      </Button>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#backToUserPage" prefHeight="25.0" prefWidth="103.0" text="Back">
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin>
+            </Button>
+            <Button id="next" mnemonicParsing="false" onAction="#confirmType" text="Next" textAlignment="CENTER">
+               <padding>
+                  <Insets bottom="5.0" left="40.0" right="40.0" top="5.0" />
+               </padding>
+            </Button>
+         </children>
+      </HBox>
     </children>
 </VBox>
