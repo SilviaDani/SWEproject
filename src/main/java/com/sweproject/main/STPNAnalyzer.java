@@ -63,7 +63,7 @@ public class STPNAnalyzer {
             Transition effective0 = pn.addTransition("Efficace_0");
             pn.addPrecondition(firstContact, effective0);
             pn.addPostcondition(effective0, contagious);
-            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
             Place lastPlace = firstContact;
 
             for(int i = 1; i<arrayList.size()-1; i++){
@@ -71,7 +71,7 @@ public class STPNAnalyzer {
                 Transition uneffectiveLast = pn.addTransition("Non-efficace"+ i);
                 pn.addPrecondition(lastPlace, uneffectiveLast);
                 pn.addPostcondition(uneffectiveLast, iCondition);
-                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(i-1).get("risk_level")))), pn)));
                 Place iContact = pn.addPlace("Contatto_"+i);
                 Transition ti = pn.addTransition("t"+i);
                 pn.addPrecondition(iCondition, ti);
@@ -81,7 +81,7 @@ public class STPNAnalyzer {
                 Transition effectiveLast = pn.addTransition("Efficace_"+i);
                 pn.addPrecondition(iContact, effectiveLast);
                 pn.addPostcondition(effectiveLast, contagious);
-                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((float)(arrayList.get(i).get("risk_level"))), pn)));
                 lastPlace = iContact;
             }
             //making the last module
@@ -91,7 +91,7 @@ public class STPNAnalyzer {
                 Transition uneffectiveLast1 = pn.addTransition("Non-efficace"+ (index - 1));
                 pn.addPrecondition(lastPlace, uneffectiveLast1);
                 pn.addPostcondition(uneffectiveLast1, finalCondition);
-                uneffectiveLast1.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+                uneffectiveLast1.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(index-2).get("risk_level")))), pn)));
                 Place lastContact = pn.addPlace("Contatto_"+index);
                 Transition tFinal = pn.addTransition("t"+index);
                 pn.addPrecondition(finalCondition, tFinal);
@@ -101,10 +101,10 @@ public class STPNAnalyzer {
                 Transition effectiveLast = pn.addTransition("Efficace_"+index);
                 pn.addPrecondition(lastContact, effectiveLast);
                 pn.addPostcondition(effectiveLast, contagious);
-                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf(((float)(arrayList.get(index-1).get("risk_level")))), pn)));
                 Transition drop = pn.addTransition("Non-efficace"+index);
                 pn.addPrecondition(lastContact, drop);
-                drop.addFeature(StochasticTransitionFeature.newDeterministicInstance("0"));
+                drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(index-1).get("risk_level")))), pn)));
             }
 
             // transient until time=12, error 0.005 (per epoch), integration step=0.02
