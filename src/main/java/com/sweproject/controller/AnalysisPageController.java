@@ -47,6 +47,4 @@ public class AnalysisPageController extends UIController implements Initializabl
         stage.setScene(scene);
         stage.show();
     }
-    //TODO everything
-
 }

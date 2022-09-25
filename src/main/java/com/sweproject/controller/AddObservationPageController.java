@@ -1,5 +1,3 @@
-//TODO mettere in modo ordinato la checkbox della mascherina (NICCOLÒ)
-
 package com.sweproject.controller;
 
 import com.sweproject.dao.ObservationDAO;
@@ -247,7 +245,7 @@ public class AddObservationPageController extends UIController implements Initia
         System.out.println(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
         add_cluster_vbox.lookup("#add"+i).setDisable(true);
         add_cluster_vbox.lookup("#remove"+i).setDisable(false);
-        cluster.add(((TextField) add_cluster_vbox.lookup("#text"+i)).getText()); //TODO controllare che il codice fiscale sia realmente esistente(?)
+        cluster.add(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
         i = cluster.size()+1;
         HBox newSubjectHbox = new HBox();
         newSubjectHbox.setAlignment(Pos.CENTER);

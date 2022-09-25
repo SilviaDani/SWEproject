@@ -37,8 +37,7 @@ public class PatientsObservationsController extends UIController {
         ObservableList <String> observableListObservations = observableLists[0];
         observations.setItems(observableListObservations);
         if(observableListObservations.size() == 0){
-            //TODO dire che non ci sono osservazioni rilevanti
-            System.out.println("Ooopsie dooopsie, non ci sono osservazioni rilevanti");
+            System.out.println("Non ci sono osservazioni rilevanti");
         }
         observations.setPrefHeight(observableListObservations.size() * ROW_HEIGHT + 2);
 
@@ -68,7 +67,6 @@ public class PatientsObservationsController extends UIController {
         observationsId.getSelectionModel().select(index);
         String selectedObservationID = observationsId.getSelectionModel().getSelectedItem();
         observationDAO.changeRelevance(selectedObservationID);
-
         //TODO AGGIORNA TABELLA OSSERVAZIONI
     }
 

@@ -340,7 +340,7 @@ public class UITest extends Application {
 
         ObservationDAO observationDAO = new ObservationDAO();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations("RSSMRA80A41H501Y");
-        assertEquals(10, arrayList.size());//FIXME
+        assertEquals(10, arrayList.size());//XXX cambia in base alle osservazioni che vengono create prima
         IDs = new ArrayList<>();
         LocalDateTime startDate = LocalDateTime.of(2021,1,1,0,0);
         LocalDateTime endDate = LocalDateTime.of(2021,12,31,23,59);
@@ -349,7 +349,7 @@ public class UITest extends Application {
             IDs.add(arrayList.get(i).get("ID").toString());
         }
         for(int i = 0; i<5; i++){
-            switch (i){//FIXME
+            switch (i){
                 case 0:
                     assertEquals(4, ObservationDAOTest.findObservation(arrayList.get(i).get("ID").toString()));
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));

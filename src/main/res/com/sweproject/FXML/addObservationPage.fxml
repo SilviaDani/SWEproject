@@ -65,7 +65,10 @@
 
 
 
-             <ComboBox id="risk_combobox" fx:id="risk_combobox" onAction="#checkRiskLevel" prefHeight="26.0" prefWidth="150.0" />
+             <ComboBox id="risk_combobox" fx:id="risk_combobox" onAction="#checkRiskLevel" prefHeight="26.0" prefWidth="150.0">
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin></ComboBox>
 
 
 

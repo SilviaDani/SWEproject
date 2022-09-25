@@ -17,7 +17,7 @@ public class Environment extends Type{
         if(maskUsed)
             riskLevel *= 0.1f;
         riskLevel *= 2 * Math.exp(minutes/40) / (1 + Math.exp(minutes/40)) - 1;
-        //TODO mettere valori plausibili
+        //FIXME mettere valori plausibili
     }
 
     public float getRiskLevel(){

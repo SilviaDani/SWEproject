@@ -26,7 +26,7 @@
             <Insets bottom="45.0" />
          </VBox.margin>
       </Button>
-      <Button id="prob_infected" mnemonicParsing="false" text="Get probability of being infected" onAction="#analysisPage">
+      <Button id="prob_infected" mnemonicParsing="false" onAction="#analysisPage" text="Get risk level">
          <VBox.margin>
             <Insets bottom="45.0" />
          </VBox.margin>
