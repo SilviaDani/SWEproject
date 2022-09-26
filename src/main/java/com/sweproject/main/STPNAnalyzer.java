@@ -51,6 +51,7 @@ public class STPNAnalyzer<R,S> {
     public TransientSolution<R,S> makeModel (String fiscalCode){
         //retrieving data from DB
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
+        System.out.println(arrayList.size());
         if (arrayList.size() > 0){
             PetriNet pn = new PetriNet();
             //creating the central node
@@ -122,13 +123,15 @@ public class STPNAnalyzer<R,S> {
                     .greedyPolicy(new BigDecimal("200"), new BigDecimal("0.005"))
                     .timeStep(new BigDecimal("2")).build();
 
-            var rewardRates = TransientSolution.rewardRates("If(Contagioso>0&&Sintomatico==0,1,0)");
+            //TODO: add plots of other rewards and change title
+            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+            var rewardRates = TransientSolution.rewardRates("Contagioso");
 
             TransientSolution<DeterministicEnablingState, Marking> solution =
                     analysis.compute(pn, m);
 
             var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-
+            //new TransientSolutionViewer(rewardedSolution);
             return (TransientSolution<R, S>) rewardedSolution;
         }
         else {
@@ -152,7 +155,8 @@ public class STPNAnalyzer<R,S> {
     }
 
 
-    private void buildContagionEvolutionSection(PetriNet net, Marking marking, Place A_Contagio){
+    private void buildContagionEvolutionSection(PetriNet net, Marking marking, Place contagio){
+        /*
            //Generating Node
             Place A_Asintomatico = net.addPlace("Asintomatico");
             Place A_ConSintomi = net.addPlace("ConSintomi");
@@ -225,6 +229,90 @@ public class STPNAnalyzer<R,S> {
         a_t1.addFeature(new Priority(0));
         a_t2.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("1", net)));
         a_t2.addFeature(new Priority(0));
-        t12.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.040", net)));
+        t12.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.040", net)));*/
+        //Generating Nodes
+        Place Asintomatico = net.addPlace("Asintomatico");
+        Place ContagiatoSintomatico = net.addPlace("ContagiatoSintomatico");
+        Place Contagioso = net.addPlace("Contagioso");
+        Place Guarito = net.addPlace("Guarito");
+        Place Isolato = net.addPlace("Isolato");
+        Place Sintomatico = net.addPlace("Sintomatico");
+        Place p30 = net.addPlace("p30");
+        Place p38 = net.addPlace("p38");
+        Transition t0 = net.addTransition("_t0");
+        Transition t1 = net.addTransition("_t1");
+        Transition t3 = net.addTransition("_t3");
+        Transition t51 = net.addTransition("_t51");
+        Transition t52 = net.addTransition("_t52");
+        Transition t53 = net.addTransition("_t53");
+        Transition t54 = net.addTransition("_t54");
+
+        //Generating Connectors
+        net.addPostcondition(t52, Asintomatico);
+        net.addPrecondition(ContagiatoSintomatico, t0);
+        net.addPrecondition(Contagioso, t53);
+        net.addPostcondition(t1, Contagioso);
+        net.addPrecondition(p38, t51);
+        net.addPrecondition(Sintomatico, t54);
+        net.addPostcondition(t3, p38);
+        net.addPostcondition(t3, p30);
+        net.addPrecondition(p30, t1);
+        net.addPrecondition(contagio, t3);
+        net.addPrecondition(Contagioso, t54);
+        net.addPostcondition(t0, Sintomatico);
+        net.addPostcondition(t53, Guarito);
+        net.addPostcondition(t51, ContagiatoSintomatico);
+        net.addPostcondition(t54, Isolato);
+        net.addPrecondition(p38, t52);
+        net.addPrecondition(Asintomatico, t53);
+
+        //Generating Properties
+        marking.setTokens(Asintomatico, 0);
+        marking.setTokens(ContagiatoSintomatico, 0);
+        marking.setTokens(contagio, 0);
+        marking.setTokens(Contagioso, 0);
+        marking.setTokens(Guarito, 0);
+        marking.setTokens(Isolato, 0);
+        marking.setTokens(Sintomatico, 0);
+        marking.setTokens(p30, 0);
+        marking.setTokens(p38, 0);
+        List<GEN> t0_gens = new ArrayList<>();
+
+        DBMZone t0_d_0 = new DBMZone(new Variable("x"));
+        Expolynomial t0_e_0 = Expolynomial.fromString("x^1 * Exp[-0.24 x] + -24*Exp[-0.24 x]");
+        //Normalization
+        t0_e_0.multiply(new BigDecimal(18.677114570749897));
+        t0_d_0.setCoefficient(new Variable("x"), new Variable("t*"), new OmegaBigDecimal("48"));
+        t0_d_0.setCoefficient(new Variable("t*"), new Variable("x"), new OmegaBigDecimal("-24"));
+        GEN t0_gen_0 = new GEN(t0_d_0, t0_e_0);
+        t0_gens.add(t0_gen_0);
+
+        PartitionedGEN t0_pFunction = new PartitionedGEN(t0_gens);
+        StochasticTransitionFeature t0_feature = StochasticTransitionFeature.of(t0_pFunction);
+        t0.addFeature(t0_feature);
+
+        List<GEN> t1_gens = new ArrayList<>();
+
+        DBMZone t1_d_0 = new DBMZone(new Variable("x"));
+        Expolynomial t1_e_0 = Expolynomial.fromString("48 * x^1 + -1* x^2 + -432 * x^0");
+        //Normalization
+        t1_e_0.multiply(new BigDecimal(4.3402777777777775E-4));
+        t1_d_0.setCoefficient(new Variable("x"), new Variable("t*"), new OmegaBigDecimal("36"));
+        t1_d_0.setCoefficient(new Variable("t*"), new Variable("x"), new OmegaBigDecimal("-12"));
+        GEN t1_gen_0 = new GEN(t1_d_0, t1_e_0);
+        t1_gens.add(t1_gen_0);
+
+        PartitionedGEN t1_pFunction = new PartitionedGEN(t1_gens);
+        StochasticTransitionFeature t1_feature = StochasticTransitionFeature.of(t1_pFunction);
+        t1.addFeature(t1_feature);
+
+        t3.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("9", net)));
+        t3.addFeature(new Priority(0));
+        t51.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("9", net)));
+        t51.addFeature(new Priority(0));
+        t52.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from("1", net)));
+        t52.addFeature(new Priority(0));
+        t53.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.040", net)));
+        t54.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.1", net)));
     }
 }
