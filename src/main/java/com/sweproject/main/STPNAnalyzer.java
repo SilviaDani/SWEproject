@@ -120,7 +120,7 @@ public class STPNAnalyzer<R,S> {
 
             // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal("200"), new BigDecimal("0.005"))
+                    .greedyPolicy(new BigDecimal("144"), new BigDecimal("0.005"))
                     .timeStep(new BigDecimal("2")).build();
 
             //TODO: add plots of other rewards and change title
@@ -150,8 +150,22 @@ public class STPNAnalyzer<R,S> {
                 series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), (float)(s.getSolution()[i][r][m])));
             }
         }
-        System.out.println(series.getData().get(20));
+        System.out.println(s.getColumnStates().size());
+        System.out.println("");
+        for(int i=0;i<s.getColumnStates().size();i++)
+            System.out.println(s.getColumnStates().get(i));
         return series;
+    }
+
+    public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution<S, R>> ss){
+        int r = ss.get(0).getRegenerations().indexOf(ss.get(0).getInitialRegeneration());
+        float max = (float) ss.get(0).getSolution()[ss.get(0).getSamplesNumber() - 1][r][0];
+        for(int i=1; i<ss.size();i++){
+            float currentValue = (float) ss.get(i).getSolution()[ss.get(i).getSamplesNumber() - 1][r][0];
+            if(currentValue > max)
+                max = currentValue;
+        }
+        return max;
     }
 
 

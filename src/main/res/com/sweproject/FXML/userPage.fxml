@@ -18,7 +18,7 @@
              </Label>
          </children>
          <VBox.margin>
-            <Insets bottom="90.0" top="15.0" />
+            <Insets bottom="60.0" top="15.0" />
          </VBox.margin>
       </StackPane>
       <Button id="add_observation" mnemonicParsing="false" onAction="#addObservation" text="Add observation">
@@ -26,7 +26,12 @@
             <Insets bottom="45.0" />
          </VBox.margin>
       </Button>
-      <Button id="prob_infected" mnemonicParsing="false" onAction="#analysisPage" text="Get risk level">
+      <Button id="prob_infected" mnemonicParsing="false" onAction="#analysisPage" text="Get contagion level">
+         <VBox.margin>
+            <Insets bottom="45.0" />
+         </VBox.margin>
+      </Button>
+      <Button id="prob_infected" mnemonicParsing="false" onAction="#getProbCluster" text="Get probability in cluster">
          <VBox.margin>
             <Insets bottom="45.0" />
          </VBox.margin>

@@ -12,4 +12,5 @@ public class UIController {
     protected Stage stage;
     protected Scene scene;
     protected Parent root;
+    protected static Object data;
 }
