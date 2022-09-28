@@ -2,8 +2,6 @@ package com.sweproject.main;
 
 import com.sweproject.dao.ObservationDAO;
 import javafx.scene.chart.XYChart;
-import org.checkerframework.checker.units.qual.A;
-import org.oristool.analyzer.log.AnalysisLogger;
 import org.oristool.math.OmegaBigDecimal;
 import org.oristool.math.domain.DBMZone;
 import org.oristool.math.expression.Expolynomial;
@@ -12,9 +10,7 @@ import org.oristool.math.function.GEN;
 import org.oristool.math.function.PartitionedGEN;
 import org.oristool.models.pn.Priority;
 import org.oristool.models.stpn.MarkingExpr;
-import org.oristool.models.stpn.RewardRate;
 import org.oristool.models.stpn.TransientSolution;
-import org.oristool.models.stpn.TransientSolutionViewer;
 import org.oristool.models.stpn.trans.RegTransient;
 import org.oristool.models.stpn.trees.DeterministicEnablingState;
 import org.oristool.models.stpn.trees.StochasticTransitionFeature;
@@ -22,14 +18,13 @@ import org.oristool.petrinet.Marking;
 import org.oristool.petrinet.PetriNet;
 import org.oristool.petrinet.Place;
 import org.oristool.petrinet.Transition;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-
-import static org.oristool.models.stpn.TransientSolutionViewer.solutionChart;
 
 public class STPNAnalyzer<R,S> {
     private ObservationDAO observationDAO;
@@ -51,7 +46,6 @@ public class STPNAnalyzer<R,S> {
     public TransientSolution<R, S> makeModel(String fiscalCode) {
         //retrieving data from DB
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
-        System.out.println(arrayList.size());
         if (arrayList.size() > 0) {
             PetriNet pn = new PetriNet();
             //creating the central node
@@ -73,6 +67,7 @@ public class STPNAnalyzer<R,S> {
             pn.addPostcondition(effective0, contagious);
             effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
             Place lastPlace = firstContact;
+            //making intermediate modules
             for (int i = 0; i < arrayList.size(); i++) {
                 System.out.println(arrayList.get(i).get("start_date"));
             }
@@ -140,11 +135,6 @@ public class STPNAnalyzer<R,S> {
 
     }
 
-    public TransientSolution<R, S> makeClusterModel(ArrayList<TransientSolution> ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet){
-        //TODO CREA RETE
-        return null;
-    }
-
     public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s ){
         XYChart.Series<String, Float> series = new XYChart.Series();
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
@@ -161,7 +151,8 @@ public class STPNAnalyzer<R,S> {
         return series;
     }
 
-    public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution<S, R>> ss){
+    public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution> ss, LocalDateTime meeting_time){
+        //TODO selezionare le probabilità al tempo meeting_time negli ss
         int r = ss.get(0).getRegenerations().indexOf(ss.get(0).getInitialRegeneration());
         float max = (float) ss.get(0).getSolution()[ss.get(0).getSamplesNumber() - 1][r][0];
         for(int i=1; i<ss.size();i++){
@@ -332,5 +323,86 @@ public class STPNAnalyzer<R,S> {
         t52.addFeature(new Priority(0));
         t53.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.040", net)));
         t54.addFeature(StochasticTransitionFeature.newExponentialInstance(new BigDecimal("1"), MarkingExpr.from("0.1", net)));
+    }
+
+    public void makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet) {
+        if (clusterSubjectsMet.size() > 0) {
+            PetriNet pn = new PetriNet();
+            //creating the central node
+            Place contagious = pn.addPlace("Contagio");
+            Marking m = new Marking();
+            buildContagionEvolutionSection(pn, m, contagious);
+            //making first module
+            Place initialCondition = pn.addPlace("Condizione_iniziale");
+            m.addTokens(initialCondition, 1);
+            Place firstContact = pn.addPlace("Contatto_1");
+            Transition t0 = pn.addTransition("t0");
+            pn.addPrecondition(initialCondition, t0);
+            pn.addPostcondition(t0, firstContact);
+            double delta = ChronoUnit.MINUTES.between(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime) clusterSubjectsMet.get(0).get("start_date")) / 60;
+            System.out.println(delta);
+            t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
+            Transition effective0 = pn.addTransition("Efficace_0");
+            pn.addPrecondition(firstContact, effective0);
+            pn.addPostcondition(effective0, contagious);
+            int i = 0;
+            int j = 0;
+            String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+            LocalDateTime meeting_time1 = (LocalDateTime) clusterSubjectsMet.get(i).get("start_date");
+            while ((LocalDateTime) clusterSubjectsMet.get(i).get("start_date") == meeting_time1) {
+                meeting_subjects[j] = clusterSubjectsMet.get(i).get("obs2.fiscalCode").toString();
+                j++;
+                i++;
+            }
+            ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
+            for (int k = 0; k < j; k++) {
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
+            }
+            float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1);
+
+            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf(effectiveness), pn)));
+            Place lastPlace = firstContact;
+            //making intermediate modules
+            for (int l = i; l < clusterSubjectsMet.size(); l++) {
+                j = 0;
+                int p = 0;
+                for (int n = 0; n < meeting_subjects.length; n++) {
+                    meeting_subjects[n] = null;
+                }
+                LocalDateTime meeting_time2 = (LocalDateTime) clusterSubjectsMet.get(l).get("start_date");
+                while ((LocalDateTime) clusterSubjectsMet.get(l).get("start_date") == meeting_time2) {
+                    meeting_subjects[j] = clusterSubjectsMet.get(i).get("obs2.fiscalCode").toString();
+                    j++;
+                    l++;
+                }
+                subjectsMet_ss.clear();
+                for (int k = 0; k < j; k++) {
+                    subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
+                }
+                effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time2);
+                p++;
+
+                Place iCondition = pn.addPlace("Condizione_" + p);
+                Transition uneffectiveLast = pn.addTransition("Non-efficace" + p);
+                pn.addPrecondition(lastPlace, uneffectiveLast);
+                pn.addPostcondition(uneffectiveLast, iCondition);
+                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf(1 - effectiveness), pn)));
+                Place iContact = pn.addPlace("Contatto_" + p);
+                Transition ti = pn.addTransition("t" + p);
+                pn.addPrecondition(iCondition, ti);
+                pn.addPostcondition(ti, iContact);
+                delta = ChronoUnit.MINUTES.between(meeting_time1 ,meeting_time2)/ 60;
+                System.out.println(delta);
+                meeting_time1 = meeting_time2;
+                ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
+                Transition effectiveLast = pn.addTransition("Efficace_" + p);
+                pn.addPrecondition(iContact, effectiveLast);
+                pn.addPostcondition(effectiveLast, contagious);
+                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf(effectiveness), pn)));
+                lastPlace = iContact;
+
+                //making last module
+            }
+        }
     }
 }

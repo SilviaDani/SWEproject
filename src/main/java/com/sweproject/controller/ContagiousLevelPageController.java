@@ -15,6 +15,7 @@ import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,18 +39,20 @@ public class ContagiousLevelPageController extends UIController implements Initi
         ArrayList<HashMap<String, Object>> clusterSubjectsMet = observationDAO.getContactObservation(FC, clusterMembers);
 
         ArrayList<TransientSolution> ss = new ArrayList<>();
+        HashMap<String, TransientSolution> subjects_ss = new HashMap<>();
         ArrayList<String> contact_subjects_duplicates = new ArrayList<>();
 
-        //analisi rischi ambiente si ogni soggetto diverso dall`utente
+        //analisi rischi ambiente di ogni soggetto diverso dall`utente
         for (int i = 0; i < clusterSubjectsMet.size(); i++){
             contact_subjects_duplicates.add(clusterSubjectsMet.get(i).get("obs2.fiscalCode").toString());
         }
-        HashSet<String> hset = new HashSet<String>(contact_subjects_duplicates);
+        HashSet<String> hset = new HashSet<>(contact_subjects_duplicates);
         String [] contact_subject = hset.toArray(new String[hset.size()]);
         for (int i = 0; i < contact_subject.length; i++){
             ss.add(stpnAnalyzer.makeModel(contact_subject[i]));
+            subjects_ss.put(contact_subject[i], ss.get(i));
         }
-        stpnAnalyzer.makeClusterModel(ss, clusterSubjectsMet);
+        stpnAnalyzer.makeClusterModel(subjects_ss, clusterSubjectsMet);
         //float r = stpnAnalyzer.getChancesOfHavingContagiousPersonInCluster(ss);
         //result.setText((r*100)+"%");
         /*var analysis = stpnAnalyzer.makeModel(user.getFiscalCode());
