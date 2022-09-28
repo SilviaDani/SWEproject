@@ -120,4 +120,32 @@ public class ObservationDAO extends DAO {
         }
         return arrayList;
     }
+
+    public ArrayList<HashMap<String, Object>> getContactObservation(String FC, ArrayList<String> subjects){
+        LocalDateTime right_now = LocalDateTime.now();
+        LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime start_time_analysis = now.minusDays(6);
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        String subjectList = "";
+        try {
+            setConnection();
+            for (int i=0; i<subjects.size(); i++){
+                if (i < subjects.size() - 1){
+                    subjectList += "'" + subjects.get(i) + "', ";
+                }
+                else
+                    subjectList += "'" + subjects.get(i) + "'";
+            }
+            rs = statement.executeQuery("SELECT distinct obs2.fiscalCode, start_date FROM (`observations` obs1 join `observations` obs2 on obs1.ID = obs2.id) join `events` on events.ID = obs1.id where obs1.`fiscalCode` = '" + FC + "' and obs2.`fiscalCode` IN (" + subjectList + ") and start_date > '" + start_time_analysis + "' order by start_date");
+            arrayList = convertResultSet(rs);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
+
+
 }

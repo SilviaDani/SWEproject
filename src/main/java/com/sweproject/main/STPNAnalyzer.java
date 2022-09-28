@@ -39,25 +39,25 @@ public class STPNAnalyzer<R,S> {
         this.observationDAO = new ObservationDAO();
     }
 
-    private boolean haveAlreadyBeenAnalized(String FC){
-        for(String code : alreadyAnalizedCodes){
-            if(code.equals(FC))
+    private boolean haveAlreadyBeenAnalized(String FC) {
+        for (String code : alreadyAnalizedCodes) {
+            if (code.equals(FC))
                 return true;
         }
         alreadyAnalizedCodes.add(FC);
         return false;
     }
 
-    public TransientSolution<R,S> makeModel (String fiscalCode){
+    public TransientSolution<R, S> makeModel(String fiscalCode) {
         //retrieving data from DB
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
         System.out.println(arrayList.size());
-        if (arrayList.size() > 0){
+        if (arrayList.size() > 0) {
             PetriNet pn = new PetriNet();
             //creating the central node
             Place contagious = pn.addPlace("Contagio");
             Marking m = new Marking();
-            buildContagionEvolutionSection(pn,m,contagious);
+            buildContagionEvolutionSection(pn, m, contagious);
             //making first module
             Place initialCondition = pn.addPlace("Condizione_iniziale");
             m.addTokens(initialCondition, 1);
@@ -65,57 +65,57 @@ public class STPNAnalyzer<R,S> {
             Transition t0 = pn.addTransition("t0");
             pn.addPrecondition(initialCondition, t0);
             pn.addPostcondition(t0, firstContact);
-            double delta = ChronoUnit.MINUTES.between(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime)arrayList.get(0).get("start_date"))/60;
+            double delta = ChronoUnit.MINUTES.between(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime) arrayList.get(0).get("start_date")) / 60;
             System.out.println(delta);
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
             Transition effective0 = pn.addTransition("Efficace_0");
             pn.addPrecondition(firstContact, effective0);
             pn.addPostcondition(effective0, contagious);
-            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
+            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
             Place lastPlace = firstContact;
-            for(int i =0; i<arrayList.size();i++){
+            for (int i = 0; i < arrayList.size(); i++) {
                 System.out.println(arrayList.get(i).get("start_date"));
             }
-            for(int i = 1; i<arrayList.size()-1; i++){
-                Place iCondition = pn.addPlace("Condizione_"+i);
-                Transition uneffectiveLast = pn.addTransition("Non-efficace"+ i);
+            for (int i = 1; i < arrayList.size() - 1; i++) {
+                Place iCondition = pn.addPlace("Condizione_" + i);
+                Transition uneffectiveLast = pn.addTransition("Non-efficace" + i);
                 pn.addPrecondition(lastPlace, uneffectiveLast);
                 pn.addPostcondition(uneffectiveLast, iCondition);
-                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(i-1).get("risk_level")))), pn)));
-                Place iContact = pn.addPlace("Contatto_"+i);
-                Transition ti = pn.addTransition("t"+i);
+                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(i - 1).get("risk_level")))), pn)));
+                Place iContact = pn.addPlace("Contatto_" + i);
+                Transition ti = pn.addTransition("t" + i);
                 pn.addPrecondition(iCondition, ti);
-                pn.addPostcondition(ti,iContact);
-                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(i-1).get("start_date"),(LocalDateTime)arrayList.get(i).get("start_date"))/60;
-                System.out.println(i+" "+delta);
+                pn.addPostcondition(ti, iContact);
+                delta = ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(i - 1).get("start_date"), (LocalDateTime) arrayList.get(i).get("start_date")) / 60;
+                System.out.println(i + " " + delta);
                 ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
-                Transition effectiveLast = pn.addTransition("Efficace_"+i);
+                Transition effectiveLast = pn.addTransition("Efficace_" + i);
                 pn.addPrecondition(iContact, effectiveLast);
                 pn.addPostcondition(effectiveLast, contagious);
-                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((float)(arrayList.get(i).get("risk_level"))), pn)));
+                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((float) (arrayList.get(i).get("risk_level"))), pn)));
                 lastPlace = iContact;
             }
             //making the last module
-            if(arrayList.size() > 1){
+            if (arrayList.size() > 1) {
                 int index = arrayList.size();
-                Place finalCondition = pn.addPlace("Condizione_"+index);
-                Transition uneffectiveLast1 = pn.addTransition("Non-efficace"+ (index - 1));
+                Place finalCondition = pn.addPlace("Condizione_" + index);
+                Transition uneffectiveLast1 = pn.addTransition("Non-efficace" + (index - 1));
                 pn.addPrecondition(lastPlace, uneffectiveLast1);
                 pn.addPostcondition(uneffectiveLast1, finalCondition);
-                uneffectiveLast1.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(index-2).get("risk_level")))), pn)));
-                Place lastContact = pn.addPlace("Contatto_"+index);
-                Transition tFinal = pn.addTransition("t"+index);
+                uneffectiveLast1.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(index - 2).get("risk_level")))), pn)));
+                Place lastContact = pn.addPlace("Contatto_" + index);
+                Transition tFinal = pn.addTransition("t" + index);
                 pn.addPrecondition(finalCondition, tFinal);
-                pn.addPostcondition(tFinal,lastContact);
-                delta = ChronoUnit.MINUTES.between((LocalDateTime)arrayList.get(index-2).get("start_date"),(LocalDateTime)arrayList.get(index-1).get("start_date"))/60;
+                pn.addPostcondition(tFinal, lastContact);
+                delta = ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(index - 2).get("start_date"), (LocalDateTime) arrayList.get(index - 1).get("start_date")) / 60;
                 tFinal.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
-                Transition effectiveLast = pn.addTransition("Efficace_"+index);
+                Transition effectiveLast = pn.addTransition("Efficace_" + index);
                 pn.addPrecondition(lastContact, effectiveLast);
                 pn.addPostcondition(effectiveLast, contagious);
-                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf(((float)(arrayList.get(index-1).get("risk_level")))), pn)));
-                Transition drop = pn.addTransition("Non-efficace"+index);
+                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf(((float) (arrayList.get(index - 1).get("risk_level")))), pn)));
+                Transition drop = pn.addTransition("Non-efficace" + index);
                 pn.addPrecondition(lastContact, drop);
-                drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0),  MarkingExpr.from(String.valueOf((1-(float)(arrayList.get(index-1).get("risk_level")))), pn)));
+                drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(index - 1).get("risk_level")))), pn)));
             }
 
             // 144 -> 6 giorni
@@ -133,12 +133,16 @@ public class STPNAnalyzer<R,S> {
             var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
             //new TransientSolutionViewer(rewardedSolution);
             return (TransientSolution<R, S>) rewardedSolution;
-        }
-        else {
-            System.out.println("The subject has no Environment observations");
+        } else {
+            System.out.println("The subject has no Environment observations of the last 6 days");
             return null;
         }
 
+    }
+
+    public TransientSolution<R, S> makeClusterModel(ArrayList<TransientSolution> ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet){
+        //TODO CREA RETE
+        return null;
     }
 
     public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s ){
