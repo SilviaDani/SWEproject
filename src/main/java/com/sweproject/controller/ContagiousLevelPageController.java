@@ -30,7 +30,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
     private ObservationDAO observationDAO;
 
     public ContagiousLevelPageController(){
-        stpnAnalyzer = new STPNAnalyzer();
+        stpnAnalyzer = new STPNAnalyzer(144, 2);
         observationDAO = new ObservationDAO();
     }
     @Override
@@ -60,13 +60,13 @@ public class ContagiousLevelPageController extends UIController implements Initi
             }
             pns.add(pits);
         }
-        XYChart.Series series = stpnAnalyzer.makeChart(pns.get(max_iterations).get(user.getFiscalCode()));
+        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Minutes");
         yAxis.setLabel("Contagion level");
-        chart.setTitle("Probability of being contagious due to the environment during the last 6 days"); //FIXME
+        chart.setTitle("Probability of being contagious due to a contact during the last 6 days");
         chart.setCreateSymbols(false);
         chart.getData().add(series);
         /* String FC = (clusterMembers).get(clusterMembers.size() - 1);
@@ -108,9 +108,6 @@ public class ContagiousLevelPageController extends UIController implements Initi
         chart.setTitle("Probability of being contagious due to the environment during the last 6 days");
         chart.setCreateSymbols(false);
         chart.getData().add(series);*/
-
-
-
     }
 
     public void ok(ActionEvent event) throws IOException {

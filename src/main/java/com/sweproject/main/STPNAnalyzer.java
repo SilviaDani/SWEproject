@@ -29,9 +29,13 @@ import java.util.HashMap;
 public class STPNAnalyzer<R,S> {
     private ObservationDAO observationDAO;
     private ArrayList<String> alreadyAnalizedCodes = new ArrayList<>();
+    private int step;
+    private int samples;
 
-    public STPNAnalyzer() {
+    public STPNAnalyzer(int samples, int step) {
         this.observationDAO = new ObservationDAO();
+        this.samples = samples;
+        this.step = step;
     }
 
     private boolean haveAlreadyBeenAnalized(String FC) {
@@ -115,8 +119,8 @@ public class STPNAnalyzer<R,S> {
 
             // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal("144"), new BigDecimal("0.005"))
-                    .timeStep(new BigDecimal("2")).build();
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.005"))
+                    .timeStep(new BigDecimal(step)).build();
 
             //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
@@ -324,7 +328,6 @@ public class STPNAnalyzer<R,S> {
     }
 
     public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet) {
-        final int step = 2;
         if (clusterSubjectsMet.size() > 0) {
             PetriNet pn = new PetriNet();
             //creating the central node
@@ -405,7 +408,7 @@ public class STPNAnalyzer<R,S> {
             drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf(1 - effectiveness), pn)));
 
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal("300"), new BigDecimal("0.005"))
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.005"))
                     .timeStep(new BigDecimal(step)).build();
 
             //TODO: add plots of other rewards and change title
@@ -423,4 +426,21 @@ public class STPNAnalyzer<R,S> {
             return null;
             }
         }
+
+    public XYChart.Series makeChart(ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) {
+        TransientSolution s = ss.get(0).get(fiscalCode);
+        XYChart.Series<String, Float> series = new XYChart.Series();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m=0; m<s.getColumnStates().size(); m++){
+            double step = s.getStep().doubleValue();
+            for(int i=0, size = s.getSamplesNumber(); i<size; i++){
+                float value = 0.f;
+                for(int j = 0; j<ss.size();j++){
+                    value += (float)ss.get(j).get(fiscalCode).getSolution()[i][r][m];
+                }
+                series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), value));
+            }
+        }
+        return series;
     }
+}

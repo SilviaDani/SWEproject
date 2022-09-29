@@ -24,7 +24,7 @@ public class AnalysisPageController extends UIController implements Initializabl
     private STPNAnalyzer stpnAnalyzer;
 
     public AnalysisPageController(){
-        stpnAnalyzer = new STPNAnalyzer();
+        stpnAnalyzer = new STPNAnalyzer(144,2);
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
