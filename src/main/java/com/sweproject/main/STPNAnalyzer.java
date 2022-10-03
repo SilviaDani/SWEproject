@@ -50,6 +50,9 @@ public class STPNAnalyzer<R,S> {
     public TransientSolution<R, S> makeModel(String fiscalCode) {
         //retrieving data from DB
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
+        for(int i = 0; i<arrayList.size(); i++){
+            System.out.println(arrayList.get(i).get("start_date"));
+        }
         if (arrayList.size() > 0) {
             PetriNet pn = new PetriNet();
             //creating the central node
@@ -64,12 +67,15 @@ public class STPNAnalyzer<R,S> {
             pn.addPrecondition(initialCondition, t0);
             pn.addPostcondition(t0, firstContact);
             double delta = ChronoUnit.MINUTES.between(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime) arrayList.get(0).get("start_date")) / 60;
-            //System.out.println(delta);
+            System.out.println(delta);
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
             Transition effective0 = pn.addTransition("Efficace_0");
             pn.addPrecondition(firstContact, effective0);
             pn.addPostcondition(effective0, contagious);
             effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
+
+            System.out.println("effective 0 : "+arrayList.get(0).get("risk_level").toString());
+
             Place lastPlace = firstContact;
             //making intermediate modules
             for (int i = 1; i < arrayList.size(); i++) {
@@ -78,17 +84,25 @@ public class STPNAnalyzer<R,S> {
                 pn.addPrecondition(lastPlace, uneffectiveLast);
                 pn.addPostcondition(uneffectiveLast, iCondition);
                 uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(i - 1).get("risk_level")))), pn)));
+
+                System.out.println("uneffective "+ (i-1) +" : "+ (1 - (float) (arrayList.get(i - 1).get("risk_level"))));
+
                 Place iContact = pn.addPlace("Contatto_" + i);
                 Transition ti = pn.addTransition("t" + i);
                 pn.addPrecondition(iCondition, ti);
                 pn.addPostcondition(ti, iContact);
                 delta = ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(i - 1).get("start_date"), (LocalDateTime) arrayList.get(i).get("start_date")) / 60;
-                //System.out.println(i + " " + delta);
+
+                System.out.println( delta);
+
                 ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(String.valueOf(delta)));
                 Transition effectiveLast = pn.addTransition("Efficace_" + i);
                 pn.addPrecondition(iContact, effectiveLast);
                 pn.addPostcondition(effectiveLast, contagious);
                 effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((float) (arrayList.get(i).get("risk_level"))), pn)));
+
+                System.out.println("effective " + i + " : "+ arrayList.get(i).get("risk_level").toString());
+
                 lastPlace = iContact;
             }
             //making the last module
@@ -117,9 +131,13 @@ public class STPNAnalyzer<R,S> {
             pn.addPrecondition(lastPlace, drop);
             drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(arrayList.size() - 1).get("risk_level")))), pn)));
 
+            System.out.println("uneffective (last) " + (1 - (float) (arrayList.get(arrayList.size() - 1).get("risk_level"))));
+
+
+
             // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.005"))
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
             //TODO: add plots of other rewards and change title
