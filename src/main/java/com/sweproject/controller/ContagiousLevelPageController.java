@@ -30,7 +30,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
     private ObservationDAO observationDAO;
 
     public ContagiousLevelPageController(){
-        stpnAnalyzer = new STPNAnalyzer(144, 2);
+        stpnAnalyzer = new STPNAnalyzer(144, 1);
         observationDAO = new ObservationDAO();
     }
     @Override

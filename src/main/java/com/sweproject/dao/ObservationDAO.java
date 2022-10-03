@@ -148,5 +148,4 @@ public class ObservationDAO extends DAO {
         return arrayList;
     }
 
-
 }
