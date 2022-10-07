@@ -86,7 +86,7 @@ public class AddObservationPageController extends UIController implements Initia
             case "Contact with people":
                 subjects = cluster;
                 subjects.add(user.getSubject().getFiscalCode());
-                type = new Contact(subjects);
+                type = new Contact(subjects, mask_used, risk_level, startDate, endDate);
                 //type = new Contact(subjects, Integer.parseInt(trasmission_rate.getText()));
                 break;
             case "Contact with environment":
@@ -223,20 +223,24 @@ public class AddObservationPageController extends UIController implements Initia
             test_type_box.setManaged(false);
             environment_box.setManaged(false);
             environment_box.setVisible(false);
-        }else if (observation_type_menu.getValue().toString().equals("Contact with environment")) {
+        }/*else if (observation_type_menu.getValue().toString().equals("Contact with environment")) {
             test_type_box.setVisible(false);
             test_type_box.setManaged(false);
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
             environment_box.setManaged(true);
             environment_box.setVisible(true);
-        }else {
+        }*/else {
             test_type_box.setVisible(false);
             test_type_box.setManaged(false);
             symptomatic_box.setVisible(false);
             symptomatic_box.setManaged(false);
-            environment_box.setManaged(false);
-            environment_box.setVisible(false);
+           // environment_box.setManaged(false);
+           // environment_box.setVisible(false);
+            environment_box.setManaged(true);
+            environment_box.setVisible(true);
+
+
         }
     }
 

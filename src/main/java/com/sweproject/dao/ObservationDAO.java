@@ -17,8 +17,9 @@ public class ObservationDAO extends DAO {
             setConnection();
             if (endDate == null) {
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "')");
-            } else if(type.getName().equals("Environment")){
-                statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`, `risk_level`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "','" + ((Environment)type).getRiskLevel()+"')");
+            } else if(type.getName().equals("Environment") || (type.getName().equals("Contact"))){
+                float riskLevel = type.getName().equals("Environment")?((Environment)type).getRiskLevel():((Contact)type).getRiskLevel();
+                statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`, `risk_level`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "','" + riskLevel+"')");
             }
             else{
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "')");
@@ -137,7 +138,7 @@ public class ObservationDAO extends DAO {
                 else
                     subjectList += "'" + subjects.get(i) + "'";
             }
-            rs = statement.executeQuery("SELECT distinct obs2.`fiscalCode` as 'fiscalCode', `start_date` FROM (`observations` obs1 join `observations` obs2 on obs1.`id` = obs2.`id`) join `events` on events.ID = obs1.`id` where obs1.`fiscalCode` = '" + FC + "' and obs2.`fiscalCode` IN (" + subjectList + ") and `start_date` > '" + start_time_analysis + "' order by start_date");
+            rs = statement.executeQuery("SELECT distinct obs2.`fiscalCode` as 'fiscalCode', `start_date`, `risk_level` FROM (`observations` obs1 join `observations` obs2 on obs1.`id` = obs2.`id`) join `events` on events.ID = obs1.`id` where obs1.`fiscalCode` = '" + FC + "' and obs2.`fiscalCode` IN (" + subjectList + ") and `start_date` > '" + start_time_analysis + "' order by start_date");
             arrayList = convertResultSet(rs);
             System.out.println(arrayList.size());
         }catch(SQLException e){

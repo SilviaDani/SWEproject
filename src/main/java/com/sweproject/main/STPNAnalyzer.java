@@ -42,15 +42,6 @@ public class STPNAnalyzer<R,S> {
         this.step = step;
     }
 
-    private boolean haveAlreadyBeenAnalyzed(String FC) {
-        for (String code : alreadyAnalyzedCodes) {
-            if (code.equals(FC))
-                return true;
-        }
-        alreadyAnalyzedCodes.add(FC);
-        return false;
-    }
-
     public TransientSolution<R,S> makeModel(String fiscalCode){
         LocalDateTime now = LocalDateTime.now().minusDays(6);
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
@@ -109,6 +100,7 @@ public class STPNAnalyzer<R,S> {
         return (TransientSolution<R, S>) rewardedSolution;
     }
 
+    //delete from here
     public TransientSolution<R, S> mm(String fiscalCode) {
         //retrieving data from DB
         LocalDateTime now = LocalDateTime.now();
@@ -197,6 +189,7 @@ public class STPNAnalyzer<R,S> {
         }
 
     }
+    //to here
 
     public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s ){
         XYChart.Series<String, Float> series = new XYChart.Series();
@@ -210,7 +203,7 @@ public class STPNAnalyzer<R,S> {
         return series;
     }
 
-    public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution> ss, LocalDateTime meeting_time, int step, LocalDateTime now){
+    public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution> ss, LocalDateTime meeting_time, int step, LocalDateTime now, float riskLevel){
         //TODO inserire quanto è stretto un contatto
         int delta = (int) ((ChronoUnit.MINUTES.between(now.truncatedTo(ChronoUnit.MINUTES).minusDays(6), meeting_time) / 60)/step);
         //System.out.println(delta);
@@ -221,7 +214,7 @@ public class STPNAnalyzer<R,S> {
             if(currentValue > max)
                 max = currentValue;
         }
-        return max;
+        return max*riskLevel;
     }
 
 
@@ -313,6 +306,11 @@ public class STPNAnalyzer<R,S> {
     }
 
     public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet) {
+        for(int i = 0; i<clusterSubjectsMet.size(); i++){
+            for(String key : clusterSubjectsMet.get(i).keySet()){
+                System.out.println("CSM ["+i+"]["+key+"]:"+clusterSubjectsMet.get(i).get(key));
+            }
+        }
         if (clusterSubjectsMet.size() > 0) {
             LocalDateTime now = LocalDateTime.now();
             PetriNet net = new PetriNet();
@@ -341,7 +339,7 @@ public class STPNAnalyzer<R,S> {
             for (int k = 0; k < j; k++) {
                 subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
             }
-            float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, now); //fixme
+            float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, now, (float) clusterSubjectsMet.get(j-1).get("risk_level")); //fixme
             float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1)/60.f;
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
             e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(effectiveness), net)));
@@ -374,7 +372,7 @@ public class STPNAnalyzer<R,S> {
                 Place p4 = net.addPlace("Incontro "+(p+1));
                 Transition t1 = net.addTransition("t "+p), e1 = net.addTransition("effective "+p), u1 = net.addTransition("uneffective "+p);
                 delta = (float) ChronoUnit.MINUTES.between(meeting_time1, meeting_time2) / 60.f;
-                effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time2, step, now); //fixme
+                effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time2, step, now, (float) clusterSubjectsMet.get(l-1).get("risk_level")); //fixme
 
                 t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
                 e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(effectiveness), net)));
@@ -416,7 +414,7 @@ public class STPNAnalyzer<R,S> {
             double step = s.getStep().doubleValue();
             for(int i=0, size = s.getSamplesNumber(); i<size; i++){
                 float value = 0.f;
-                for(int j = 0; j<ss.size();j++){
+                for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
                     value += (float)ss.get(j).get(fiscalCode).getSolution()[i][r][m];
                 }
                 series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), value));
