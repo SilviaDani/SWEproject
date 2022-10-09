@@ -1,11 +1,7 @@
-package com.sweproject.main;
+package com.sweproject.analysis;
 
 import com.sweproject.dao.ObservationDAO;
-import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import org.assertj.core.internal.bytebuddy.asm.Advice;
 import org.oristool.math.OmegaBigDecimal;
 import org.oristool.math.domain.DBMZone;
 import org.oristool.math.expression.Expolynomial;
@@ -32,7 +28,6 @@ import java.util.HashMap;
 
 public class STPNAnalyzer<R,S> {
     private ObservationDAO observationDAO;
-    private ArrayList<String> alreadyAnalyzedCodes = new ArrayList<>();
     private int step;
     private int samples;
 
@@ -44,7 +39,7 @@ public class STPNAnalyzer<R,S> {
 
     public TransientSolution<R,S> makeModel(String fiscalCode){
         LocalDateTime now = LocalDateTime.now().minusDays(6);
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(fiscalCode);
         PetriNet net = new PetriNet();
         Marking marking = new Marking();
         //Generating Nodes
@@ -104,7 +99,7 @@ public class STPNAnalyzer<R,S> {
     public TransientSolution<R, S> mm(String fiscalCode) {
         //retrieving data from DB
         LocalDateTime now = LocalDateTime.now();
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservation(fiscalCode);
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(fiscalCode);
         for(int i = 0; i<arrayList.size(); i++){
             System.out.println(arrayList.get(i).get("start_date"));
         }

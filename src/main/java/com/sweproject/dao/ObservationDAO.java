@@ -106,7 +106,7 @@ public class ObservationDAO extends DAO {
         return arrayList;
     }
 
-    public ArrayList<HashMap<String, Object>> getEnvironmentObservation(String FC){
+    public ArrayList<HashMap<String, Object>> getEnvironmentObservations(String FC){
         LocalDateTime right_now = LocalDateTime.now();
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime start_time_analysis = now.minusDays(6);
@@ -124,7 +124,7 @@ public class ObservationDAO extends DAO {
         return arrayList;
     }
 
-    public ArrayList<HashMap<String, Object>> getContactObservation(String FC, ArrayList<String> subjects){
+    public ArrayList<HashMap<String, Object>> getContactObservations(String FC, ArrayList<String> subjects){
         LocalDateTime right_now = LocalDateTime.now();
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime start_time_analysis = now.minusDays(6);

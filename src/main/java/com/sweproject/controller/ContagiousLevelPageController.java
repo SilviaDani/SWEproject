@@ -1,6 +1,6 @@
 package com.sweproject.controller;
 
-import com.sweproject.main.STPNAnalyzer;
+import com.sweproject.analysis.STPNAnalyzer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,17 +11,14 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import com.sweproject.dao.ObservationDAO;
 import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.ResourceBundle;
 
 public class ContagiousLevelPageController extends UIController implements Initializable {
@@ -43,7 +40,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             for(int i = 0; i<clusterMembers.size(); i++){
             ArrayList<String> otherMembers = new ArrayList<>(clusterMembers);
             otherMembers.remove(i);
-            clusterSubjectsMet.put(clusterMembers.get(i), observationDAO.getContactObservation(clusterMembers.get(i), otherMembers));
+            clusterSubjectsMet.put(clusterMembers.get(i), observationDAO.getContactObservations(clusterMembers.get(i), otherMembers));
             }
         }
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();

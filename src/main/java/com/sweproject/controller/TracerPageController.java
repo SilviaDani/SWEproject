@@ -12,6 +12,7 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class TracerPageController extends UIController{
+    //TODO: delete this
     @FXML
     Label welcome_user;
 

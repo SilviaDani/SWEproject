@@ -1,13 +1,10 @@
-package com.sweproject.main;
+package com.sweproject.analysis;
 
+import com.sweproject.analysis.STPNAnalyzer;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
 import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
-import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.math.OmegaBigDecimal;
@@ -19,7 +16,6 @@ import org.oristool.math.function.PartitionedGEN;
 import org.oristool.models.pn.Priority;
 import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
-import org.oristool.models.stpn.TransientSolutionViewer;
 import org.oristool.models.stpn.trans.RegTransient;
 import org.oristool.models.stpn.trees.DeterministicEnablingState;
 import org.oristool.models.stpn.trees.StochasticTransitionFeature;
@@ -34,7 +30,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.text.DecimalFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
