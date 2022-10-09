@@ -109,6 +109,9 @@ public class UITest extends Application {
            robot.type(KeyCode.ENTER);
            switch (i){
                case 0:
+                   robot.clickOn("#risk_combobox");
+                   robot.type(KeyCode.DOWN, 1);
+                   robot.type(KeyCode.ENTER);
                    robot.clickOn("#next");
                    robot.clickOn("#start_datePicker_menu");
                    robot.write("01/01/2021");

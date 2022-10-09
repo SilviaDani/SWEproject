@@ -2,6 +2,7 @@ package com.sweproject.dao;
 
 import com.sweproject.model.*;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ public class ObservationDAO extends DAO {
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "')");
             } else if(type.getName().equals("Environment") || (type.getName().equals("Contact"))){
                 float riskLevel = type.getName().equals("Environment")?((Environment)type).getRiskLevel():((Contact)type).getRiskLevel();
+                System.out.println("riskLevel: "+riskLevel);
                 statement.execute("INSERT INTO `events` (`is_relevant`, `type`, `start_date`, `end_date`, `risk_level`) VALUES ('" + 1 + "', '" + type.getName() + "', '" + startDate + "','" + endDate + "','" + riskLevel+"')");
             }
             else{

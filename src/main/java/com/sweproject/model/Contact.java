@@ -8,6 +8,7 @@ public class Contact extends Type{
     private ArrayList<Subject> subjects;
     private float trasmissionChance;
     private ArrayList<String> cluster;
+    private float riskLevel;
 
     public Contact(ArrayList<Subject> subjects, float trasmissionChance) {
         this.trasmissionChance = trasmissionChance;
@@ -17,7 +18,7 @@ public class Contact extends Type{
     public Contact(ArrayList<String> cluster){
         this.cluster = cluster;
     }
-    private float riskLevel;
+
     public Contact(ArrayList<String> cluster, boolean maskUsed, String risk, LocalDateTime initialDate, LocalDateTime finalDate) {
         this(cluster);
         long minutes = ChronoUnit.MINUTES.between(initialDate, finalDate);
@@ -29,7 +30,12 @@ public class Contact extends Type{
             riskLevel = 0.9f;
         if(maskUsed)
             riskLevel *= 0.1f;
+
         riskLevel *= 2 * Math.exp(minutes/40) / (1 + Math.exp(minutes/40)) - 1;
+        if(Float.isNaN(riskLevel)) {
+            riskLevel = 0.99f;
+            System.out.println("nan");
+        }
         //FIXME mettere valori plausibili
     }
 
