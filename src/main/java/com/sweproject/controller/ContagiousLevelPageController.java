@@ -49,7 +49,11 @@ public class ContagiousLevelPageController extends UIController implements Initi
             for(String member : clusterMembers){
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
-                    pits.put(member, stpnAnalyzer.makeModel(member));
+                    try {
+                        pits.put(member, stpnAnalyzer.makeModel(member));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }else{
                     pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
                 }

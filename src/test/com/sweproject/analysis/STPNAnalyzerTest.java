@@ -42,7 +42,7 @@ class STPNAnalyzerTest {
         stpnAnalyzer = new STPNAnalyzer(144, 1);
     }
     @Test
-    void contactWithEnvironment(){
+    void contactWithEnvironment() throws Exception {
         //inserisco nel db le osservazioni che mi servono
         //8,20
         //3,2

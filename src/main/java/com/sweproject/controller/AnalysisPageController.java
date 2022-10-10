@@ -12,6 +12,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.stage.Stage;
+import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
@@ -26,7 +27,12 @@ public class AnalysisPageController extends UIController implements Initializabl
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        var analysis = stpnAnalyzer.makeModel(user.getFiscalCode());
+        TransientSolution analysis = null;
+        try {
+            analysis = stpnAnalyzer.makeModel(user.getFiscalCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         XYChart.Series series = stpnAnalyzer.makeChart(analysis);
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();

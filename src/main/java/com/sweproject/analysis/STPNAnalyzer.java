@@ -37,62 +37,66 @@ public class STPNAnalyzer<R,S> {
         this.step = step;
     }
 
-    public TransientSolution<R,S> makeModel(String fiscalCode){
+    public TransientSolution<R,S> makeModel(String fiscalCode) throws Exception {
         LocalDateTime now = LocalDateTime.now().minusDays(6);
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(fiscalCode);
-        PetriNet net = new PetriNet();
-        Marking marking = new Marking();
-        //Generating Nodes
-        Place Contagio = net.addPlace("Contagio");
-        buildContagionEvolutionSection(net, marking, Contagio);
-        Place p1 = net.addPlace("Condizione iniziale");
-        Place p2 = net.addPlace("Primo incontro");
-        marking.setTokens(p1, 1);
-        Transition t0 = net.addTransition("t0");
-        Transition e0 = net.addTransition("effective0");
-        Transition u0 = net.addTransition("uneffective0");
-        float delta = (float)ChronoUnit.MINUTES.between(now, (LocalDateTime)arrayList.get(0).get("start_date"))/60.f;
-        t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-        e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf((float)arrayList.get(0).get("risk_level")), net)));
-        u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1-(float)arrayList.get(0).get("risk_level")), net)));
-        net.addPrecondition(p1,t0);
-        net.addPostcondition(t0,p2);
-        net.addPrecondition(p2, e0);
-        net.addPostcondition(e0, Contagio);
-        net.addPrecondition(p2, u0);
+        if(arrayList.size() > 0) {
+            PetriNet net = new PetriNet();
+            Marking marking = new Marking();
+            //Generating Nodes
+            Place Contagio = net.addPlace("Contagio");
+            buildContagionEvolutionSection(net, marking, Contagio);
+            Place p1 = net.addPlace("Condizione iniziale");
+            Place p2 = net.addPlace("Primo incontro");
+            marking.setTokens(p1, 1);
+            Transition t0 = net.addTransition("t0");
+            Transition e0 = net.addTransition("effective0");
+            Transition u0 = net.addTransition("uneffective0");
+            float delta = (float) ChronoUnit.MINUTES.between(now, (LocalDateTime) arrayList.get(0).get("start_date")) / 60.f;
+            t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
+            e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf((float) arrayList.get(0).get("risk_level")), net)));
+            u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - (float) arrayList.get(0).get("risk_level")), net)));
+            net.addPrecondition(p1, t0);
+            net.addPostcondition(t0, p2);
+            net.addPrecondition(p2, e0);
+            net.addPostcondition(e0, Contagio);
+            net.addPrecondition(p2, u0);
 
-        Transition lastTransition = u0;
-        for(int i = 1; i<arrayList.size(); i++) {
-            Place p3 = net.addPlace("Dopo incontro "+i);
-            Place p4 = net.addPlace("Incontro "+(i+1));
-            Transition t1 = net.addTransition("t "+i), e1 = net.addTransition("effective "+i), u1 = net.addTransition("uneffective "+i);
-            delta = (float) ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(i-1).get("start_date"), (LocalDateTime) arrayList.get(i).get("start_date")) / 60.f;
-            t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-            e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf((float) arrayList.get(i).get("risk_level")), net)));
-            u1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - (float) arrayList.get(i).get("risk_level")), net)));
-            net.addPostcondition(lastTransition, p3);
-            net.addPrecondition(p3, t1);
-            net.addPostcondition(t1, p4);
-            net.addPrecondition(p4, e1);
-            net.addPostcondition(e1, Contagio);
-            net.addPrecondition(p4, u1);
-            lastTransition = u1;
+            Transition lastTransition = u0;
+            for (int i = 1; i < arrayList.size(); i++) {
+                Place p3 = net.addPlace("Dopo incontro " + i);
+                Place p4 = net.addPlace("Incontro " + (i + 1));
+                Transition t1 = net.addTransition("t " + i), e1 = net.addTransition("effective " + i), u1 = net.addTransition("uneffective " + i);
+                delta = (float) ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(i - 1).get("start_date"), (LocalDateTime) arrayList.get(i).get("start_date")) / 60.f;
+                t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
+                e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf((float) arrayList.get(i).get("risk_level")), net)));
+                u1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - (float) arrayList.get(i).get("risk_level")), net)));
+                net.addPostcondition(lastTransition, p3);
+                net.addPrecondition(p3, t1);
+                net.addPostcondition(t1, p4);
+                net.addPrecondition(p4, e1);
+                net.addPostcondition(e1, Contagio);
+                net.addPrecondition(p4, u1);
+                lastTransition = u1;
+            }
+            // 144 -> 6 giorni
+            RegTransient analysis = RegTransient.builder()
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .timeStep(new BigDecimal(step)).build();
+
+            //TODO: add plots of other rewards and change title
+            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+            var rewardRates = TransientSolution.rewardRates("Contagioso");
+
+            TransientSolution<DeterministicEnablingState, Marking> solution =
+                    analysis.compute(net, marking);
+
+            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
+            //new TransientSolutionViewer(rewardedSolution);
+            return (TransientSolution<R, S>) rewardedSolution;
+        }else{
+            throw new Exception("No environmental observation are present on the database");
         }
-        // 144 -> 6 giorni
-        RegTransient analysis = RegTransient.builder()
-                .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                .timeStep(new BigDecimal(step)).build();
-
-        //TODO: add plots of other rewards and change title
-        //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-        var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-        TransientSolution<DeterministicEnablingState, Marking> solution =
-                analysis.compute(net, marking);
-
-        var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-        //new TransientSolutionViewer(rewardedSolution);
-        return (TransientSolution<R, S>) rewardedSolution;
     }
 
     //delete from here
