@@ -11,6 +11,7 @@ import org.oristool.math.function.PartitionedGEN;
 import org.oristool.models.pn.Priority;
 import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
+import org.oristool.models.stpn.TransientSolutionViewer;
 import org.oristool.models.stpn.trans.RegTransient;
 import org.oristool.models.stpn.trees.DeterministicEnablingState;
 import org.oristool.models.stpn.trees.StochasticTransitionFeature;
@@ -92,7 +93,6 @@ public class STPNAnalyzer<R,S> {
                     analysis.compute(net, marking);
 
             var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            //new TransientSolutionViewer(rewardedSolution);
             return (TransientSolution<R, S>) rewardedSolution;
         }else{
             throw new Exception("No environmental observation are present on the database");

@@ -109,6 +109,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
         chart.setTitle("Probability of being contagious due to the environment during the last 6 days");
         chart.setCreateSymbols(false);
         chart.getData().add(series);*/
+
     }
 
     public void ok(ActionEvent event) throws IOException {

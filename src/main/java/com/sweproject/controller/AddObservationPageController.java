@@ -47,6 +47,7 @@ public class AddObservationPageController extends UIController implements Initia
     @FXML private VBox add_cluster_vbox;
     @FXML private Button add_to_cluster;
     @FXML private Button remove_from_cluster;
+    @FXML private Label risk_level_label;
     private boolean dateError;
     private static String eventType;
     private static LocalDateTime startDate;
@@ -239,6 +240,10 @@ public class AddObservationPageController extends UIController implements Initia
            // environment_box.setVisible(false);
             environment_box.setManaged(true);
             environment_box.setVisible(true);
+            if(observation_type_menu.getValue().toString().equals("Contact with people"))
+                risk_level_label.setText("Choose risk level of the contact");
+            else
+                risk_level_label.setText("Choose risk level of the environment");
 
 
         }

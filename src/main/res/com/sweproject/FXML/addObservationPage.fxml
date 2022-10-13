@@ -56,7 +56,7 @@
       </HBox>
       <HBox fx:id="environment_box" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" visible="false">
          <children>
-             <Label text="Choose risk level of the environment">
+             <Label text="Choose risk level of the environment" fx:id="risk_level_label">
                  <HBox.margin>
                      <Insets right="10.0" />
                  </HBox.margin>

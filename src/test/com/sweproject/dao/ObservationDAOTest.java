@@ -158,4 +158,52 @@ public class ObservationDAOTest {
             
         }
     }
+
+    public static ArrayList<String> getAllUsers(){
+        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        Properties prop = new Properties();
+        try{
+            FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
+            prop.load(fis);
+        }catch(IOException ex){
+            System.out.println("Impossibile trovare le credenziali per l'accesso al database");
+        }
+        String user = prop.getProperty("db.user");
+        String password = prop.getProperty("db.password");
+        Connection connection = null;
+        Statement statement = null;
+        ArrayList<String> arrayList = new ArrayList<>();
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            statement = connection.createStatement();
+            statement.execute("use `tracing-app`");
+            ResultSet rs = statement.executeQuery("SELECT DISTINCT users.`fiscalCode` FROM `users` RIGHT JOIN observations o on users.fiscalCode = o.fiscalCode WHERE users.`fiscalCode` IS NOT NULL");
+            try {
+                while(rs.next()){
+                    arrayList.add((String) rs.getObject(1));
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Si è verificato un problema durante l'esecuzione della query");
+        }finally {
+            if(statement!=null) {
+                try {
+                    statement.close();
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+            if(connection!=null) {
+                try {
+                    connection.close();
+                }catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+        }
+        return arrayList;
+    }
 }
