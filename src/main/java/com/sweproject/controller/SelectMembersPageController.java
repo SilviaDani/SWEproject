@@ -58,7 +58,7 @@ public class SelectMembersPageController extends UIController implements Initial
         System.out.println(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
         add_cluster_vbox.lookup("#add"+i).setDisable(true);
         add_cluster_vbox.lookup("#remove"+i).setDisable(false);
-        cluster.add(((TextField) add_cluster_vbox.lookup("#text"+i)).getText());
+        cluster.add(((TextField) add_cluster_vbox.lookup("#text"+i)).getText().toUpperCase());
         i = cluster.size()+1;
         HBox newSubjectHbox = new HBox();
         newSubjectHbox.setAlignment(Pos.CENTER);
@@ -98,7 +98,7 @@ public class SelectMembersPageController extends UIController implements Initial
     }
 
     public void confirm(ActionEvent event) throws IOException {
-        cluster.add(user.getFiscalCode());
+        cluster.add(user.getFiscalCode().toUpperCase());
         data = cluster;
         Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/contagiousLevelPage.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();

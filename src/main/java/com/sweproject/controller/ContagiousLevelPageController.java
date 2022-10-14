@@ -18,6 +18,7 @@ import org.oristool.models.stpn.TransientSolution;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
@@ -43,6 +44,10 @@ public class ContagiousLevelPageController extends UIController implements Initi
             clusterSubjectsMet.put(clusterMembers.get(i), observationDAO.getContactObservations(clusterMembers.get(i), otherMembers));
             }
         }
+
+        System.out.println(clusterSubjectsMet.keySet());
+        System.out.println(clusterMembers.get(0));
+
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         for(int nIteration = 0; nIteration<=max_iterations; nIteration++){
             HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
@@ -61,7 +66,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             }
             pns.add(pits);
         }
-        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode());
+        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode().toUpperCase());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
