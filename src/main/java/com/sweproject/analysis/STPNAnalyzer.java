@@ -336,7 +336,7 @@ public class STPNAnalyzer<R,S> {
             }
             ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
             for (int k = 0; k < j; k++) {
-                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
             }
             float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, now, (float) clusterSubjectsMet.get(j-1).get("risk_level")); //fixme
             float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1)/60.f;
