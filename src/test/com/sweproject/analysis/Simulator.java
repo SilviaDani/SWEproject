@@ -1,10 +1,16 @@
 package com.sweproject.analysis;
 
+import com.sweproject.controller.UIController;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
 import com.sweproject.model.Contact;
 import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
+import javafx.fxml.FXML;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.math.OmegaBigDecimal;
 import org.oristool.math.expression.Expolynomial;
@@ -19,14 +25,21 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class Simulator {
-    private static ObservationDAO observationDAO;
+public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    int days = 6;
     final int maxReps = 10000;
     HashMap<LocalDateTime, ArrayList<Integer>> p1perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
     HashMap<LocalDateTime, ArrayList<Integer>> p2perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
+    @FXML
+    private LineChart chart;
+    private static ObservationDAO observationDAO;
+    private STPNAnalyzer stpnAnalyzer;
+
+    Simulator(){
+        observationDAO = new ObservationDAO();
+        stpnAnalyzer = new STPNAnalyzer(samples, steps);
+    }
 
     @Test
     void start_simulation(){
@@ -61,7 +74,7 @@ public class Simulator {
         }
 
         //Create Cluster Contacts
-        subjects.add("p1");
+        subjects.add(0, "p1");
         Type [] mm = new Contact [3];
         LocalDateTime[] startDates = new LocalDateTime[]{t0.plusHours(38), t0.plusHours(78), t0.plusHours(100), t0.plusHours(136)};
         LocalDateTime[] endDates = new LocalDateTime[]{t0.plusHours(38+3), t0.plusHours(78+1).plusMinutes(30), t0.plusHours(98+2).plusMinutes(15)};
@@ -79,126 +92,318 @@ public class Simulator {
             int p2_environment = 0;
             int p1_p2 = 0;
             int[] lastStates = new int[]{0, 0}; //0 -> sano, 1 -> infetto, 2 -> contagioso, 3 -> guarito
-            //Get next contact in timeline and its risk
-            for(int contact = 0; contact<13; contact++){
-                ArrayList <LocalDateTime> nextContactTime = new ArrayList<>();
-                ArrayList<Float> nextRisk = new ArrayList<>();
-                ArrayList<String> nextContact = new ArrayList<>();
+            ArrayList<LocalDateTime> nextContactTime = new ArrayList<>();
+            ArrayList<Float> nextRisk = new ArrayList<>();
+            ArrayList<String> nextContact = new ArrayList<>();
 
-                if(startDates1[p1_environment].isBefore(startDates2[p2_environment]) & startDates1[p1_environment].isBefore(startDates[p1_p2])) {
-                    nextContactTime.add(startDates1[p1_environment]);
-                    nextRisk.add(risks1[p1_environment]);
-                    nextContact.add("p1");
-                    p1_environment++;
+            //Get next contact in timeline and its risk
+            for(int contact = 0; contact<13; contact++) {
+                if (p1_environment < startDates1.length & p2_environment < startDates2.length & startDates.length < p1_p2){
+                    if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) & startDates1[p1_environment].isBefore(startDates[p1_p2])) {
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment]) & startDates2[p2_environment].isBefore(startDates[p1_p2])) {
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+                    } else if (startDates[p1_p2].isBefore(startDates1[p1_environment]) & startDates[p1_p2].isBefore(startDates2[p2_environment])) {
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_p2++;
+                    } else if (startDates1[p1_environment].isEqual(startDates2[p2_environment])) {
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_environment++;
+                        p2_environment++;
+                    }
                 }
-                else if(startDates2[p2_environment].isBefore(startDates1[p1_environment]) & startDates2[p2_environment].isBefore(startDates[p1_p2])){
-                    nextContactTime.add(startDates2[p2_environment]);
-                    nextRisk.add(risks2[p2_environment]);
-                    nextContact.add("p2");
-                    p2_environment++;
+                else if (p1_environment >= startDates1.length & p2_environment < startDates2.length & startDates.length < p1_p2){
+                    if (startDates2[p2_environment].isEqual(startDates[p1_p2])){
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_p2++;
+                    }
+                    else if (startDates2[p2_environment].isBefore(startDates[p1_p2])){
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+                    }
+                    else {
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks2[p1_p2]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_p2++;
+                    }
                 }
-                else if(startDates[p1_p2].isBefore(startDates1[p1_environment]) & startDates[p1_p2].isBefore(startDates2[p2_environment])){
+                else if (p1_environment < startDates1.length & p2_environment >= startDates2.length & startDates.length < p1_p2){
+                    if (startDates[p1_p2].isEqual(startDates1[p1_environment])){
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks2[p1_p2]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_p2++;
+
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    }
+                    else if (startDates1[p1_environment].isBefore(startDates[p1_p2])){
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    }
+                    else {
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks2[p1_p2]);
+                        nextContact.add("p1");
+                        nextContact.add("p2");
+                        p1_p2++;
+                    }
+                }
+                else if (p1_environment < startDates1.length & p2_environment < startDates2.length & startDates.length <= p1_p2){
+                    if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    }
+                    else if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    }
+                    else if (startDates2[p2_environment].isBefore(startDates1[p1_environment])){
+                        nextContactTime.add(startDates2[p2_environment]);
+                        nextRisk.add(risks2[p2_environment]);
+                        nextContact.add("p2");
+                        p2_environment++;
+                    }
+                    else {
+                        nextContactTime.add(startDates1[p1_environment]);
+                        nextRisk.add(risks1[p1_environment]);
+                        nextContact.add("p1");
+                        p1_environment++;
+                    }
+                }
+                else if (p1_environment >= startDates1.length & p2_environment >= startDates2.length & startDates.length < p1_p2){
                     nextContactTime.add(startDates[p1_p2]);
-                    nextRisk.add(risks[p1_p2]);
+                    nextRisk.add(risks2[p1_p2]);
                     nextContact.add("p1");
                     nextContact.add("p2");
                     p1_p2++;
                 }
-                else if(startDates1[p1_environment].isEqual(startDates2[p2_environment])){
-                    nextContactTime.add(startDates1[p1_environment]);
+                else if (p1_environment >= startDates1.length & p2_environment < startDates2.length & startDates.length >= p1_p2){
                     nextContactTime.add(startDates2[p2_environment]);
-                    nextRisk.add(risks1[p1_environment]);
                     nextRisk.add(risks2[p2_environment]);
-                    nextContact.add("p1");
                     nextContact.add("p2");
-                    p1_environment++;
                     p2_environment++;
                 }
+                else if (p1_environment < startDates1.length & p2_environment >= startDates2.length & startDates.length >= p1_p2){
+                    nextContactTime.add(startDates1[p1_environment]);
+                    nextRisk.add(risks1[p1_environment]);
+                    nextContact.add("p1");
+                    p1_environment++;
+                }
+            }
 
-                while (nextContactTime.size() != 0){
-                    String nc = nextContact.remove(0);
-                    if (nc.equals("p1")){
-                        if (lastStates[0] == 0){ //sano
-                            Random r = new Random();
-                            float random = 0 + r.nextFloat() * (1 - 0);
-                            if (random<nextRisk.remove(0)) { //Da sano a contagiato
-                                lastStates[0] += 1;
-                                LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
-                                addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                                int position = 0;
-                                for (int iterator=0; iterator<nextContactTime.size(); iterator++){
-                                    if (nextContactTime.get(iterator).isBefore(timeContagious))
-                                        position = iterator + 1;
-                                }
-                                nextContactTime.add(position, timeContagious);
-                                nextContact.add(position, "p1");
-                            }
-                            else {//altrimenti resta sano
-                                addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                            }
-                        }
-                        else if (lastStates[0] == 1){ //contagiato
-                            lastStates[0] += 1; //da contagiato a contagioso
-                            LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
+            System.out.println("NEXTCONTACT SIZE " + nextContact.size());
+
+            while (nextContactTime.size() > 0){
+                System.out.println("1 " + nextContact.size());
+                String nc = nextContact.remove(0);
+                if (nc.equals("p1")){
+                    if (lastStates[0] == 0){ //sano
+                        Random r = new Random();
+                        float random = 0 + r.nextFloat() * (1 - 0);
+                        if (random<nextRisk.remove(0)) { //Da sano a contagiato
+                            lastStates[0] += 1;
+                            System.out.println("new state  " + lastStates[0]);
+                            LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
                             addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
+                            System.out.println("nextcontact.size 1 " + nextContact.size());
                             int position = 0;
                             for (int iterator=0; iterator<nextContactTime.size(); iterator++){
-                                if (nextContactTime.get(iterator).isBefore(timeHealing))
+                                if (nextContactTime.get(iterator).isBefore(timeContagious))
                                     position = iterator + 1;
                             }
-                            nextContactTime.add(position, timeHealing);
+                            nextContactTime.add(position, timeContagious);
                             nextContact.add(position, "p1");
-
+                            System.out.println("nextcontact.size 2 " + nextContact.size());
+                            System.out.println("2 " + nextContact.size());
                         }
-                        else if (lastStates[0] == 2){ //contagioso
-                            lastStates[0] += 1; //da contagioso a guarito
+                        else {// resta sano
                             addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
+                            System.out.println("resta sano");
+                            System.out.println("nextcontact.size 1 " + nextContact.size());
                         }
                     }
-                    else if (nc.equals("p2")){
-                        if (lastStates[1] == 0){ //sano
-                            Random r = new Random();
-                            float random = 0 + r.nextFloat() * (1 - 0);
-                            if (random<nextRisk.remove(0)) { //Da sano a contagiato
-                                lastStates[1] += 1;
-                                LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
-                                addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
-                                int position = 0;
-                                for (int iterator=0; iterator<nextContactTime.size(); iterator++){
-                                    if (nextContactTime.get(iterator).isBefore(timeContagious))
-                                        position = iterator + 1;
-                                }
-                                nextContactTime.add(position, timeContagious);
-                                nextContact.add(position, "p2");
-                            }
-                            else {//altrimenti resta sano
-                                addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
-                            }
+                    else if (lastStates[0] == 1){ //contagiato
+                        lastStates[0] += 1; //da contagiato a contagioso
+                        LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
+                        System.out.println("new state  " + lastStates[0]);
+                        addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
+                        System.out.println("nextcontact.size 1 " + nextContact.size());
+                        int position = 0;
+                        for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                            if (nextContactTime.get(iterator).isBefore(timeHealing))
+                                position = iterator + 1;
                         }
-                        else if (lastStates[1] == 1){ //contagiato
-                            lastStates[1] += 1; //da contagiato a contagioso
-                            LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
+                        nextContactTime.add(position, timeHealing);
+                        nextContact.add(position, "p1");
+                        System.out.println("nextcontact.size 2 " + nextContact.size());
+                        System.out.println("3 " + nextContact.size());
+
+                    }
+                    else if (lastStates[0] == 2){ //contagioso
+                        lastStates[0] += 1; //da contagioso a guarito
+                        System.out.println("new state  " + lastStates[0]);
+                        addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
+                        System.out.println("nextcontact.size 1 " + nextContact.size());
+                    }
+                }
+                else if (nc.equals("p2")){
+                    System.out.println("contatto di p2");
+                    if (lastStates[1] == 0){ //sano
+                        Random r = new Random();
+                        float random = 0 + r.nextFloat() * (1 - 0);
+                        if (random<nextRisk.remove(0)) { //Da sano a contagiato
+                            lastStates[1] += 1;
+                            LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
                             addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
                             int position = 0;
                             for (int iterator=0; iterator<nextContactTime.size(); iterator++){
-                                if (nextContactTime.get(iterator).isBefore(timeHealing))
+                                if (nextContactTime.get(iterator).isBefore(timeContagious))
                                     position = iterator + 1;
                             }
-                            nextContactTime.add(position, timeHealing);
+                            nextContactTime.add(position, timeContagious);
                             nextContact.add(position, "p2");
-
                         }
-                        else if (lastStates[1] == 2){ //contagioso
-                            lastStates[1] += 1; //da contagioso a guarito
+                        else {//altrimenti resta sano
                             addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
                         }
+                    }
+                    else if (lastStates[1] == 1){ //contagiato
+                        lastStates[1] += 1; //da contagiato a contagioso
+                        LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
+                        addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
+                        int position = 0;
+                        for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                            if (nextContactTime.get(iterator).isBefore(timeHealing))
+                                position = iterator + 1;
+                        }
+                        nextContactTime.add(position, timeHealing);
+                        nextContact.add(position, "p2");
+
+                    }
+                    else if (lastStates[1] == 2){ //contagioso
+                        lastStates[1] += 1; //da contagioso a guarito
+                        addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
                     }
                 }
             }
 
         }
-        //TODO CONTARE PER OGNI CHIAVE NELLE HASHMAP QUANTE VOLTE LO STATO è 2 su n
-        //TODO plottare grafici di p1 (oris e simulazione)
+        float[] contagiousProbability1 = new float[p1perTime.size()];
+        float[] hours1 = new float[p1perTime.size()];
+        for (int r=0; r<p1perTime.size(); r++){
+            int p1_count = 0;
+            for (int state=0; state<p1perTime.get(r).size(); state++){
+                if (p1perTime.get(r).get(state) == 2)
+                    p1_count++;
+            }
+            float p1_probability = p1_count/p1perTime.get(r).size();
+            contagiousProbability1[r] = p1_probability;
+            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60;
+            hours1[r] = hour1;
+        }
+
+        float[] contagiousProbability2 = new float[p2perTime.size()];
+        float[] hours2 = new float[p2perTime.size()];
+        for (int r=0; r<p2perTime.size(); r++){
+            int p2_count = 0;
+            for (int state=0; state<p2perTime.get(r).size(); state++){
+                if (p2perTime.get(r).get(state) == 2)
+                    p2_count++;
+            }
+            float p2_probability = p2_count/p2perTime.get(r).size();
+            contagiousProbability2[r] = p2_probability;
+            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60;
+            hours2[r] = hour2;
+        }
+
+
+        //TODO PLOT SIMULAZIONE
+
+
+        //TODO FIXA LA PARTE DI SIRIO
+        ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
+        final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+        HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
+        if(max_iterations>0){
+            for(int i = 0; i<subjects.size(); i++){
+                ArrayList<String> otherMembers = new ArrayList<>(subjects);
+                otherMembers.remove(i);
+                clusterSubjectsMet.put(subjects.get(i), observationDAO.getContactObservations(subjects.get(i), otherMembers));
+            }
+        }
+
+        for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
+            HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
+            for(String member : subjects){
+                System.out.println(member + " it:"+nIteration + " started");
+                if(nIteration==0){
+                    try {
+                        pits.put(member, stpnAnalyzer.makeModel(member));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                }
+                System.out.println(member + " it:"+nIteration + " completed");
+            }
+            pns.add(pits);
+        }
+        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode().toUpperCase());
+        series.setName("Contagion level");
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Minutes");
+        yAxis.setLabel("Contagion level");
+        chart.setTitle("Probability of being contagious due to a contact during the last 6 days");
+        chart.setCreateSymbols(false);
+        chart.getData().add(series);
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
@@ -223,6 +428,14 @@ public class Simulator {
             hm.put(date, new ArrayList());
         }
         hm.get(date).add(state);
+    }
+
+    @AfterAll
+    static void clean(){
+        ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("p1");
+        for(int i = 0; i<obs.size();i++){
+            ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
+        }
     }
 }
 
