@@ -95,7 +95,8 @@ public class STPNAnalyzer<R,S> {
             var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
             return (TransientSolution<R, S>) rewardedSolution;
         }else{
-            throw new Exception("No environmental observation are present on the database");
+            System.out.println("The subject has no 'Environment' observations of the last 6 days");
+            return makeFakeNet();
         }
     }
 
@@ -305,11 +306,13 @@ public class STPNAnalyzer<R,S> {
     }
 
     public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet) {
+        //can be deleted ...
         for(int i = 0; i<clusterSubjectsMet.size(); i++){
             for(String key : clusterSubjectsMet.get(i).keySet()){
                 System.out.println("CSM ["+i+"]["+key+"]:"+clusterSubjectsMet.get(i).get(key));
             }
         }
+        //... until here
         if (clusterSubjectsMet.size() > 0) {
             LocalDateTime now = LocalDateTime.now();
             PetriNet net = new PetriNet();
@@ -325,6 +328,7 @@ public class STPNAnalyzer<R,S> {
             Transition u0 = net.addTransition("uneffective0");
 
             Transition lastTransition = u0;
+            //dato un tempo "meeting_time1" si segna quante persone, oltre al soggetto analizzato, hanno partecipato
             int i = 0; //index of contact
             int j = 0; //n. person met during contact counter
             String[] meeting_subjects = new String[clusterSubjectsMet.size()];
@@ -349,9 +353,9 @@ public class STPNAnalyzer<R,S> {
             net.addPostcondition(e0, Contagio);
             net.addPrecondition(p2, u0);
             //making intermediate modules
+            int p = 0; //index for transitions
             for (int l = i; l < clusterSubjectsMet.size(); l++) { //fixme
                 j = 0;
-                int p = 0; //index for transitions
                 for (int n = 0; n < meeting_subjects.length; n++) {
                     meeting_subjects[n] = null;
                 }
@@ -400,8 +404,8 @@ public class STPNAnalyzer<R,S> {
             //new TransientSolutionViewer(rewardedSolution);
             return (TransientSolution<R, S>) rewardedSolution;
         } else {
-            System.out.println("The subject has no Environment observations of the last 6 days");
-            return null;
+            System.out.println("The subject has no 'Contact' observations of the last 6 days");
+            return makeFakeNet();
             }
         }
 
@@ -420,5 +424,22 @@ public class STPNAnalyzer<R,S> {
             }
         }
         return series;
+    }
+
+    private TransientSolution<R,S> makeFakeNet(){
+        PetriNet fakeNet = new PetriNet();
+        Marking marking = new Marking();
+        fakeNet.addPlace("BlankNode");
+        RegTransient analysis = RegTransient.builder()
+                .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                .timeStep(new BigDecimal(step)).build();
+
+        var rewardRates = TransientSolution.rewardRates("BlankNode");
+
+        TransientSolution<DeterministicEnablingState, Marking> solution =
+                analysis.compute(fakeNet, marking);
+
+        var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
+        return (TransientSolution<R, S>) rewardedSolution;
     }
 }
