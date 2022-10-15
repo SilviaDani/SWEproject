@@ -395,6 +395,8 @@ public class Simulator extends UIController {
             }
             pns.add(pits);
         }
+
+        //TODO user da rivedere
         XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode().toUpperCase());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
