@@ -51,7 +51,6 @@ public class ContagiousLevelPageController extends UIController implements Initi
             System.out.println(s+ " "+ clusterSubjectsMet.get(s));
         }
 
-        //TODO : mettere che se un soggetto non ha osservazioni ambientali allora il rischio è 0.
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         for(int nIteration = 0; nIteration<=max_iterations; nIteration++){
             HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s

@@ -1,5 +1,9 @@
 package com.sweproject.analysis;
 
+import com.github.sh0nk.matplotlib4j.NumpyUtils;
+import com.github.sh0nk.matplotlib4j.Plot;
+import com.github.sh0nk.matplotlib4j.PythonConfig;
+import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 import com.sweproject.controller.UIController;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
@@ -17,11 +21,13 @@ import org.oristool.math.expression.Expolynomial;
 import org.oristool.math.expression.Variable;
 import org.oristool.models.stpn.TransientSolution;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,10 +48,36 @@ public class Simulator extends UIController {
     }
 
     @Test
-    void start_simulation(){
+    void plot(ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
+        TransientSolution s = ss.get(0).get(fiscalCode);
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        List<Double> yPN = new ArrayList<>();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m=0; m<s.getColumnStates().size(); m++){
+            for(int i=0, size = s.getSamplesNumber(); i<size; i++){
+                double value = 0.f;
+                for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                    value += ss.get(j).get(fiscalCode).getSolution()[i][r][m];
+                }
+                yPN.add(value);
+            }
+        }
+        List<Double> C = x.stream().map(xi -> Math.cos(xi)).collect(Collectors.toList());
+        List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
+
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig("C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe"));
+        plt.plot().add(x, yPN);
+        plt.plot().add(x, S);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.show();
+    }
+
+    @Test
+    void start_simulation() throws PythonExecutionException, IOException {
         //Created Enviornment Contacts
         ArrayList<String> subjects = new ArrayList<>();
-        subjects.add("p1");
+        subjects.add("P1");
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
         Type[] tt = new Environment[6];
         LocalDateTime[] startDates1 = new LocalDateTime[]{t0.plusHours(8), t0.plusHours(28), t0.plusHours(32), t0.plusHours(40), t0.plusHours(64), t0.plusHours(70)};
@@ -60,7 +92,7 @@ public class Simulator extends UIController {
         }
 
         subjects.clear();
-        subjects.add("p2");
+        subjects.add("P2");
         tt = new Environment[4];
         LocalDateTime[] startDates2 = new LocalDateTime[]{t0.plusHours(3), t0.plusHours(43), t0.plusHours(100), t0.plusHours(136)};
         LocalDateTime[] endDates2 = new LocalDateTime[]{t0.plusHours(3+1), t0.plusHours(43).plusMinutes(30), t0.plusHours(100+1), t0.plusHours(136).plusMinutes(45)};
@@ -74,9 +106,9 @@ public class Simulator extends UIController {
         }
 
         //Create Cluster Contacts
-        subjects.add(0, "p1");
+        subjects.add(0, "P1");
         Type [] mm = new Contact [3];
-        LocalDateTime[] startDates = new LocalDateTime[]{t0.plusHours(38), t0.plusHours(78), t0.plusHours(100), t0.plusHours(136)};
+        LocalDateTime[] startDates = new LocalDateTime[]{t0.plusHours(38), t0.plusHours(78), t0.plusHours(100)};
         LocalDateTime[] endDates = new LocalDateTime[]{t0.plusHours(38+3), t0.plusHours(78+1).plusMinutes(30), t0.plusHours(98+2).plusMinutes(15)};
         String[] riskLevels = new String[]{"Medium", "High", "Low"};
         masks = new boolean[]{false, false, true};
@@ -237,7 +269,7 @@ public class Simulator extends UIController {
                 }
             }
 
-            System.out.println("NEXTCONTACT SIZE " + nextContact.size());
+           // System.out.println("NEXTCONTACT SIZE " + nextContact.size());
 
             while (nextContactTime.size() > 0){
                 System.out.println("1 " + nextContact.size());
@@ -377,7 +409,13 @@ public class Simulator extends UIController {
                 clusterSubjectsMet.put(subjects.get(i), observationDAO.getContactObservations(subjects.get(i), otherMembers));
             }
         }
-
+        System.out.println("---");
+        System.out.println(clusterSubjectsMet.keySet());
+        System.out.println(subjects.get(0));
+        for(String s : clusterSubjectsMet.keySet()){
+            System.out.println(s+ " "+ clusterSubjectsMet.get(s));
+        }
+        System.out.println("---");
         for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
             HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
             for(String member : subjects){
@@ -396,16 +434,7 @@ public class Simulator extends UIController {
             pns.add(pits);
         }
 
-        //TODO user da rivedere
-        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode().toUpperCase());
-        series.setName("Contagion level");
-        final NumberAxis xAxis = new NumberAxis();
-        final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Minutes");
-        yAxis.setLabel("Contagion level");
-        chart.setTitle("Probability of being contagious due to a contact during the last 6 days");
-        chart.setCreateSymbols(false);
-        chart.getData().add(series);
+        plot(pns, "P1");
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
@@ -438,6 +467,10 @@ public class Simulator extends UIController {
         for(int i = 0; i<obs.size();i++){
             ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
         }
+        ArrayList<HashMap<String, Object>> obs2 = observationDAO.getObservations("p2");
+        for(int i = 0; i<obs2.size();i++){
+            ObservationDAOTest.deleteObservation(obs2.get(i).get("id").toString());
+        }
     }
 }
 
@@ -449,7 +482,7 @@ public class Simulator extends UIController {
         Variable x = new Variable("x");
         return Float.parseFloat(expolynomial.integrate(x, new OmegaBigDecimal(lowerBound), new OmegaBigDecimal(upperBound)).toString());
     }
-    @Test
+
     void evaluateExponential(){
         float lambda = 0.1f;
         Random rand = new Random();
