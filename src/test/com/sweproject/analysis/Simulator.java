@@ -12,18 +12,12 @@ import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.oristool.math.OmegaBigDecimal;
-import org.oristool.math.expression.Expolynomial;
-import org.oristool.math.expression.Variable;
 import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Array;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -35,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 10;
-    HashMap<LocalDateTime, ArrayList<Integer>> p1perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
-    HashMap<LocalDateTime, ArrayList<Integer>> p2perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
+    final int maxReps = 1;
+    TreeMap<LocalDateTime, ArrayList<Integer>> p1perTime = new TreeMap<>();
+    TreeMap<LocalDateTime, ArrayList<Integer>> p2perTime = new TreeMap<>();
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
@@ -97,6 +91,7 @@ public class Simulator extends UIController {
         ArrayList<String> subjects = new ArrayList<>();
         subjects.add("P1");
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
+        System.out.println(t0 + "<-t0");
         Type[] tt = new Environment[6];
         LocalDateTime[] startDates1 = new LocalDateTime[]{t0.plusHours(8), t0.plusHours(28), t0.plusHours(32), t0.plusHours(40), t0.plusHours(64), t0.plusHours(70)};
         LocalDateTime[] endDates1 = new LocalDateTime[]{t0.plusHours(8+3), t0.plusHours(28+2), t0.plusHours(32+5), t0.plusHours(40+5), t0.plusHours(64+2), t0.plusHours(70+6)};
@@ -287,11 +282,12 @@ public class Simulator extends UIController {
                     p1_environment++;
                 }
             }
-            
-            HashMap<LocalDateTime, Integer> date_stateToInfected1 = new HashMap<>();
-            HashMap<LocalDateTime, Integer> date_stateToContagious1 = new HashMap<>();
-            HashMap<LocalDateTime, Integer> date_stateToInfected2 = new HashMap<>();
-            HashMap<LocalDateTime, Integer> date_stateToContagious2 = new HashMap<>();
+
+            //XXX
+            TreeMap<LocalDateTime, Integer> date_stateToInfected1 = new TreeMap<>();
+            TreeMap<LocalDateTime, Integer> date_stateToContagious1 = new TreeMap<>();
+            TreeMap<LocalDateTime, Integer> date_stateToInfected2 = new TreeMap<>();
+            TreeMap<LocalDateTime, Integer> date_stateToContagious2 = new TreeMap<>();
             ArrayList<Integer> ids = new ArrayList<>();
             System.out.println("IDS"+ids.size());
             System.out.println("NC"+nextContact.size());
@@ -304,10 +300,10 @@ public class Simulator extends UIController {
             for (int id=0; id<ids.size(); id++){
                 id_states.put(id, 0);
             }
-            LocalDateTime toContagious1 = t0;
-            LocalDateTime toInfected1 = t0;
-            LocalDateTime toContagious2 = t0;
-            LocalDateTime toInfected2 = t0;
+            LocalDateTime toContagious1 = LocalDateTime.from(t0);
+            LocalDateTime toInfected1 = LocalDateTime.from(t0);
+            LocalDateTime toContagious2 = LocalDateTime.from(t0);
+            LocalDateTime toInfected2 = LocalDateTime.from(t0);
             while (nextContactTime.size() > 0) {
                 System.out.println(id_states.values());
                 String nc = nextContact.remove(0);
@@ -331,7 +327,7 @@ public class Simulator extends UIController {
                             nextContact.add(position, nc);
                             id_states.put(event_id, 1);
                             ids.add(position, event_id);
-                            if (toInfected1.isAfter(nct)) {
+                            if (toInfected1.isBefore(nct)) {
                                 date_stateToInfected1.remove(toInfected1);
                                 toInfected1 = nct;
                                 for (int l = 0; l < date_stateToInfected1.keySet().size(); l++) {
@@ -400,7 +396,7 @@ public class Simulator extends UIController {
                             nextContact.add(position, nc);
                             id_states.put(event_id, 1);
                             ids.add(position, event_id);
-                            if (toInfected2.isAfter(nct)) {
+                            if (toInfected2.isBefore(nct)) {
                                 date_stateToInfected2.remove(toInfected2);
                                 toInfected2 = nct;
                                 for (int l = 0; l < date_stateToInfected2.keySet().size(); l++) {
@@ -448,6 +444,10 @@ public class Simulator extends UIController {
                     }
                 }
             }
+            //filling
+            fill(date_stateToInfected1, date_stateToContagious1, t0);
+            fill(date_stateToInfected2, date_stateToContagious2, t0);
+
             for (int l=0; l<date_stateToInfected1.size(); l++){
                 LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
                 int currentValue = date_stateToInfected1.get(currentKey);
@@ -557,10 +557,9 @@ public class Simulator extends UIController {
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
         Random r = new Random();
-        int randomHours = min + r.nextInt() * (max - 1 - min);
-        int randomMinutes = 0 + r.nextInt() * (60 - 0);
-        date.plusHours(randomHours).plusMinutes(randomMinutes);
-        return date;
+        int randomHours = min + r.nextInt() % (max + 1 - min);
+        int randomMinutes = r.nextInt() % 60;
+        return date.plusHours(randomHours).plusMinutes(randomMinutes);
     }
 
     private LocalDateTime getSampleCH(LocalDateTime date) {
@@ -568,11 +567,10 @@ public class Simulator extends UIController {
         double result = Math.log(1-r.nextFloat())/(-0.04);
         int randomHours = (int) Math.floor(result);
         int randomMinutes = (int) Math.floor((result - randomHours) * 60);
-        date = date.plusHours(randomHours).plusMinutes(randomMinutes);
-        return date;
+        return date.plusHours(randomHours).plusMinutes(randomMinutes);
     }
 
-    private void addToHashMap(HashMap<LocalDateTime, ArrayList<Integer>> hm, LocalDateTime date, int state){
+    private void addToHashMap(TreeMap<LocalDateTime, ArrayList<Integer>> hm, LocalDateTime date, int state){
         if(!hm.containsKey(date)){
             hm.put(date, new ArrayList());
         }
@@ -589,6 +587,37 @@ public class Simulator extends UIController {
         for(int i = 0; i<obs2.size();i++){
             ObservationDAOTest.deleteObservation(obs2.get(i).get("id").toString());
         }
+    }
+
+    private HashMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> date_stateToInfected, TreeMap<LocalDateTime, Integer> date_stateToContagious, LocalDateTime t0){
+        LocalDateTime t = LocalDateTime.from(t0);
+        final int minutes = 1;
+        //trovo 1 e metto tutti 1, poi trovo 2 e metto tutti 2, poi trovo 3 e metto tutti 3 fine.
+        TreeMap<LocalDateTime, Integer> treeMap = new TreeMap<>();
+        treeMap.putAll(date_stateToInfected);
+        treeMap.putAll(date_stateToContagious);
+        for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
+            System.out.println(entry.getKey() + " " + entry.getValue());
+        LocalDateTime tLimit = LocalDateTime.from(t).plusDays(6);
+        TreeMap<LocalDateTime, Integer> state = new TreeMap<>();
+        int currentState = 0;
+        /*while(t.isBefore(tLimit) && treeMap.size() > 0){
+            if(ChronoUnit.MINUTES.between(t, treeMap.firstKey())<minutes){
+                currentState = currentState<treeMap.firstEntry().getValue() && treeMap.firstEntry().getValue() == currentState+1 ?treeMap.firstEntry().getValue():currentState;
+                treeMap.remove(treeMap.firstKey());
+            }
+            state.put(t, currentState);
+            t = t.plusMinutes(minutes);
+        }
+        System.out.println("---");
+        System.out.println("---");
+        for(Map.Entry<LocalDateTime, Integer> entry : state.entrySet())
+            System.out.println(entry.getKey() + " " + entry.getValue());*/
+        for(int i = 0; i<treeMap.size();i++){
+            System.out.println(treeMap.keySet().toArray()[i]);
+        }
+        System.out.println("---");
+        return null;
     }
 }
 
