@@ -22,8 +22,8 @@ import org.oristool.math.expression.Variable;
 import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100;
+    final int maxReps = 10;
     HashMap<LocalDateTime, ArrayList<Integer>> p1perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
     HashMap<LocalDateTime, ArrayList<Integer>> p2perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
     @FXML
@@ -45,7 +45,7 @@ public class Simulator extends UIController {
     //Cambiare percorso in base al computer utilizzato e a dove è installato python
     String path1 = "C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String path2 = "C:\\Python39\\python.exe";
-    String path3 = "";
+    String path3 = "C:\\Users\\user\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -93,7 +93,7 @@ public class Simulator extends UIController {
 
     @Test
     void start_simulation() throws PythonExecutionException, IOException {
-        //Created Enviornment Contacts
+        //Created Environment Contacts
         ArrayList<String> subjects = new ArrayList<>();
         subjects.add("P1");
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
@@ -142,7 +142,6 @@ public class Simulator extends UIController {
             int p1_environment = 0;
             int p2_environment = 0;
             int p1_p2 = 0;
-            int[] lastStates = new int[]{0, 0}; //0 -> sano, 1 -> infetto, 2 -> contagioso, 3 -> guarito
             ArrayList<LocalDateTime> nextContactTime = new ArrayList<>();
             ArrayList<Float> nextRisk = new ArrayList<>();
             ArrayList<String> nextContact = new ArrayList<>();
@@ -288,130 +287,223 @@ public class Simulator extends UIController {
                     p1_environment++;
                 }
             }
-
-           // System.out.println("NEXTCONTACT SIZE " + nextContact.size());
-
-            while (nextContactTime.size() > 0){
-                System.out.println("1 " + nextContact.size() + " " + nextContactTime.size() + " " + nextRisk.size());
+            
+            HashMap<LocalDateTime, Integer> date_stateToInfected1 = new HashMap<>();
+            HashMap<LocalDateTime, Integer> date_stateToContagious1 = new HashMap<>();
+            HashMap<LocalDateTime, Integer> date_stateToInfected2 = new HashMap<>();
+            HashMap<LocalDateTime, Integer> date_stateToContagious2 = new HashMap<>();
+            ArrayList<Integer> ids = new ArrayList<>();
+            System.out.println("IDS"+ids.size());
+            System.out.println("NC"+nextContact.size());
+            for (int id=0; id< nextContact.size(); id++){
+                ids.add(id, id);
+                System.out.println("ids array " + ids.get(id));
+            }
+            System.out.println("IDS2"+ids.size());
+            HashMap<Integer, Integer> id_states= new HashMap<>();
+            for (int id=0; id<ids.size(); id++){
+                id_states.put(id, 0);
+            }
+            LocalDateTime toContagious1 = t0;
+            LocalDateTime toInfected1 = t0;
+            LocalDateTime toContagious2 = t0;
+            LocalDateTime toInfected2 = t0;
+            while (nextContactTime.size() > 0) {
+                System.out.println(id_states.values());
                 String nc = nextContact.remove(0);
-                if (nc.equals("p1")){
-                    if (lastStates[0] == 0){ //sano
+                LocalDateTime nct = nextContactTime.remove(0);
+                int event_id = ids.remove(0);
+                System.out.println("event " + event_id);
+                System.out.println("nc " + nc);
+                if (nc.equals("p1")) {
+                    if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
-                        if (random<nextRisk.remove(0)) { //Da sano a contagiato
-                            lastStates[0] += 1;
-                            System.out.println("new state  " + lastStates[0]);
-                            LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
-                            addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                            System.out.println("nextcontact.size 1 " + nextContact.size());
+                        if (random < nextRisk.remove(0)) { //Da sano a contagiato
+                            System.out.println("da sano a contagiato evento " + event_id);
+                            LocalDateTime timeContagious = getSampleCC(nct, 12, 36);
                             int position = 0;
-                            for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                            for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
                                 if (nextContactTime.get(iterator).isBefore(timeContagious))
                                     position = iterator + 1;
                             }
                             nextContactTime.add(position, timeContagious);
-                            nextContact.add(position, "p1");
-                            System.out.println("nextcontact.size 2 " + nextContact.size());
-                            System.out.println("2 " + nextContact.size());
+                            nextContact.add(position, nc);
+                            id_states.put(event_id, 1);
+                            ids.add(position, event_id);
+                            if (toInfected1.isAfter(nct)) {
+                                date_stateToInfected1.remove(toInfected1);
+                                toInfected1 = nct;
+                                for (int l = 0; l < date_stateToInfected1.keySet().size(); l++) {
+                                    LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
+                                    if (toInfected1.isBefore(currentKey)) {
+                                        System.out.println("rimosso "+date_stateToInfected1.get(currentKey));
+                                        date_stateToInfected1.remove(currentKey);
+                                    }
+                                }
+                            }
+                            date_stateToInfected1.put(toInfected1, 1);
+                            if (timeContagious.isBefore(toContagious1)) {
+                                date_stateToContagious1.remove(toContagious1);
+                                toContagious1 = timeContagious;
+                                for (int l = 0; l < date_stateToContagious1.keySet().size(); l++) {
+                                    LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
+                                    if (toContagious1.isBefore(currentKey)) {
+                                        date_stateToContagious1.remove(currentKey);
+                                        System.out.println("Rimosso "+date_stateToInfected1.get(currentKey));
+                                    }
+                                }
+                            }
+                        } else {// resta sano
+                            date_stateToInfected1.put(nct, 0);
+                            System.out.println("da sano a sano " + event_id);
                         }
-                        else {// resta sano
-                            addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                            System.out.println("resta sano");
-                            System.out.println("nextcontact.size 1 " + nextContact.size());
-                        }
-                    }
-                    else if (lastStates[0] == 1){ //contagiato
-                        lastStates[0] += 1; //da contagiato a contagioso
-                        LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
-                        System.out.println("new state  " + lastStates[0]);
-                        addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                        System.out.println("nextcontact.size 1 " + nextContact.size());
+                    } else if (id_states.get(event_id) == 1) { //contagiato
+                        //da contagiato a contagioso
+                        System.out.println("da contagiato a contagioso evento " + event_id);
+                        LocalDateTime timeHealing = getSampleCH(nct);
+                        System.out.println(timeHealing);
                         int position = 0;
-                        for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                        for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
                             if (nextContactTime.get(iterator).isBefore(timeHealing))
                                 position = iterator + 1;
                         }
+                        //TODO
                         nextContactTime.add(position, timeHealing);
-                        nextContact.add(position, "p1");
-                        System.out.println("nextcontact.size 2 " + nextContact.size());
-                        System.out.println("3 " + nextContact.size());
+                        nextContact.add(position, nc);
+                        id_states.put(event_id, 2);
+                        System.out.println("inserito stato contagioso");
+                        ids.add(position, event_id);
+                        date_stateToContagious1.put(nct, 2);
+                        System.out.println("stato al tempo "+ nct + " " +date_stateToContagious1.get(nct));
 
+                    } else if (id_states.get(event_id) == 2) { //contagioso
+                        //da contagioso a guarito
+                        System.out.println("da contagioso a guarito evento " + event_id);
+                        date_stateToContagious1.put(nct, 3);
+                        id_states.put(event_id, 3);
+                        System.out.println("stato al tempo "+ nct + " " +date_stateToContagious1.get(nct));
                     }
-                    else if (lastStates[0] == 2){ //contagioso
-                        lastStates[0] += 1; //da contagioso a guarito
-                        System.out.println("new state  " + lastStates[0]);
-                        addToHashMap(p1perTime, nextContactTime.remove(0), lastStates[0]);
-                        System.out.println("nextcontact.size 1 " + nextContact.size());
-                    }
-                }
-                else if (nc.equals("p2")){
-                    System.out.println("contatto di p2");
-                    if (lastStates[1] == 0){ //sano
+                } else if (nc.equals("p2")) {
+                    if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
-                        if (random<nextRisk.remove(0)) { //Da sano a contagiato
-                            lastStates[1] += 1;
-                            LocalDateTime timeContagious = getSampleCC(nextContactTime.get(0), 12, 36);
-                            addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
+                        if (random < nextRisk.remove(0)) { //Da sano a contagiato
+                            System.out.println("da sano a contagiato evento " + event_id);
+                            LocalDateTime timeContagious = getSampleCC(nct, 12, 36);
                             int position = 0;
-                            for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                            for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
                                 if (nextContactTime.get(iterator).isBefore(timeContagious))
                                     position = iterator + 1;
                             }
                             nextContactTime.add(position, timeContagious);
-                            nextContact.add(position, "p2");
+                            nextContact.add(position, nc);
+                            id_states.put(event_id, 1);
+                            ids.add(position, event_id);
+                            if (toInfected2.isAfter(nct)) {
+                                date_stateToInfected2.remove(toInfected2);
+                                toInfected2 = nct;
+                                for (int l = 0; l < date_stateToInfected2.keySet().size(); l++) {
+                                    LocalDateTime currentKey = (LocalDateTime) date_stateToInfected2.keySet().toArray()[l];
+                                    if (toInfected2.isBefore(currentKey)) {
+                                        date_stateToInfected2.remove(currentKey);
+                                    }
+                                }
+                            }
+                            date_stateToInfected2.put(toInfected2, 1);
+                            if (timeContagious.isBefore(toContagious2)) {
+                                date_stateToContagious2.remove(toContagious2);
+                                toContagious2 = timeContagious;
+                                for (int l = 0; l < date_stateToContagious2.keySet().size(); l++) {
+                                    LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
+                                    if (toContagious2.isBefore(currentKey)) {
+                                        date_stateToContagious2.remove(currentKey);
+                                    }
+                                }
+                            }
+                        } else {// resta sano
+                            System.out.println("da sano a sano " + event_id);
+                            date_stateToInfected2.put(nct, 0);
                         }
-                        else {//altrimenti resta sano
-                            addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
-                        }
-                    }
-                    else if (lastStates[1] == 1){ //contagiato
-                        lastStates[1] += 1; //da contagiato a contagioso
-                        LocalDateTime timeHealing = getSampleCH(nextContactTime.get(0));
-                        addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
+                    } else if (id_states.get(event_id) == 1) { //contagiato
+                        //da contagiato a contagioso
+                        System.out.println("da contagiato a contagioso evento " + event_id);
+                        LocalDateTime timeHealing = getSampleCH(nct);
                         int position = 0;
-                        for (int iterator=0; iterator<nextContactTime.size(); iterator++){
+                        for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
                             if (nextContactTime.get(iterator).isBefore(timeHealing))
                                 position = iterator + 1;
                         }
                         nextContactTime.add(position, timeHealing);
-                        nextContact.add(position, "p2");
+                        nextContact.add(position, nc);
+                        id_states.put(event_id, 2);
+                        ids.add(position, event_id);
+                        date_stateToContagious2.put(nct, 2);
 
-                    }
-                    else if (lastStates[1] == 2){ //contagioso
-                        lastStates[1] += 1; //da contagioso a guarito
-                        addToHashMap(p2perTime, nextContactTime.remove(0), lastStates[1]);
+                    } else if (id_states.get(event_id) == 2) { //contagioso
+                        //da contagioso a guarito
+                        System.out.println("da contagioso a guarito evento " + event_id);
+                        date_stateToContagious1.put(nct, 3);
+                        id_states.put(event_id, 3);
                     }
                 }
             }
+            for (int l=0; l<date_stateToInfected1.size(); l++){
+                LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
+                int currentValue = date_stateToInfected1.get(currentKey);
+                addToHashMap(p1perTime, currentKey, currentValue);
+            }
+            for (int l=0; l<date_stateToContagious1.size(); l++){
+                System.out.println("2half size "+date_stateToContagious1.size());
+                LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
+                int currentValue = date_stateToContagious1.get(currentKey);
+                System.out.println("states "+currentValue);
+                addToHashMap(p1perTime, currentKey, currentValue);
+            }
 
+            for (int l=0; l<date_stateToInfected2.size(); l++){
+                LocalDateTime currentKey = (LocalDateTime) date_stateToInfected2.keySet().toArray()[l];
+                int currentValue = date_stateToInfected2.get(currentKey);
+                addToHashMap(p2perTime, currentKey, currentValue);
+            }
+            for (int l=0; l<date_stateToContagious2.size(); l++){
+                LocalDateTime currentKey = (LocalDateTime) date_stateToContagious2.keySet().toArray()[l];
+                int currentValue = date_stateToContagious2.get(currentKey);
+                addToHashMap(p2perTime, currentKey, currentValue);
+            }
         }
 
         float[] contagiousProbability1 = new float[p1perTime.size()];
         float[] hours1 = new float[p1perTime.size()];
         for (int r=0; r<p1perTime.size(); r++){
+            LocalDateTime currentKey = (LocalDateTime) p1perTime.keySet().toArray()[r];
             int p1_count = 0;
-            for (int state=0; state<p1perTime.get(r).size(); state++){
-                if (p1perTime.get(r).get(state) == 2)
+            for (int state=0; state<p1perTime.get(currentKey).size(); state++){
+                //System.out.println("pppp " + p1perTime.get(currentKey).get(state));
+                if (p1perTime.get(currentKey).get(state) == 2)
                     p1_count++;
             }
-            float p1_probability = ((float)p1_count)/((float)p1perTime.get(r).size());
+            System.out.println("p1 count " + p1_count);
+            System.out.println("tot " + p1perTime.get(currentKey).size());
+            float p1_probability = ((float)p1_count)/((float)p1perTime.get(currentKey).size());
+            System.out.println("p1 prb " + p1_probability);
             contagiousProbability1[r] = p1_probability;
-            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60.f;
+            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[r])/60.f;
             hours1[r] = hour1;
         }
 
         float[] contagiousProbability2 = new float[p2perTime.size()];
         float[] hours2 = new float[p2perTime.size()];
         for (int r=0; r<p2perTime.size(); r++){
+            LocalDateTime currentKey = (LocalDateTime) p2perTime.keySet().toArray()[r];
             int p2_count = 0;
-            for (int state=0; state<p2perTime.get(r).size(); state++){
-                if (p2perTime.get(r).get(state) == 2)
+            for (int state=0; state<p2perTime.get(currentKey).size(); state++){
+                if (p2perTime.get(currentKey).get(state) == 2)
                     p2_count++;
             }
-            float p2_probability = ((float)p2_count)/((float)p2perTime.get(r).size());
+            float p2_probability = ((float)p2_count)/((float)p2perTime.get(currentKey).size());
             contagiousProbability2[r] = p2_probability;
-            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60.f;
+            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[r])/60.f;
             hours2[r] = hour2;
         }
         System.out.println(p1perTime.size());
@@ -476,7 +568,7 @@ public class Simulator extends UIController {
         double result = Math.log(1-r.nextFloat())/(-0.04);
         int randomHours = (int) Math.floor(result);
         int randomMinutes = (int) Math.floor((result - randomHours) * 60);
-        date.plusHours(randomHours).plusMinutes(randomMinutes);
+        date = date.plusHours(randomHours).plusMinutes(randomMinutes);
         return date;
     }
 
@@ -485,7 +577,6 @@ public class Simulator extends UIController {
             hm.put(date, new ArrayList());
         }
         hm.get(date).add(state);
-        System.out.println(hm.get(date) + "!!!");
     }
 
     @AfterAll
