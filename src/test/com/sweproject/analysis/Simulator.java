@@ -4,6 +4,7 @@ import com.github.sh0nk.matplotlib4j.NumpyUtils;
 import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+import com.sun.source.tree.Tree;
 import com.sweproject.controller.UIController;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
@@ -29,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 1;
+    final int maxReps = 100;
     TreeMap<LocalDateTime, ArrayList<Integer>> p1perTime = new TreeMap<>();
     TreeMap<LocalDateTime, ArrayList<Integer>> p2perTime = new TreeMap<>();
     @FXML
@@ -62,8 +63,8 @@ public class Simulator extends UIController {
         plt.show();
     }
 
-    void plot(ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
-        TransientSolution s = ss.get(0).get(fiscalCode);
+    void plot(TreeMap<LocalDateTime, Double> t, ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
+       /* TransientSolution s = ss.get(0).get(fiscalCode);
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
         Double[] yPNarray = new Double[samples];
         List<Double> yPN = new ArrayList<>();
@@ -82,7 +83,35 @@ public class Simulator extends UIController {
         //plt.plot().add(x, S);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
         plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.show();*/
+        List<Double> tYSampled = new ArrayList<>();
+        Double[] tYSampledArray = new Double[samples];
+        IntStream.range(0, samples).parallel().forEach(i->{
+            if(i*60 < t.keySet().size())
+                tYSampledArray[i] = t.get((LocalDateTime) t.keySet().toArray()[i*60]);
+        });
+        tYSampled = Arrays.stream(tYSampledArray).toList();
+
+        TransientSolution s = ss.get(0).get(fiscalCode);
+        Double[] yPNarray = new Double[samples];
+        List<Double> yPN = new ArrayList<>();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        IntStream.range(0, samples).parallel().forEach(i -> {
+            double value = 0.f;
+            for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                value += ss.get(j).get(fiscalCode).getSolution()[i][r][0];
+            }
+            yPNarray[i] = value;
+        });
+        yPN = Arrays.stream(yPNarray).toList();
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        plt.plot().add(x, tYSampled);
+        plt.plot().add(x, yPN);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(tYSampled) * 1.1, Collections.max(tYSampled) * 1.1);
         plt.show();
+
     }
 
     @Test
@@ -91,7 +120,7 @@ public class Simulator extends UIController {
         ArrayList<String> subjects = new ArrayList<>();
         subjects.add("P1");
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
-        System.out.println(t0 + "<-t0");
+        //System.out.println(t0 + "<-t0");
         Type[] tt = new Environment[6];
         LocalDateTime[] startDates1 = new LocalDateTime[]{t0.plusHours(8), t0.plusHours(28), t0.plusHours(32), t0.plusHours(40), t0.plusHours(64), t0.plusHours(70)};
         LocalDateTime[] endDates1 = new LocalDateTime[]{t0.plusHours(8+3), t0.plusHours(28+2), t0.plusHours(32+5), t0.plusHours(40+5), t0.plusHours(64+2), t0.plusHours(70+6)};
@@ -132,8 +161,12 @@ public class Simulator extends UIController {
             observationDAO.insertObservation(subjects, mm[i], startDates[i], endDates[i]);
         }
 
+        TreeMap<LocalDateTime, Integer>[] trees1 = new TreeMap[maxReps];
+        TreeMap<LocalDateTime, Integer>[] trees2 = new TreeMap[maxReps];
+        TreeMap<LocalDateTime, Integer> tm1 = new TreeMap<>();
+        TreeMap<LocalDateTime, Integer> tm2 = new TreeMap<>();
         //simulate
-        for (int i=0; i<maxReps; i++){
+        for (int i=0; i<maxReps; i++) {
             int p1_environment = 0;
             int p2_environment = 0;
             int p1_p2 = 0;
@@ -142,8 +175,8 @@ public class Simulator extends UIController {
             ArrayList<String> nextContact = new ArrayList<>();
 
             //Get next contact in timeline and its risk
-            for(int contact = 0; contact<13; contact++) {
-                if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2){
+            for (int contact = 0; contact < 13; contact++) {
+                if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2) {
                     if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) && startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
@@ -172,9 +205,8 @@ public class Simulator extends UIController {
                         p1_environment++;
                         p2_environment++;
                     }
-                }
-                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2){
-                    if (startDates2[p2_environment].isEqual(startDates[p1_p2])){
+                } else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2) {
+                    if (startDates2[p2_environment].isEqual(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
@@ -187,14 +219,12 @@ public class Simulator extends UIController {
                         nextContact.add("p1");
                         nextContact.add("p2");
                         p1_p2++;
-                    }
-                    else if (startDates2[p2_environment].isBefore(startDates[p1_p2])){
+                    } else if (startDates2[p2_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
                         p2_environment++;
-                    }
-                    else {
+                    } else {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
@@ -203,9 +233,8 @@ public class Simulator extends UIController {
                         nextContact.add("p2");
                         p1_p2++;
                     }
-                }
-                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length > p1_p2){
-                    if (startDates[p1_p2].isEqual(startDates1[p1_environment])){
+                } else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length > p1_p2) {
+                    if (startDates[p1_p2].isEqual(startDates1[p1_environment])) {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
@@ -218,14 +247,12 @@ public class Simulator extends UIController {
                         nextRisk.add(risks1[p1_environment]);
                         nextContact.add("p1");
                         p1_environment++;
-                    }
-                    else if (startDates1[p1_environment].isBefore(startDates[p1_p2])){
+                    } else if (startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
                         nextContact.add("p1");
                         p1_environment++;
-                    }
-                    else {
+                    } else {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
@@ -234,9 +261,8 @@ public class Simulator extends UIController {
                         nextContact.add("p2");
                         p1_p2++;
                     }
-                }
-                else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2){
-                    if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
+                } else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2) {
+                    if (startDates2[p2_environment].isEqual(startDates1[p1_environment])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
@@ -246,21 +272,18 @@ public class Simulator extends UIController {
                         nextRisk.add(risks1[p1_environment]);
                         nextContact.add("p1");
                         p1_environment++;
-                    }
-                    else if (startDates2[p2_environment].isBefore(startDates1[p1_environment])){
+                    } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
                         p2_environment++;
-                    }
-                    else {
+                    } else {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
                         nextContact.add("p1");
                         p1_environment++;
                     }
-                }
-                else if (p1_environment >= startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2){
+                } else if (p1_environment >= startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2) {
                     nextContactTime.add(startDates[p1_p2]);
                     nextContactTime.add(startDates[p1_p2]);
                     nextRisk.add(risks[p1_p2]);
@@ -268,14 +291,12 @@ public class Simulator extends UIController {
                     nextContact.add("p1");
                     nextContact.add("p2");
                     p1_p2++;
-                }
-                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2){
+                } else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2) {
                     nextContactTime.add(startDates2[p2_environment]);
                     nextRisk.add(risks2[p2_environment]);
                     nextContact.add("p2");
                     p2_environment++;
-                }
-                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length <= p1_p2){
+                } else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length <= p1_p2) {
                     nextContactTime.add(startDates1[p1_environment]);
                     nextRisk.add(risks1[p1_environment]);
                     nextContact.add("p1");
@@ -289,15 +310,15 @@ public class Simulator extends UIController {
             TreeMap<LocalDateTime, Integer> date_stateToInfected2 = new TreeMap<>();
             TreeMap<LocalDateTime, Integer> date_stateToContagious2 = new TreeMap<>();
             ArrayList<Integer> ids = new ArrayList<>();
-            System.out.println("IDS"+ids.size());
-            System.out.println("NC"+nextContact.size());
-            for (int id=0; id< nextContact.size(); id++){
+            //System.out.println("IDS" + ids.size());
+            //System.out.println("NC" + nextContact.size());
+            for (int id = 0; id < nextContact.size(); id++) {
                 ids.add(id, id);
-                System.out.println("ids array " + ids.get(id));
+                //System.out.println("ids array " + ids.get(id));
             }
-            System.out.println("IDS2"+ids.size());
-            HashMap<Integer, Integer> id_states= new HashMap<>();
-            for (int id=0; id<ids.size(); id++){
+            //System.out.println("IDS2" + ids.size());
+            HashMap<Integer, Integer> id_states = new HashMap<>();
+            for (int id = 0; id < ids.size(); id++) {
                 id_states.put(id, 0);
             }
             LocalDateTime toContagious1 = LocalDateTime.from(t0);
@@ -305,18 +326,18 @@ public class Simulator extends UIController {
             LocalDateTime toContagious2 = LocalDateTime.from(t0);
             LocalDateTime toInfected2 = LocalDateTime.from(t0);
             while (nextContactTime.size() > 0) {
-                System.out.println(id_states.values());
+                //System.out.println(id_states.values());
                 String nc = nextContact.remove(0);
                 LocalDateTime nct = nextContactTime.remove(0);
                 int event_id = ids.remove(0);
-                System.out.println("event " + event_id);
-                System.out.println("nc " + nc);
+                //System.out.println("event " + event_id);
+                //System.out.println("nc " + nc);
                 if (nc.equals("p1")) {
                     if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
                         if (random < nextRisk.remove(0)) { //Da sano a contagiato
-                            System.out.println("da sano a contagiato evento " + event_id);
+                            //System.out.println("da sano a contagiato evento " + event_id);
                             LocalDateTime timeContagious = getSampleCC(nct, 12, 36);
                             int position = 0;
                             for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -327,16 +348,18 @@ public class Simulator extends UIController {
                             nextContact.add(position, nc);
                             id_states.put(event_id, 1);
                             ids.add(position, event_id);
-                            if (toInfected1.isBefore(nct)) {
+                            if (toInfected1.isAfter(nct)) {
                                 date_stateToInfected1.remove(toInfected1);
                                 toInfected1 = nct;
                                 for (int l = 0; l < date_stateToInfected1.keySet().size(); l++) {
                                     LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
                                     if (toInfected1.isBefore(currentKey)) {
-                                        System.out.println("rimosso "+date_stateToInfected1.get(currentKey));
+                                        //System.out.println("rimosso " + date_stateToInfected1.get(currentKey));
                                         date_stateToInfected1.remove(currentKey);
                                     }
                                 }
+                            } else {
+                                toInfected1 = nct;
                             }
                             date_stateToInfected1.put(toInfected1, 1);
                             if (timeContagious.isBefore(toContagious1)) {
@@ -346,19 +369,19 @@ public class Simulator extends UIController {
                                     LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
                                     if (toContagious1.isBefore(currentKey)) {
                                         date_stateToContagious1.remove(currentKey);
-                                        System.out.println("Rimosso "+date_stateToInfected1.get(currentKey));
+                                        //System.out.println("Rimosso " + date_stateToInfected1.get(currentKey));
                                     }
                                 }
                             }
                         } else {// resta sano
                             date_stateToInfected1.put(nct, 0);
-                            System.out.println("da sano a sano " + event_id);
+                            //System.out.println("da sano a sano " + event_id);
                         }
                     } else if (id_states.get(event_id) == 1) { //contagiato
                         //da contagiato a contagioso
-                        System.out.println("da contagiato a contagioso evento " + event_id);
+                        //System.out.println("da contagiato a contagioso evento " + event_id);
                         LocalDateTime timeHealing = getSampleCH(nct);
-                        System.out.println(timeHealing);
+                        //System.out.println(timeHealing);
                         int position = 0;
                         for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
                             if (nextContactTime.get(iterator).isBefore(timeHealing))
@@ -367,24 +390,24 @@ public class Simulator extends UIController {
                         nextContactTime.add(position, timeHealing);
                         nextContact.add(position, nc);
                         id_states.put(event_id, 2);
-                        System.out.println("inserito stato contagioso");
+                        //System.out.println("inserito stato contagioso");
                         ids.add(position, event_id);
                         date_stateToContagious1.put(nct, 2);
-                        System.out.println("stato al tempo "+ nct + " " +date_stateToContagious1.get(nct));
+                        //System.out.println("stato al tempo " + nct + " " + date_stateToContagious1.get(nct));
 
                     } else if (id_states.get(event_id) == 2) { //contagioso
                         //da contagioso a guarito
-                        System.out.println("da contagioso a guarito evento " + event_id);
+                        //System.out.println("da contagioso a guarito evento " + event_id);
                         date_stateToContagious1.put(nct, 3);
                         id_states.put(event_id, 3);
-                        System.out.println("stato al tempo "+ nct + " " +date_stateToContagious1.get(nct));
+                        //System.out.println("stato al tempo " + nct + " " + date_stateToContagious1.get(nct));
                     }
                 } else if (nc.equals("p2")) {
                     if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
                         if (random < nextRisk.remove(0)) { //Da sano a contagiato
-                            System.out.println("da sano a contagiato evento " + event_id);
+                            //System.out.println("da sano a contagiato evento " + event_id);
                             LocalDateTime timeContagious = getSampleCC(nct, 12, 36);
                             int position = 0;
                             for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -404,9 +427,11 @@ public class Simulator extends UIController {
                                         date_stateToInfected2.remove(currentKey);
                                     }
                                 }
+                            } else {
+                                toInfected2 = nct;
                             }
                             date_stateToInfected2.put(toInfected2, 1);
-                            if (timeContagious.isBefore(toContagious2)) {
+                            if (timeContagious.isAfter(toContagious2)) {
                                 date_stateToContagious2.remove(toContagious2);
                                 toContagious2 = timeContagious;
                                 for (int l = 0; l < date_stateToContagious2.keySet().size(); l++) {
@@ -417,12 +442,12 @@ public class Simulator extends UIController {
                                 }
                             }
                         } else {// resta sano
-                            System.out.println("da sano a sano " + event_id);
+                            //System.out.println("da sano a sano " + event_id);
                             date_stateToInfected2.put(nct, 0);
                         }
                     } else if (id_states.get(event_id) == 1) { //contagiato
                         //da contagiato a contagioso
-                        System.out.println("da contagiato a contagioso evento " + event_id);
+                        //System.out.println("da contagiato a contagioso evento " + event_id);
                         LocalDateTime timeHealing = getSampleCH(nct);
                         int position = 0;
                         for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -437,17 +462,42 @@ public class Simulator extends UIController {
 
                     } else if (id_states.get(event_id) == 2) { //contagioso
                         //da contagioso a guarito
-                        System.out.println("da contagioso a guarito evento " + event_id);
+                        //System.out.println("da contagioso a guarito evento " + event_id);
                         date_stateToContagious2.put(nct, 3);
                         id_states.put(event_id, 3);
                     }
                 }
             }
             //filling
-            fill(date_stateToInfected1, date_stateToContagious1, t0);
-            fill(date_stateToInfected2, date_stateToContagious2, t0);
+            trees1[i] = convert(fill(date_stateToInfected1, date_stateToContagious1, t0));
+            trees2[i] = convert(fill(date_stateToInfected2, date_stateToContagious2, t0));
+        }
+        TreeMap<LocalDateTime, Double> t1 = new TreeMap<>();
+        TreeMap<LocalDateTime, Double> t2 = new TreeMap<>();
 
-            for (int l=0; l<date_stateToInfected1.size(); l++){
+        var indices = trees1[0].keySet().toArray();
+        IntStream.range(0, trees1[0].size()).parallel().forEach(i->{
+            double currentT = 0;
+            for (int j = 0; j<trees1.length; j++) {
+                if((LocalDateTime) indices[i] != null)
+                    currentT += trees1[j].get((LocalDateTime) indices[i]);
+            }
+            currentT/=(double)maxReps;
+            t1.put((LocalDateTime) indices[i], currentT);
+
+            currentT = 0;
+            for (int j = 0; j<trees2.length; j++) {
+                if((LocalDateTime) indices[i] != null)
+                    currentT += trees2[j].get((LocalDateTime) indices[i]);
+            }
+            currentT/=(double)maxReps;
+            t2.put((LocalDateTime) indices[i], currentT);
+        });
+        for(Map.Entry<LocalDateTime, Double> entry : t1.entrySet())
+            System.out.println(entry.getKey() + " " + entry.getValue());
+
+
+            /*for (int l=0; l<date_stateToInfected1.size(); l++){
                 LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
                 int currentValue = date_stateToInfected1.get(currentKey);
                 addToHashMap(p1perTime, currentKey, currentValue);
@@ -508,13 +558,13 @@ public class Simulator extends UIController {
         System.out.println(p1perTime.size());
         System.out.println(p1perTime.keySet());
         System.out.println(Arrays.toString(contagiousProbability1));
-        System.out.println(Arrays.toString(hours1));
+        System.out.println(Arrays.toString(hours1));*/
+
 
         //TODO PLOT SIMULAZIONE
 
 
         //TODO FIXA LA PARTE DI SIRIO
-        /*
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
         HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
@@ -550,8 +600,8 @@ public class Simulator extends UIController {
             pns.add(pits);
         }
 
-        plot(pns, "P1");
-        */
+        plot(t1, pns, "P1");
+
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
@@ -595,8 +645,8 @@ public class Simulator extends UIController {
         TreeMap<LocalDateTime, Integer> treeMap = new TreeMap<>();
         treeMap.putAll(date_stateToInfected);
         treeMap.putAll(date_stateToContagious);
-        for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
-            System.out.println(entry.getKey() + " " + entry.getValue());
+       /* for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
+            System.out.println(entry.getKey() + " " + entry.getValue());*/
         LocalDateTime tLimit = LocalDateTime.from(t).plusDays(6);
         TreeMap<LocalDateTime, Integer> state = new TreeMap<>();
         int currentState = 0;
@@ -608,12 +658,30 @@ public class Simulator extends UIController {
             state.put(t, currentState);
             t = t.plusMinutes(minutes);
         }
+        //complete
+        currentState = state.lastEntry().getValue();
+        while(t.isBefore(tLimit)){
+            state.put(t, currentState);
+            t = t.plusMinutes(minutes);
+        }
+       /* System.out.println("---");
         System.out.println("---");
-        System.out.println("---");
-       /*( for(Map.Entry<LocalDateTime, Integer> entry : state.entrySet())
-            System.out.println(entry.getKey() + " " + entry.getValue());*/
-        System.out.println("---");
+       for(Map.Entry<LocalDateTime, Integer> entry : state.entrySet())
+            System.out.println(entry.getKey() + " " + entry.getValue());
+        System.out.println("---");*/
         return state;
+    }
+
+    private TreeMap<LocalDateTime, Integer> convert(TreeMap<LocalDateTime, Integer> state){
+        TreeMap<LocalDateTime, Integer> binarizedStates = new TreeMap<>(state);
+        var indices = binarizedStates.keySet().toArray();
+        IntStream.range(0, state.size()).parallel().forEach(i -> {
+            if(binarizedStates.get(indices[i]) == 2)
+                binarizedStates.put((LocalDateTime) indices[i], 1);
+            else
+                binarizedStates.put((LocalDateTime) indices[i], 0);
+        });
+        return binarizedStates;
     }
 }
 
