@@ -107,8 +107,8 @@ public class Simulator extends UIController {
         subjects.clear();
         subjects.add("P2");
         tt = new Environment[4];
-        LocalDateTime[] startDates2 = new LocalDateTime[]{t0.plusHours(3), t0.plusHours(43), t0.plusHours(100), t0.plusHours(136)};
-        LocalDateTime[] endDates2 = new LocalDateTime[]{t0.plusHours(3+1), t0.plusHours(43).plusMinutes(30), t0.plusHours(100+1), t0.plusHours(136).plusMinutes(45)};
+        LocalDateTime[] startDates2 = new LocalDateTime[]{t0.plusHours(3), t0.plusHours(43), t0.plusHours(96), t0.plusHours(136)};
+        LocalDateTime[] endDates2 = new LocalDateTime[]{t0.plusHours(3+1), t0.plusHours(43).plusMinutes(30), t0.plusHours(96+1), t0.plusHours(136).plusMinutes(45)};
         String[] riskLevels2 = new String[]{"Medium", "High", "High", "Low"};
         boolean[] masks2 = new boolean[]{false, false, true, false};
         float[] risks2 = new float[4];
@@ -364,7 +364,6 @@ public class Simulator extends UIController {
                             if (nextContactTime.get(iterator).isBefore(timeHealing))
                                 position = iterator + 1;
                         }
-                        //TODO
                         nextContactTime.add(position, timeHealing);
                         nextContact.add(position, nc);
                         id_states.put(event_id, 2);
@@ -411,7 +410,7 @@ public class Simulator extends UIController {
                                 date_stateToContagious2.remove(toContagious2);
                                 toContagious2 = timeContagious;
                                 for (int l = 0; l < date_stateToContagious2.keySet().size(); l++) {
-                                    LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
+                                    LocalDateTime currentKey = (LocalDateTime) date_stateToContagious2.keySet().toArray()[l];
                                     if (toContagious2.isBefore(currentKey)) {
                                         date_stateToContagious2.remove(currentKey);
                                     }
@@ -439,7 +438,7 @@ public class Simulator extends UIController {
                     } else if (id_states.get(event_id) == 2) { //contagioso
                         //da contagioso a guarito
                         System.out.println("da contagioso a guarito evento " + event_id);
-                        date_stateToContagious1.put(nct, 3);
+                        date_stateToContagious2.put(nct, 3);
                         id_states.put(event_id, 3);
                     }
                 }
@@ -503,7 +502,7 @@ public class Simulator extends UIController {
             }
             float p2_probability = ((float)p2_count)/((float)p2perTime.get(currentKey).size());
             contagiousProbability2[r] = p2_probability;
-            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[r])/60.f;
+            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p2perTime.keySet().toArray()[r])/60.f;
             hours2[r] = hour2;
         }
         System.out.println(p1perTime.size());
@@ -557,8 +556,8 @@ public class Simulator extends UIController {
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
         Random r = new Random();
-        int randomHours = min + r.nextInt() % (max + 1 - min);
-        int randomMinutes = r.nextInt() % 60;
+        int randomHours = min + r.nextInt(max + 1 - min);
+        int randomMinutes = r.nextInt(60);
         return date.plusHours(randomHours).plusMinutes(randomMinutes);
     }
 
@@ -589,7 +588,7 @@ public class Simulator extends UIController {
         }
     }
 
-    private HashMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> date_stateToInfected, TreeMap<LocalDateTime, Integer> date_stateToContagious, LocalDateTime t0){
+    private TreeMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> date_stateToInfected, TreeMap<LocalDateTime, Integer> date_stateToContagious, LocalDateTime t0){
         LocalDateTime t = LocalDateTime.from(t0);
         final int minutes = 1;
         //trovo 1 e metto tutti 1, poi trovo 2 e metto tutti 2, poi trovo 3 e metto tutti 3 fine.
@@ -601,7 +600,7 @@ public class Simulator extends UIController {
         LocalDateTime tLimit = LocalDateTime.from(t).plusDays(6);
         TreeMap<LocalDateTime, Integer> state = new TreeMap<>();
         int currentState = 0;
-        /*while(t.isBefore(tLimit) && treeMap.size() > 0){
+        while(t.isBefore(tLimit) && treeMap.size() > 0){
             if(ChronoUnit.MINUTES.between(t, treeMap.firstKey())<minutes){
                 currentState = currentState<treeMap.firstEntry().getValue() && treeMap.firstEntry().getValue() == currentState+1 ?treeMap.firstEntry().getValue():currentState;
                 treeMap.remove(treeMap.firstKey());
@@ -611,13 +610,10 @@ public class Simulator extends UIController {
         }
         System.out.println("---");
         System.out.println("---");
-        for(Map.Entry<LocalDateTime, Integer> entry : state.entrySet())
+       /*( for(Map.Entry<LocalDateTime, Integer> entry : state.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());*/
-        for(int i = 0; i<treeMap.size();i++){
-            System.out.println(treeMap.keySet().toArray()[i]);
-        }
         System.out.println("---");
-        return null;
+        return state;
     }
 }
 
