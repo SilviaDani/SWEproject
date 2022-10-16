@@ -28,19 +28,24 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 10000;
+    final int maxReps = 100;
     HashMap<LocalDateTime, ArrayList<Integer>> p1perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
     HashMap<LocalDateTime, ArrayList<Integer>> p2perTime = new HashMap<LocalDateTime, ArrayList<Integer>>();
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
     private STPNAnalyzer stpnAnalyzer;
+    //Cambiare percorso in base al computer utilizzato e a dove è installato python
+    String path1 = "C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
+    String path2 = "C:\\Python39\\python.exe";
+    String path3 = "";
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -48,26 +53,39 @@ public class Simulator extends UIController {
     }
 
     @Test
+    void plot_plot() throws PythonExecutionException, IOException {
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        List<Double> yPN = new ArrayList<>();
+        for(int i=0;i<samples;i++)
+            yPN.add((double) i);
+        List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
+
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        plt.plot().add(x, yPN);
+        plt.plot().add(x, S);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.show();
+    }
+
     void plot(ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
         TransientSolution s = ss.get(0).get(fiscalCode);
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Double[] yPNarray = new Double[samples];
         List<Double> yPN = new ArrayList<>();
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
-        for(int m=0; m<s.getColumnStates().size(); m++){
-            for(int i=0, size = s.getSamplesNumber(); i<size; i++){
-                double value = 0.f;
-                for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
-                    value += ss.get(j).get(fiscalCode).getSolution()[i][r][m];
-                }
-                yPN.add(value);
+        IntStream.range(0, samples).parallel().forEach(i -> {
+            double value = 0.f;
+            for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                value += ss.get(j).get(fiscalCode).getSolution()[i][r][0];
             }
-        }
-        List<Double> C = x.stream().map(xi -> Math.cos(xi)).collect(Collectors.toList());
+            yPNarray[i] = value;
+        });
+        yPN = Arrays.stream(yPNarray).toList();
         List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
-
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig("C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe"));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
         plt.plot().add(x, yPN);
-        plt.plot().add(x, S);
+        //plt.plot().add(x, S);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
         plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
         plt.show();
@@ -119,6 +137,7 @@ public class Simulator extends UIController {
             observationDAO.insertObservation(subjects, mm[i], startDates[i], endDates[i]);
         }
 
+        //simulate
         for (int i=0; i<maxReps; i++){
             int p1_environment = 0;
             int p2_environment = 0;
@@ -130,7 +149,7 @@ public class Simulator extends UIController {
 
             //Get next contact in timeline and its risk
             for(int contact = 0; contact<13; contact++) {
-                if (p1_environment < startDates1.length & p2_environment < startDates2.length & startDates.length < p1_p2){
+                if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length < p1_p2){
                     if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) & startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
@@ -158,7 +177,7 @@ public class Simulator extends UIController {
                         p2_environment++;
                     }
                 }
-                else if (p1_environment >= startDates1.length & p2_environment < startDates2.length & startDates.length < p1_p2){
+                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length < p1_p2){
                     if (startDates2[p2_environment].isEqual(startDates[p1_p2])){
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
@@ -185,7 +204,7 @@ public class Simulator extends UIController {
                         p1_p2++;
                     }
                 }
-                else if (p1_environment < startDates1.length & p2_environment >= startDates2.length & startDates.length < p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2){
                     if (startDates[p1_p2].isEqual(startDates1[p1_environment])){
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks2[p1_p2]);
@@ -212,7 +231,7 @@ public class Simulator extends UIController {
                         p1_p2++;
                     }
                 }
-                else if (p1_environment < startDates1.length & p2_environment < startDates2.length & startDates.length <= p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length <= p1_p2){
                     if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
@@ -248,20 +267,20 @@ public class Simulator extends UIController {
                         p1_environment++;
                     }
                 }
-                else if (p1_environment >= startDates1.length & p2_environment >= startDates2.length & startDates.length < p1_p2){
+                else if (p1_environment >= startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2){
                     nextContactTime.add(startDates[p1_p2]);
                     nextRisk.add(risks2[p1_p2]);
                     nextContact.add("p1");
                     nextContact.add("p2");
                     p1_p2++;
                 }
-                else if (p1_environment >= startDates1.length & p2_environment < startDates2.length & startDates.length >= p1_p2){
+                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2){
                     nextContactTime.add(startDates2[p2_environment]);
                     nextRisk.add(risks2[p2_environment]);
                     nextContact.add("p2");
                     p2_environment++;
                 }
-                else if (p1_environment < startDates1.length & p2_environment >= startDates2.length & startDates.length >= p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length >= p1_p2){
                     nextContactTime.add(startDates1[p1_environment]);
                     nextRisk.add(risks1[p1_environment]);
                     nextContact.add("p1");
@@ -366,6 +385,7 @@ public class Simulator extends UIController {
             }
 
         }
+
         float[] contagiousProbability1 = new float[p1perTime.size()];
         float[] hours1 = new float[p1perTime.size()];
         for (int r=0; r<p1perTime.size(); r++){
@@ -374,9 +394,9 @@ public class Simulator extends UIController {
                 if (p1perTime.get(r).get(state) == 2)
                     p1_count++;
             }
-            float p1_probability = p1_count/p1perTime.get(r).size();
+            float p1_probability = ((float)p1_count)/((float)p1perTime.get(r).size());
             contagiousProbability1[r] = p1_probability;
-            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60;
+            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60.f;
             hours1[r] = hour1;
         }
 
@@ -388,17 +408,21 @@ public class Simulator extends UIController {
                 if (p2perTime.get(r).get(state) == 2)
                     p2_count++;
             }
-            float p2_probability = p2_count/p2perTime.get(r).size();
+            float p2_probability = ((float)p2_count)/((float)p2perTime.get(r).size());
             contagiousProbability2[r] = p2_probability;
-            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60;
+            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[0])/60.f;
             hours2[r] = hour2;
         }
-
+        System.out.println(p1perTime.size());
+        System.out.println(p1perTime.keySet());
+        System.out.println(Arrays.toString(contagiousProbability1));
+        System.out.println(Arrays.toString(hours1));
 
         //TODO PLOT SIMULAZIONE
 
 
         //TODO FIXA LA PARTE DI SIRIO
+        /*
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
         HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
@@ -435,6 +459,7 @@ public class Simulator extends UIController {
         }
 
         plot(pns, "P1");
+        */
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
@@ -459,6 +484,7 @@ public class Simulator extends UIController {
             hm.put(date, new ArrayList());
         }
         hm.get(date).add(state);
+        System.out.println(hm.get(date) + "!!!");
     }
 
     @AfterAll
