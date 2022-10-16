@@ -149,19 +149,21 @@ public class Simulator extends UIController {
 
             //Get next contact in timeline and its risk
             for(int contact = 0; contact<13; contact++) {
-                if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length < p1_p2){
-                    if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) & startDates1[p1_environment].isBefore(startDates[p1_p2])) {
+                if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2){
+                    if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) && startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
                         nextContact.add("p1");
                         p1_environment++;
-                    } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment]) & startDates2[p2_environment].isBefore(startDates[p1_p2])) {
+                    } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment]) && startDates2[p2_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
                         p2_environment++;
-                    } else if (startDates[p1_p2].isBefore(startDates1[p1_environment]) & startDates[p1_p2].isBefore(startDates2[p2_environment])) {
+                    } else if (startDates[p1_p2].isBefore(startDates1[p1_environment]) && startDates[p1_p2].isBefore(startDates2[p2_environment])) {
                         nextContactTime.add(startDates[p1_p2]);
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextContact.add("p1");
                         nextContact.add("p2");
@@ -177,7 +179,7 @@ public class Simulator extends UIController {
                         p2_environment++;
                     }
                 }
-                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length < p1_p2){
+                else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length > p1_p2){
                     if (startDates2[p2_environment].isEqual(startDates[p1_p2])){
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
@@ -185,6 +187,8 @@ public class Simulator extends UIController {
                         p2_environment++;
 
                         nextContactTime.add(startDates[p1_p2]);
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextContact.add("p1");
                         nextContact.add("p2");
@@ -198,16 +202,20 @@ public class Simulator extends UIController {
                     }
                     else {
                         nextContactTime.add(startDates[p1_p2]);
-                        nextRisk.add(risks2[p1_p2]);
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
                         nextContact.add("p1");
                         nextContact.add("p2");
                         p1_p2++;
                     }
                 }
-                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length > p1_p2){
                     if (startDates[p1_p2].isEqual(startDates1[p1_environment])){
                         nextContactTime.add(startDates[p1_p2]);
-                        nextRisk.add(risks2[p1_p2]);
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
                         nextContact.add("p1");
                         nextContact.add("p2");
                         p1_p2++;
@@ -225,25 +233,16 @@ public class Simulator extends UIController {
                     }
                     else {
                         nextContactTime.add(startDates[p1_p2]);
-                        nextRisk.add(risks2[p1_p2]);
+                        nextContactTime.add(startDates[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
+                        nextRisk.add(risks[p1_p2]);
                         nextContact.add("p1");
                         nextContact.add("p2");
                         p1_p2++;
                     }
                 }
-                else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length <= p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2){
                     if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
-                        nextContactTime.add(startDates2[p2_environment]);
-                        nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
-                        p2_environment++;
-
-                        nextContactTime.add(startDates1[p1_environment]);
-                        nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
-                        p1_environment++;
-                    }
-                    else if (startDates2[p2_environment].isEqual(startDates1[p1_environment])){
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
                         nextContact.add("p2");
@@ -269,7 +268,9 @@ public class Simulator extends UIController {
                 }
                 else if (p1_environment >= startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2){
                     nextContactTime.add(startDates[p1_p2]);
-                    nextRisk.add(risks2[p1_p2]);
+                    nextContactTime.add(startDates[p1_p2]);
+                    nextRisk.add(risks[p1_p2]);
+                    nextRisk.add(risks[p1_p2]);
                     nextContact.add("p1");
                     nextContact.add("p2");
                     p1_p2++;
@@ -280,7 +281,7 @@ public class Simulator extends UIController {
                     nextContact.add("p2");
                     p2_environment++;
                 }
-                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length >= p1_p2){
+                else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length <= p1_p2){
                     nextContactTime.add(startDates1[p1_environment]);
                     nextRisk.add(risks1[p1_environment]);
                     nextContact.add("p1");
@@ -291,7 +292,7 @@ public class Simulator extends UIController {
            // System.out.println("NEXTCONTACT SIZE " + nextContact.size());
 
             while (nextContactTime.size() > 0){
-                System.out.println("1 " + nextContact.size());
+                System.out.println("1 " + nextContact.size() + " " + nextContactTime.size() + " " + nextRisk.size());
                 String nc = nextContact.remove(0);
                 if (nc.equals("p1")){
                     if (lastStates[0] == 0){ //sano
