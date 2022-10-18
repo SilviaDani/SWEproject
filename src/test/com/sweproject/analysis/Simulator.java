@@ -98,21 +98,89 @@ public class Simulator extends UIController {
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
         IntStream.range(0, samples).parallel().forEach(i -> {
             double value = 0.f;
-            for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+            for(int j = 0; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
                 value += ss.get(j).get(fiscalCode).getSolution()[i][r][0];
             }
             yPNarray[i] = value;
         });
         yPN = Arrays.stream(yPNarray).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path1));
         plt.plot().add(x, tYSampled);
         plt.plot().add(x, yPN);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(Collections.min(tYSampled) * 1.1, Collections.max(tYSampled) * 1.1);
+        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
         plt.show();
 
     }
+    void plot(TreeMap<LocalDateTime, Double> t1, ArrayList<HashMap<String, TransientSolution>> ss,String fiscalCode1, TreeMap<LocalDateTime, Double> t2, String fiscalCode2) throws PythonExecutionException, IOException {
+       /* TransientSolution s = ss.get(0).get(fiscalCode);
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Double[] yPNarray = new Double[samples];
+        List<Double> yPN = new ArrayList<>();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        IntStream.range(0, samples).parallel().forEach(i -> {
+            double value = 0.f;
+            for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                value += ss.get(j).get(fiscalCode).getSolution()[i][r][0];
+            }
+            yPNarray[i] = value;
+        });
+        yPN = Arrays.stream(yPNarray).toList();
+        List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        plt.plot().add(x, yPN);
+        //plt.plot().add(x, S);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.show();*/
+        List<Double> tYSampled1 = new ArrayList<>();
+        List<Double> tYSampled2 = new ArrayList<>();
+        Double[] tYSampledArray1 = new Double[samples];
+        Double[] tYSampledArray2 = new Double[samples];
+        IntStream.range(0, samples).parallel().forEach(i->{
+            if(i*60 < t1.keySet().size()) {
+                tYSampledArray1[i] = t1.get((LocalDateTime) t1.keySet().toArray()[i * 60]);
+                tYSampledArray2[i] = t2.get((LocalDateTime) t2.keySet().toArray()[i * 60]);
+            }
+        });
+        tYSampled1 = Arrays.stream(tYSampledArray1).toList();
+        tYSampled2 = Arrays.stream(tYSampledArray2).toList();
+
+        TransientSolution s1 = ss.get(0).get(fiscalCode1);
+        TransientSolution s2 = ss.get(0).get(fiscalCode2);
+        Double[] yPNarray1 = new Double[samples];
+        List<Double> yPN1 = new ArrayList<>();
+        Double[] yPNarray2 = new Double[samples];
+        List<Double> yPN2 = new ArrayList<>();
+        int r = s1.getRegenerations().indexOf(s1.getInitialRegeneration());
+        IntStream.range(0, samples).parallel().forEach(i -> {
+            double value1 = 0.f;
+            double value2 = 0.f;
+            for(int j = 0; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                value1 += ss.get(j).get(fiscalCode1).getSolution()[i][r][0];
+                value2 += ss.get(j).get(fiscalCode2).getSolution()[i][r][0];
+            }
+            yPNarray1[i] = value1;
+            yPNarray2[i] = value2;
+        });
+        yPN1 = Arrays.stream(yPNarray1).toList();
+        yPN2 = Arrays.stream(yPNarray2).toList();
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path1));
+        plt.plot().add(x, tYSampled1);
+        plt.plot().add(x, yPN1);
+        plt.plot().add(x, tYSampled2);
+        plt.plot().add(x, yPN2);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(yPN1) * 1.1, Collections.max(yPN1) * 1.1);
+        plt.show();
+
+    }
+
+
+
+
 
     @Test
     void start_simulation() throws PythonExecutionException, IOException {
@@ -180,28 +248,28 @@ public class Simulator extends UIController {
                     if (startDates1[p1_environment].isBefore(startDates2[p2_environment]) && startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
+                        nextContact.add("P1");
                         p1_environment++;
                     } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment]) && startDates2[p2_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
+                        nextContact.add("P2");
                         p2_environment++;
                     } else if (startDates[p1_p2].isBefore(startDates1[p1_environment]) && startDates[p1_p2].isBefore(startDates2[p2_environment])) {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_p2++;
                     } else if (startDates1[p1_environment].isEqual(startDates2[p2_environment])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks1[p1_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_environment++;
                         p2_environment++;
                     }
@@ -209,28 +277,28 @@ public class Simulator extends UIController {
                     if (startDates2[p2_environment].isEqual(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
+                        nextContact.add("P2");
                         p2_environment++;
 
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_p2++;
                     } else if (startDates2[p2_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
+                        nextContact.add("P2");
                         p2_environment++;
                     } else {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_p2++;
                     }
                 } else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length > p1_p2) {
@@ -239,48 +307,48 @@ public class Simulator extends UIController {
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_p2++;
 
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
+                        nextContact.add("P1");
                         p1_environment++;
                     } else if (startDates1[p1_environment].isBefore(startDates[p1_p2])) {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
+                        nextContact.add("P1");
                         p1_environment++;
                     } else {
                         nextContactTime.add(startDates[p1_p2]);
                         nextContactTime.add(startDates[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
                         nextRisk.add(risks[p1_p2]);
-                        nextContact.add("p1");
-                        nextContact.add("p2");
+                        nextContact.add("P1");
+                        nextContact.add("P2");
                         p1_p2++;
                     }
                 } else if (p1_environment < startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2) {
                     if (startDates2[p2_environment].isEqual(startDates1[p1_environment])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
+                        nextContact.add("P2");
                         p2_environment++;
 
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
+                        nextContact.add("P1");
                         p1_environment++;
                     } else if (startDates2[p2_environment].isBefore(startDates1[p1_environment])) {
                         nextContactTime.add(startDates2[p2_environment]);
                         nextRisk.add(risks2[p2_environment]);
-                        nextContact.add("p2");
+                        nextContact.add("P2");
                         p2_environment++;
                     } else {
                         nextContactTime.add(startDates1[p1_environment]);
                         nextRisk.add(risks1[p1_environment]);
-                        nextContact.add("p1");
+                        nextContact.add("P1");
                         p1_environment++;
                     }
                 } else if (p1_environment >= startDates1.length && p2_environment >= startDates2.length && startDates.length < p1_p2) {
@@ -288,18 +356,18 @@ public class Simulator extends UIController {
                     nextContactTime.add(startDates[p1_p2]);
                     nextRisk.add(risks[p1_p2]);
                     nextRisk.add(risks[p1_p2]);
-                    nextContact.add("p1");
-                    nextContact.add("p2");
+                    nextContact.add("P1");
+                    nextContact.add("P2");
                     p1_p2++;
                 } else if (p1_environment >= startDates1.length && p2_environment < startDates2.length && startDates.length >= p1_p2) {
                     nextContactTime.add(startDates2[p2_environment]);
                     nextRisk.add(risks2[p2_environment]);
-                    nextContact.add("p2");
+                    nextContact.add("P2");
                     p2_environment++;
                 } else if (p1_environment < startDates1.length && p2_environment >= startDates2.length && startDates.length <= p1_p2) {
                     nextContactTime.add(startDates1[p1_environment]);
                     nextRisk.add(risks1[p1_environment]);
-                    nextContact.add("p1");
+                    nextContact.add("P1");
                     p1_environment++;
                 }
             }
@@ -332,7 +400,7 @@ public class Simulator extends UIController {
                 int event_id = ids.remove(0);
                 //System.out.println("event " + event_id);
                 //System.out.println("nc " + nc);
-                if (nc.equals("p1")) {
+                if (nc.equals("P1")) {
                     if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
@@ -402,7 +470,7 @@ public class Simulator extends UIController {
                         id_states.put(event_id, 3);
                         //System.out.println("stato al tempo " + nct + " " + date_stateToContagious1.get(nct));
                     }
-                } else if (nc.equals("p2")) {
+                } else if (nc.equals("P2")) {
                     if (id_states.get(event_id) == 0) { //sano
                         Random r = new Random();
                         float random = 0 + r.nextFloat() * (1 - 0);
@@ -600,7 +668,7 @@ public class Simulator extends UIController {
             pns.add(pits);
         }
 
-        plot(t1, pns, "P1");
+        plot(t1, pns, "P1", t2, "P2");
 
     }
 
@@ -628,11 +696,11 @@ public class Simulator extends UIController {
 
     @AfterAll
     static void clean(){
-        ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("p1");
+        ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("P1");
         for(int i = 0; i<obs.size();i++){
             ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
         }
-        ArrayList<HashMap<String, Object>> obs2 = observationDAO.getObservations("p2");
+        ArrayList<HashMap<String, Object>> obs2 = observationDAO.getObservations("P2");
         for(int i = 0; i<obs2.size();i++){
             ObservationDAOTest.deleteObservation(obs2.get(i).get("id").toString());
         }
