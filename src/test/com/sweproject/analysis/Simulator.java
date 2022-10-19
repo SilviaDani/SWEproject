@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100;
+    final int maxReps = 1000;
     TreeMap<LocalDateTime, ArrayList<Integer>> p1perTime = new TreeMap<>();
     TreeMap<LocalDateTime, ArrayList<Integer>> p2perTime = new TreeMap<>();
     @FXML
@@ -378,6 +378,8 @@ public class Simulator extends UIController {
             TreeMap<LocalDateTime, Integer> date_stateToInfected2 = new TreeMap<>();
             TreeMap<LocalDateTime, Integer> date_stateToContagious2 = new TreeMap<>();
             ArrayList<Integer> ids = new ArrayList<>();
+            Integer contagiousId1 = null;
+            Integer contagiousId2 = null;
             //System.out.println("IDS" + ids.size());
             //System.out.println("NC" + nextContact.size());
             for (int id = 0; id < nextContact.size(); id++) {
@@ -448,6 +450,8 @@ public class Simulator extends UIController {
                     } else if (id_states.get(event_id) == 1) { //contagiato
                         //da contagiato a contagioso
                         //System.out.println("da contagiato a contagioso evento " + event_id);
+                        if (contagiousId1 == null)
+                            contagiousId1 = event_id;
                         LocalDateTime timeHealing = getSampleCH(nct);
                         //System.out.println(timeHealing);
                         int position = 0;
@@ -466,8 +470,10 @@ public class Simulator extends UIController {
                     } else if (id_states.get(event_id) == 2) { //contagioso
                         //da contagioso a guarito
                         //System.out.println("da contagioso a guarito evento " + event_id);
-                        date_stateToContagious1.put(nct, 3);
-                        id_states.put(event_id, 3);
+                        if (contagiousId1 == event_id){
+                            date_stateToContagious1.put(nct, 3);
+                            id_states.put(event_id, 3);
+                        }
                         //System.out.println("stato al tempo " + nct + " " + date_stateToContagious1.get(nct));
                     }
                 } else if (nc.equals("P2")) {
@@ -516,6 +522,8 @@ public class Simulator extends UIController {
                     } else if (id_states.get(event_id) == 1) { //contagiato
                         //da contagiato a contagioso
                         //System.out.println("da contagiato a contagioso evento " + event_id);
+                        if (contagiousId2 == null)
+                            contagiousId2 = event_id;
                         LocalDateTime timeHealing = getSampleCH(nct);
                         int position = 0;
                         for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -530,6 +538,10 @@ public class Simulator extends UIController {
 
                     } else if (id_states.get(event_id) == 2) { //contagioso
                         //da contagioso a guarito
+                        if (contagiousId2 == event_id){
+                            date_stateToContagious1.put(nct, 3);
+                            id_states.put(event_id, 3);
+                        }
                         //System.out.println("da contagioso a guarito evento " + event_id);
                         date_stateToContagious2.put(nct, 3);
                         id_states.put(event_id, 3);
