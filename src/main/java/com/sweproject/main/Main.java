@@ -49,7 +49,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/index.fxml"));
-        primaryStage.setTitle("Covid Tracing App");
+        primaryStage.setTitle("ChITA");
         primaryStage.getIcons().add(new Image(new File("src/main/res/icon.png").toURI().toString()));
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
