@@ -4,6 +4,7 @@ import com.github.sh0nk.matplotlib4j.NumpyUtils;
 import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+import com.sun.source.tree.Tree;
 import com.sweproject.controller.UIController;
 import com.sweproject.dao.ObservationDAO;
 import com.sweproject.dao.ObservationDAOTest;
@@ -12,6 +13,7 @@ import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.models.stpn.TransientSolution;
@@ -40,6 +42,7 @@ public class Simulator extends UIController {
     String path1 = "C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String path2 = "C:\\Python39\\python.exe";
     String path3 = "C:\\Users\\user\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
+    String PATH; //XXX: environment variable
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -104,7 +107,7 @@ public class Simulator extends UIController {
         });
         yPN = Arrays.stream(yPNarray).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path1));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PATH));
         plt.plot().add(x, tYSampled);
         plt.plot().add(x, yPN);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
@@ -137,12 +140,19 @@ public class Simulator extends UIController {
         List<Double> tYSampled2 = new ArrayList<>();
         Double[] tYSampledArray1 = new Double[samples];
         Double[] tYSampledArray2 = new Double[samples];
-        IntStream.range(0, samples).parallel().forEach(i->{
+        /*IntStream.range(0, samples).parallel().forEach(i->{
             if(i*60 < t1.keySet().size()) {
                 tYSampledArray1[i] = t1.get((LocalDateTime) t1.keySet().toArray()[i * 60]);
                 tYSampledArray2[i] = t2.get((LocalDateTime) t2.keySet().toArray()[i * 60]);
             }
+        });*/
+        IntStream.range(0, samples).parallel().forEach(i->{
+            if(i< t1.keySet().size()) {
+                tYSampledArray1[i] = t1.get((LocalDateTime) t1.keySet().toArray()[i]);
+                tYSampledArray2[i] = t2.get((LocalDateTime) t2.keySet().toArray()[i]);
+            }
         });
+
         tYSampled1 = Arrays.stream(tYSampledArray1).toList();
         tYSampled2 = Arrays.stream(tYSampledArray2).toList();
 
@@ -166,7 +176,7 @@ public class Simulator extends UIController {
         yPN1 = Arrays.stream(yPNarray1).toList();
         yPN2 = Arrays.stream(yPNarray2).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path1));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
         plt.plot().add(x, tYSampled1);
         plt.plot().add(x, yPN1);
         plt.plot().add(x, tYSampled2);
@@ -214,12 +224,21 @@ public class Simulator extends UIController {
                 }
                 else {
                     endDates[end] = dates.get(date);
+                    end++;
                 }
             }
             np_startDates.add(startDates);
             np_endDates.add(endDates);
-            np_riskLevels.set(p, generateRiskLevels(nEnvironment));
-            np_masks.set(p, generateMasks(nEnvironment));
+            if(np_riskLevels.size()<p) {
+                np_riskLevels.set(p, generateRiskLevels(nEnvironment));
+            }else{
+                np_riskLevels.add(p, generateRiskLevels(nEnvironment));
+            }
+            if(np_masks.size()<p){
+                np_masks.set(p, generateMasks(nEnvironment));
+            }else{
+                np_masks.add(p, generateMasks(nEnvironment));
+            }
 
             float[] risks = new float[nEnvironment];
             String[] contacts = new String[nEnvironment];
@@ -264,20 +283,30 @@ public class Simulator extends UIController {
                     start++;
                 } else {
                     endDates[end] = dates.get(date);
+                    end++;
                 }
             }
             nc_startDates.add(startDates);
             nc_endDates.add(endDates);
-            nc_riskLevels.set(c, generateRiskLevels(nContact));
-            nc_masks.set(c, generateMasks(nContact));
+            if(nc_riskLevels.size()<c){
+                nc_riskLevels.set(c, generateRiskLevels(nContact));
+            }else{
+                nc_riskLevels.add(c, generateRiskLevels(nContact));
+            }
+            if(nc_masks.size()<c){
+                nc_masks.set(c, generateMasks(nContact));
+            }else{
+                nc_masks.add(c, generateMasks(nContact));
+            }
+
 
             float[] risks = new float[nContact];
             for (int i = 0; i < nContact; i++) {
                 mm[i] = new Contact(subjects, nc_masks.get(c)[i], nc_riskLevels.get(c)[i], nc_startDates.get(c)[i], nc_endDates.get(c)[i]);
-                risks[i] = BigDecimal.valueOf(((Environment) mm[i]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
+                risks[i] = BigDecimal.valueOf(((Contact) mm[i]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
                 observationDAO.insertObservation(subjects, mm[i], nc_startDates.get(c)[i], nc_endDates.get(c)[i]);
             }
-            np_risks.add(risks);
+            nc_risks.add(risks);
         }
 
 
@@ -287,6 +316,7 @@ public class Simulator extends UIController {
 
         TreeMap<LocalDateTime, Integer>[] trees1 = new TreeMap[maxReps];
         TreeMap<LocalDateTime, Integer>[] trees2 = new TreeMap[maxReps];
+        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> trees = new ArrayList<>();
         TreeMap<LocalDateTime, Integer> tm1 = new TreeMap<>();
         TreeMap<LocalDateTime, Integer> tm2 = new TreeMap<>();
         //simulate
@@ -359,7 +389,7 @@ public class Simulator extends UIController {
                             Integer value = entry.getValue();
                             pStates.add(value);
                         }
-                        int current_state = pStates.get(pStates.size() - 1);
+                        int current_state = pStates.size() == 0 ? 0 : pStates.get(pStates.size() - 1); //XXX
                         if (current_state == 0 && idsInfected.get(p) == null) { //sano
                             float random = 0 + r.nextFloat() * (1 - 0);
                             if (random < nextRisk.remove(0)) { //Da sano a contagiato
@@ -378,7 +408,7 @@ public class Simulator extends UIController {
                             } else {// resta sano
                                 states.get(p).put(nct, 0);
                             }
-                        } else if (current_state == 1 && idsInfected.get(p) == event_id) { //contagiato
+                        } else if ((Object)idsInfected.get(p) != null && current_state == 1 && idsInfected.get(p) == event_id) { //contagiato //XXX
                             //da contagiato a contagioso
                             LocalDateTime timeHealing = getSampleCH(nct);
                             int position = 0;
@@ -391,7 +421,7 @@ public class Simulator extends UIController {
                             states.get(p).put(nct, 2);
                             ids.add(position, event_id);
 
-                        } else if (current_state == 2 && idsInfected.get(p) == event_id) { //contagioso
+                        } else if ((Object)idsInfected.get(p) != null && current_state == 2 && idsInfected.get(p) == event_id) { //contagioso
                             //da contagioso a guarito
                             states.get(p).put(nct, 3);
                         }
@@ -399,12 +429,18 @@ public class Simulator extends UIController {
                 }
             }
             //filling
-            trees1[i] = convert(fill(date_stateToInfected1, date_stateToContagious1, t0));
-            trees2[i] = convert(fill(date_stateToInfected2, date_stateToContagious2, t0));
+            ArrayList<TreeMap<LocalDateTime, Integer>> treesIIteration = new ArrayList<>();
+            for(int p = 0; p<states.size(); p++) {
+                treesIIteration.add(convert(fill(states.get(p), t0)));
+            }
+            trees.add(treesIIteration);
         }
+        System.out.println(trees.size() + " " + trees.get(0).size());
+
         TreeMap<LocalDateTime, Double> t1 = new TreeMap<>();
         TreeMap<LocalDateTime, Double> t2 = new TreeMap<>();
 
+        //FIXME
         var indices = trees1[0].keySet().toArray();
         IntStream.range(0, trees1[0].size()).parallel().forEach(i->{
             double currentT = 0;
@@ -423,72 +459,13 @@ public class Simulator extends UIController {
             currentT/=(double)maxReps;
             t2.put((LocalDateTime) indices[i], currentT);
         });
+        var v = getVariance(trees1, t1);
+        var ci = getConfidenceIntervalOffset(v, maxReps);
+        for(LocalDateTime l : v.keySet()){
+            System.out.println(l + " " + v.get(l) + " -> " + t1.get(l) + " +- " + ci.get(l));
+        }
         for(Map.Entry<LocalDateTime, Double> entry : t1.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());
-
-
-            /*for (int l=0; l<date_stateToInfected1.size(); l++){
-                LocalDateTime currentKey = (LocalDateTime) date_stateToInfected1.keySet().toArray()[l];
-                int currentValue = date_stateToInfected1.get(currentKey);
-                addToHashMap(p1perTime, currentKey, currentValue);
-            }
-            for (int l=0; l<date_stateToContagious1.size(); l++){
-                System.out.println("2half size "+date_stateToContagious1.size());
-                LocalDateTime currentKey = (LocalDateTime) date_stateToContagious1.keySet().toArray()[l];
-                int currentValue = date_stateToContagious1.get(currentKey);
-                System.out.println("states "+currentValue);
-                addToHashMap(p1perTime, currentKey, currentValue);
-            }
-
-            for (int l=0; l<date_stateToInfected2.size(); l++){
-                LocalDateTime currentKey = (LocalDateTime) date_stateToInfected2.keySet().toArray()[l];
-                int currentValue = date_stateToInfected2.get(currentKey);
-                addToHashMap(p2perTime, currentKey, currentValue);
-            }
-            for (int l=0; l<date_stateToContagious2.size(); l++){
-                LocalDateTime currentKey = (LocalDateTime) date_stateToContagious2.keySet().toArray()[l];
-                int currentValue = date_stateToContagious2.get(currentKey);
-                addToHashMap(p2perTime, currentKey, currentValue);
-            }
-        }
-
-        float[] contagiousProbability1 = new float[p1perTime.size()];
-        float[] hours1 = new float[p1perTime.size()];
-        for (int r=0; r<p1perTime.size(); r++){
-            LocalDateTime currentKey = (LocalDateTime) p1perTime.keySet().toArray()[r];
-            int p1_count = 0;
-            for (int state=0; state<p1perTime.get(currentKey).size(); state++){
-                //System.out.println("pppp " + p1perTime.get(currentKey).get(state));
-                if (p1perTime.get(currentKey).get(state) == 2)
-                    p1_count++;
-            }
-            System.out.println("p1 count " + p1_count);
-            System.out.println("tot " + p1perTime.get(currentKey).size());
-            float p1_probability = ((float)p1_count)/((float)p1perTime.get(currentKey).size());
-            System.out.println("p1 prb " + p1_probability);
-            contagiousProbability1[r] = p1_probability;
-            float hour1 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p1perTime.keySet().toArray()[r])/60.f;
-            hours1[r] = hour1;
-        }
-
-        float[] contagiousProbability2 = new float[p2perTime.size()];
-        float[] hours2 = new float[p2perTime.size()];
-        for (int r=0; r<p2perTime.size(); r++){
-            LocalDateTime currentKey = (LocalDateTime) p2perTime.keySet().toArray()[r];
-            int p2_count = 0;
-            for (int state=0; state<p2perTime.get(currentKey).size(); state++){
-                if (p2perTime.get(currentKey).get(state) == 2)
-                    p2_count++;
-            }
-            float p2_probability = ((float)p2_count)/((float)p2perTime.get(currentKey).size());
-            contagiousProbability2[r] = p2_probability;
-            float hour2 = ChronoUnit.MINUTES.between(t0, (LocalDateTime) p2perTime.keySet().toArray()[r])/60.f;
-            hours2[r] = hour2;
-        }
-        System.out.println(p1perTime.size());
-        System.out.println(p1perTime.keySet());
-        System.out.println(Arrays.toString(contagiousProbability1));
-        System.out.println(Arrays.toString(hours1));*/
 
 
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
@@ -570,9 +547,18 @@ public class Simulator extends UIController {
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
-        Random r = new Random();
+       /*WeibullDistribution w = new WeibullDistribution(4, (double)6);
+        double offset = w.sample() + min;
+        if(offset>max)
+            offset = max;*/
+        NormalDistribution n = new NormalDistribution(24, 3.5);
+        double offset = n.sample();
+        int hours = (int)Math.floor(offset);
+        int minutes = (int) Math.floor((offset - hours) * 60);
+        return date.plusHours(hours).plusMinutes(minutes);
+        /*Random r = new Random();
         int randomHours = min + r.nextInt(max - min);
-        return date.plusHours(randomHours);
+        return date.plusHours(randomHours);*/
     }
 
     private LocalDateTime getSampleCH(LocalDateTime date) {
@@ -601,13 +587,10 @@ public class Simulator extends UIController {
         }
     }
 
-    private TreeMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> date_stateToInfected, TreeMap<LocalDateTime, Integer> date_stateToContagious, LocalDateTime t0){
+    private TreeMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> treeMap, LocalDateTime t0){
         LocalDateTime t = LocalDateTime.from(t0);
-        final int minutes = 1;
+        final int minutes = 60;
         //trovo 1 e metto tutti 1, poi trovo 2 e metto tutti 2, poi trovo 3 e metto tutti 3 fine.
-        TreeMap<LocalDateTime, Integer> treeMap = new TreeMap<>();
-        treeMap.putAll(date_stateToInfected);
-        treeMap.putAll(date_stateToContagious);
        /* for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());*/
         LocalDateTime tLimit = LocalDateTime.from(t).plusDays(6);
@@ -622,7 +605,7 @@ public class Simulator extends UIController {
             t = t.plusMinutes(minutes);
         }
         //complete
-        currentState = state.lastEntry().getValue();
+        currentState = treeMap.size()==0 ? 0 : state.lastEntry().getValue();
         while(t.isBefore(tLimit)){
             state.put(t, currentState);
             t = t.plusMinutes(minutes);
@@ -645,5 +628,33 @@ public class Simulator extends UIController {
                 binarizedStates.put((LocalDateTime) indices[i], 0);
         });
         return binarizedStates;
+    }
+
+    private TreeMap<LocalDateTime, Double> getVariance(TreeMap<LocalDateTime, Integer>[] trees, TreeMap<LocalDateTime, Double> meanTree){
+        ArrayList<TreeMap<LocalDateTime, Double>> tt = new ArrayList<>();
+        IntStream.range(0, trees.length).parallel().forEach(i->{
+            TreeMap<LocalDateTime, Double> t = new TreeMap<>();
+            for(LocalDateTime l : trees[i].keySet())
+                t.put(l, Math.pow((trees[i].get(l) - meanTree.get(l)), 2));
+            tt.add(t);
+        });
+        System.out.println(tt.size());
+        TreeMap<LocalDateTime, Double> output = new TreeMap<>();
+        for(LocalDateTime l : trees[0].keySet()) {
+            double sum = 0;
+            for (int i = 0; i < tt.size(); i++) {
+                sum+=tt.get(i).get(l);
+            }
+            output.put(l, sum/(tt.size()-1));
+        }
+        return output;
+    }
+    private TreeMap<LocalDateTime, Double> getConfidenceIntervalOffset (TreeMap<LocalDateTime, Double> s2, int n){
+        final double z95 = 1.96;
+        TreeMap<LocalDateTime, Double> offsets = new TreeMap<>();
+        for(LocalDateTime l : s2.keySet()){
+            offsets.put(l, z95*Math.sqrt(s2.get(l)/n));
+        }
+        return offsets;
     }
 }
