@@ -43,26 +43,15 @@ public class Simulator extends UIController {
     String path2 = "C:\\Python39\\python.exe";
     String path3 = "C:\\Users\\user\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
     String PATH; //XXX: environment variable
+    static final int np = 2;
+    int nContact = 0;
+    int max_nEnvironment = 5;
+    int min_nEnvironment = 1;
+    //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
 
     Simulator(){
         observationDAO = new ObservationDAO();
         stpnAnalyzer = new STPNAnalyzer(samples, steps);
-    }
-
-    @Test
-    void plot_plot() throws PythonExecutionException, IOException {
-        List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        List<Double> yPN = new ArrayList<>();
-        for(int i=0;i<samples;i++)
-            yPN.add((double) i);
-        List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
-
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
-        plt.plot().add(x, yPN);
-        plt.plot().add(x, S);
-        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
-        plt.show();
     }
 
     void plot(TreeMap<LocalDateTime, Double> t, ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
@@ -89,8 +78,8 @@ public class Simulator extends UIController {
         List<Double> tYSampled = new ArrayList<>();
         Double[] tYSampledArray = new Double[samples];
         IntStream.range(0, samples).parallel().forEach(i->{
-            if(i*60 < t.keySet().size())
-                tYSampledArray[i] = t.get((LocalDateTime) t.keySet().toArray()[i*60]);
+            if(i < t.keySet().size())
+                tYSampledArray[i] = t.get((LocalDateTime) t.keySet().toArray()[i]);
         });
         tYSampled = Arrays.stream(tYSampledArray).toList();
 
@@ -111,7 +100,7 @@ public class Simulator extends UIController {
         plt.plot().add(x, tYSampled);
         plt.plot().add(x, yPN);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.ylim(-0.1, 1.1);
         plt.show();
 
     }
@@ -176,13 +165,13 @@ public class Simulator extends UIController {
         yPN1 = Arrays.stream(yPNarray1).toList();
         yPN2 = Arrays.stream(yPNarray2).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PATH));
         plt.plot().add(x, tYSampled1);
         plt.plot().add(x, yPN1);
         plt.plot().add(x, tYSampled2);
         plt.plot().add(x, yPN2);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(Collections.min(yPN1) * 1.1, Collections.max(yPN1) * 1.1);
+        plt.ylim(-0.1,1.1);
         plt.show();
 
     }
@@ -194,7 +183,6 @@ public class Simulator extends UIController {
     @Test
     void start_simulation() throws PythonExecutionException, IOException {
         //Created Environment Contacts
-        int np = 10;
         ArrayList<String> subjects = new ArrayList<>();
         ArrayList<String[]> np_contact = new ArrayList<>();
         ArrayList<LocalDateTime[]> np_startDates = new ArrayList<>();
@@ -209,7 +197,7 @@ public class Simulator extends UIController {
             String current_subject = "P" + p;
             subjects.add(current_subject);
             Random r = new Random();
-            int nEnvironment = r.nextInt(7 - 1) + 1;
+            int nEnvironment = r.nextInt(max_nEnvironment - min_nEnvironment) + min_nEnvironment;
             Type[] tt = new Environment[nEnvironment];
             LocalDateTime[] startDates = new LocalDateTime[nEnvironment];
             LocalDateTime[] endDates = new LocalDateTime[nEnvironment];
@@ -256,7 +244,6 @@ public class Simulator extends UIController {
         //Create Cluster Contacts
         Random r = new Random();
         //int nContact = (int) (r.nextInt((int) (np - Math.ceil(np/2))) + Math.ceil(np/2));
-        int nContact = 4;
         subjects.clear();
         for (int p=0; p<np; p++){
             subjects.add("P" + p);
@@ -314,11 +301,7 @@ public class Simulator extends UIController {
         ArrayList<Float> nextRisk = new ArrayList<>();
         ArrayList<String> nextContact = new ArrayList<>();
 
-        TreeMap<LocalDateTime, Integer>[] trees1 = new TreeMap[maxReps];
-        TreeMap<LocalDateTime, Integer>[] trees2 = new TreeMap[maxReps];
         ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> trees = new ArrayList<>();
-        TreeMap<LocalDateTime, Integer> tm1 = new TreeMap<>();
-        TreeMap<LocalDateTime, Integer> tm2 = new TreeMap<>();
         //simulate
         for (int i=0; i<maxReps; i++) {
             TreeMap<LocalDateTime, ArrayList<Object>> tmp = new TreeMap<>();
@@ -437,10 +420,29 @@ public class Simulator extends UIController {
         }
         System.out.println(trees.size() + " " + trees.get(0).size());
 
-        TreeMap<LocalDateTime, Double> t1 = new TreeMap<>();
-        TreeMap<LocalDateTime, Double> t2 = new TreeMap<>();
-
-        //FIXME
+        var indices = trees.get(0).get(0).keySet().toArray();
+        System.out.println(Arrays.toString(indices));
+        HashMap<String, ArrayList<TreeMap<LocalDateTime, Integer>>> treeHM = new HashMap<>();
+        for(int p = 0; p<np; p++){
+            ArrayList<TreeMap<LocalDateTime, Integer>> t = new ArrayList<>();
+            for(int i = 0; i<trees.size(); i++){
+                t.add(trees.get(i).get(p));
+            }
+            treeHM.put("P"+p, t);
+        }
+        HashMap<String, TreeMap<LocalDateTime, Double>> tt = new HashMap();
+        for(String subject : treeHM.keySet()){
+            TreeMap<LocalDateTime, Double> t = new TreeMap<>();
+            for(int j = 0; j<indices.length; j++) {
+                double currentT = 0;
+                for (int i = 0; i < treeHM.get(subject).size(); i++) {
+                    currentT += treeHM.get(subject).get(i).get((LocalDateTime) indices[j]);
+                }
+                t.put((LocalDateTime) indices[j], currentT/treeHM.get(subject).size());
+            }
+            tt.put(subject, t);
+        }
+        /*
         var indices = trees1[0].keySet().toArray();
         IntStream.range(0, trees1[0].size()).parallel().forEach(i->{
             double currentT = 0;
@@ -466,7 +468,7 @@ public class Simulator extends UIController {
         }
         for(Map.Entry<LocalDateTime, Double> entry : t1.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());
-
+    */
 
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
@@ -503,7 +505,9 @@ public class Simulator extends UIController {
             pns.add(pits);
         }
 
-        plot(t1, pns, "P1", t2, "P2");
+        for(LocalDateTime l : tt.get("P0").keySet())
+            System.out.println(tt.get("P0").get(l));
+        plot(tt.get("P0"), pns, "P0", tt.get("P1"), "P1");
 
     }
 
@@ -568,22 +572,13 @@ public class Simulator extends UIController {
         return date.plusHours(randomHours);
     }
 
-    private void addToHashMap(TreeMap<LocalDateTime, ArrayList<Integer>> hm, LocalDateTime date, int state){
-        if(!hm.containsKey(date)){
-            hm.put(date, new ArrayList());
-        }
-        hm.get(date).add(state);
-    }
-
     @AfterAll
     static void clean(){
-        ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("P1");
-        for(int i = 0; i<obs.size();i++){
-            ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
-        }
-        ArrayList<HashMap<String, Object>> obs2 = observationDAO.getObservations("P2");
-        for(int i = 0; i<obs2.size();i++){
-            ObservationDAOTest.deleteObservation(obs2.get(i).get("id").toString());
+        for(int p=0; p<np; p++) {
+            ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("P"+p);
+            for (int i = 0; i < obs.size(); i++) {
+                ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
+            }
         }
     }
 
