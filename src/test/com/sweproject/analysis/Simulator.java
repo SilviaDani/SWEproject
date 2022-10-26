@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10000;
     TreeMap<LocalDateTime, ArrayList<Integer>> p1perTime = new TreeMap<>();
     TreeMap<LocalDateTime, ArrayList<Integer>> p2perTime = new TreeMap<>();
     @FXML
@@ -46,8 +46,9 @@ public class Simulator extends UIController {
     static final int np = 2;
     int nContact = 0;
     int max_nEnvironment = 5;
-    int min_nEnvironment = 1;
+    int min_nEnvironment = 4;
     //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
+    //FIXME potrebbe essere un problema del rischio dei vari eventi
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -516,7 +517,7 @@ public class Simulator extends UIController {
         for (int i=0; i<(nEvent*2); i++){
             Random r = new Random();
             int hours = r.nextInt(144-0)+0;
-            LocalDateTime date = t0.plusHours(hours);
+            LocalDateTime date = LocalDateTime.from(t0).plusHours(hours);
             dates.add(date);
         }
         Collections.sort(dates);
@@ -528,7 +529,8 @@ public class Simulator extends UIController {
         String[] risk_levels = new String[nEvent];
         for (int i=0; i<nEvent; i++){
             String string_risk_level = "";
-            int risk_number = r.nextInt(3 - 1) + 1;
+            int risk_number = r.nextInt(3) + 1;
+            System.out.println(risk_number);
             if (risk_number == 1)
                 string_risk_level = "High";
             else if (risk_number == 2)
@@ -559,7 +561,7 @@ public class Simulator extends UIController {
         double offset = n.sample();
         int hours = (int)Math.floor(offset);
         int minutes = (int) Math.floor((offset - hours) * 60);
-        return date.plusHours(hours).plusMinutes(minutes);
+        return LocalDateTime.from(date).plusHours(hours).plusMinutes(minutes);
         /*Random r = new Random();
         int randomHours = min + r.nextInt(max - min);
         return date.plusHours(randomHours);*/
@@ -569,7 +571,7 @@ public class Simulator extends UIController {
         Random r = new Random();
         double result = Math.log(1-r.nextFloat())/(-0.04);
         int randomHours = (int) Math.floor(result);
-        return date.plusHours(randomHours);
+        return LocalDateTime.from(date).plusHours(randomHours);
     }
 
     @AfterAll
