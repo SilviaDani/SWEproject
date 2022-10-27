@@ -13,7 +13,7 @@ import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
-import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.WeibullDistribution;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.models.stpn.TransientSolution;
@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 70000;
+    final int maxReps = 100000;
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
@@ -42,8 +41,8 @@ public class Simulator extends UIController {
     String path3 = "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String PYTHON_PATH; //XXX: environment variable
     static final int np = 2;
-    int nContact = 0;
-    int max_nEnvironment = 7;
+    int nContact = 1;
+    int max_nEnvironment = 3;
     int min_nEnvironment = 2;
     //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
 
@@ -243,7 +242,6 @@ public class Simulator extends UIController {
 
     @Test
     void start_simulation() throws PythonExecutionException, IOException {
-        System.out.println(PYTHON_PATH);
         //Created Environment Contacts
         ArrayList<String> subjects = new ArrayList<>();
         ArrayList<String[]> np_contact = new ArrayList<>();
@@ -296,7 +294,7 @@ public class Simulator extends UIController {
             float[] risks = new float[nEnvironment];
             String[] contacts = new String[nEnvironment];
             for(int i = 0; i<nEnvironment; i++) {
-                contacts[i] =  current_subject;
+               contacts[i] =  current_subject;
                 tt[i] = new Environment(np_masks.get(p)[i], np_riskLevels.get(p)[i], np_startDates.get(p)[i], np_endDates.get(p)[i]);
                 risks[i] = BigDecimal.valueOf(((Environment) tt[i]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
                 observationDAO.insertObservation(subjects, tt[i], np_startDates.get(p)[i], np_endDates.get(p)[i]);
@@ -389,11 +387,7 @@ public class Simulator extends UIController {
                     ArrayList<Object> tmp_obj = new ArrayList<>();
                     tmp_obj.add(nc_risks.get(j)[l]);
                     tmp_obj.add(subjects);
-                    //27-10-2022
-                    LocalDateTime workaroundDate = LocalDateTime.from(nc_startDates.get(j)[l]);
-                    while(tmp.get(workaroundDate) != null){
-                        workaroundDate = workaroundDate.plusNanos(1);
-                    }
+
                     tmp.put(nc_startDates.get(j)[l], tmp_obj);
                 }
             }
@@ -408,7 +402,7 @@ public class Simulator extends UIController {
                 //System.out.println("current key " + current_key);
                 //FIXME rimuovere solo la prima occorrenza
                 ArrayList<Object> tmp_obj = tmp.remove(current_key); //IL REMOVE CANCELLA TUTTE LE DATE UGUALI A current_key QUINDI SE CI SONO DOPPIONI CANCELLA TUTTO
-                if (tmp_obj.get(1).equals(subjects)){
+                if (tmp_obj.get(1).equals(subjects)){ //tmp_obj.get(1).equals(subjects) XXX
                     for (int s=0; s<subjects.size(); s++){
                         nextContactTime.add(current_key.truncatedTo(ChronoUnit.MINUTES));
                         nextRisk.add((Float)tmp_obj.get(0));
@@ -454,7 +448,7 @@ public class Simulator extends UIController {
                             pStates.add(value);
                         }
                         int current_state = pStates.size() == 0 ? 0 : pStates.get(pStates.size() - 1); //XXX
-                        if (current_state == 0 && idsInfected.get(p) == null) { //sano
+                         if (current_state == 0 && idsInfected.get(p) == null) { //sano
                             float random = 0 + r.nextFloat() * (1 - 0);
                             if (random < nextRisk.remove(0)) { //Da sano a contagiato
                                 idsInfected.add(p, event_id);
@@ -501,7 +495,7 @@ public class Simulator extends UIController {
                 treesIIteration.add(convert(fill(states.get(p), t0)));
             }
             trees.add(treesIIteration);
-            for(int p = 0; p<treesIIteration.size(); p++) {
+            /*for(int p = 0; p<treesIIteration.size(); p++) {
                 for(Map.Entry<LocalDateTime, Integer> entry : states.get(p).entrySet()) {
                     Integer value = entry.getValue();
                     //System.out.println("states di " + p + " " + value);
@@ -510,7 +504,7 @@ public class Simulator extends UIController {
                     Integer value = entry.getValue();
                     //System.out.println("filled states di " + p + " " + value);
                 }
-            }
+            }*/
         }
         //System.out.println(trees.size() + " " + trees.get(0).size());
 
@@ -555,14 +549,18 @@ public class Simulator extends UIController {
             currentT/=(double)maxReps;
             t2.put((LocalDateTime) indices[i], currentT);
         });
-        var v = getVariance(trees1, t1);
-        var ci = getConfidenceIntervalOffset(v, maxReps);
-        for(LocalDateTime l : v.keySet()){
-            System.out.println(l + " " + v.get(l) + " -> " + t1.get(l) + " +- " + ci.get(l));
+        */
+        for(int i = 0; i<tt.size(); i++) {
+            TreeMap<LocalDateTime, Integer>[] treesOfASubject = new TreeMap[treeHM.size()];
+            for(int j = 0; j<treeHM.size(); j++){
+                treesOfASubject[j] = treeHM.get("P"+i).get(j);
+            }
+            var v = getVariance(treesOfASubject, tt.get("P"+i));
+            var ci = getConfidenceIntervalOffset(v, maxReps);
+            for (LocalDateTime l : v.keySet()) {
+                System.out.println(i+" "+l + " " + v.get(l) + " -> " + tt.get("P"+i).get(l) + " +- " + ci.get(l));
+            }
         }
-        for(Map.Entry<LocalDateTime, Double> entry : t1.entrySet())
-            System.out.println(entry.getKey() + " " + entry.getValue());
-    */
 
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
@@ -644,12 +642,12 @@ public class Simulator extends UIController {
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
-       /*WeibullDistribution w = new WeibullDistribution(4, (double)6);
+       WeibullDistribution w = new WeibullDistribution(3.2, (double)13);
         double offset = w.sample() + min;
         if(offset>max)
-            offset = max;*/
+            offset = max;/*
         NormalDistribution n = new NormalDistribution(24, 3.5);
-        double offset = n.sample();
+        double offset = n.sample();*/
         int hours = (int)Math.floor(offset);
         return date.plusHours(hours);
         /*Random r = new Random();

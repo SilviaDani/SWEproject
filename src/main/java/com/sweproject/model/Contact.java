@@ -3,6 +3,7 @@ package com.sweproject.model;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Contact extends Type{
     private ArrayList<Subject> subjects;
@@ -22,6 +23,7 @@ public class Contact extends Type{
     public Contact(ArrayList<String> cluster, boolean maskUsed, String risk, LocalDateTime initialDate, LocalDateTime finalDate) {
         this(cluster);
         long minutes = ChronoUnit.MINUTES.between(initialDate, finalDate);
+        Random r = new Random();
         if(risk.equals("Low"))
             riskLevel = 0.5f;
         else if(risk.equals("Medium"))
@@ -32,6 +34,7 @@ public class Contact extends Type{
             riskLevel *= 0.1f;
 
         riskLevel *= 2 * Math.exp(minutes/40) / (1 + Math.exp(minutes/40)) - 1;
+        riskLevel += r.nextFloat()/10 - 0.05f;
         if(Float.isNaN(riskLevel)) {
             riskLevel = 0.99f;
             System.out.println("nan");
