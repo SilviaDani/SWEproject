@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100000;
+    final int maxReps = 100;
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
@@ -39,8 +39,8 @@ public class Simulator extends UIController {
     //Cambiare percorso in base al computer utilizzato e a dove è installato python
     String path1 = "C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String path2 = "C:\\Python39\\python.exe";
-    String path3 = "C:\\Users\\user\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
-    String PATH; //XXX: environment variable
+    String path3 = "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
+    String PYTHON_PATH; //XXX: environment variable
     static final int np = 3;
     int nContact = 0;
     int max_nEnvironment = 10;
@@ -94,7 +94,7 @@ public class Simulator extends UIController {
         });
         yPN = Arrays.stream(yPNarray).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PATH));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
         plt.plot().add(x, tYSampled);
         plt.plot().add(x, yPN);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
@@ -163,7 +163,7 @@ public class Simulator extends UIController {
         yPN1 = Arrays.stream(yPNarray1).toList();
         yPN2 = Arrays.stream(yPNarray2).toList();
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PATH));
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
         plt.plot().add(x, tYSampled1);
         plt.plot().add(x, yPN1);
         plt.plot().add(x, tYSampled2);
@@ -180,6 +180,7 @@ public class Simulator extends UIController {
 
     @Test
     void start_simulation() throws PythonExecutionException, IOException {
+        System.out.println(PYTHON_PATH);
         //Created Environment Contacts
         ArrayList<String> subjects = new ArrayList<>();
         ArrayList<String[]> np_contact = new ArrayList<>();
