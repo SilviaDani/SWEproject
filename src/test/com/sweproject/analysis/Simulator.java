@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100;
+    final int maxReps = 70000;
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
@@ -41,9 +41,9 @@ public class Simulator extends UIController {
     String path2 = "C:\\Python39\\python.exe";
     String path3 = "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String PYTHON_PATH; //XXX: environment variable
-    static final int np = 3;
+    static final int np = 2;
     int nContact = 0;
-    int max_nEnvironment = 10;
+    int max_nEnvironment = 7;
     int min_nEnvironment = 2;
     //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
 
@@ -175,7 +175,70 @@ public class Simulator extends UIController {
     }
 
 
+    void plot(HashMap<String, TreeMap<LocalDateTime, Double>> tt, ArrayList<HashMap<String, TransientSolution>> ss) throws PythonExecutionException, IOException {
+       /* TransientSolution s = ss.get(0).get(fiscalCode);
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Double[] yPNarray = new Double[samples];
+        List<Double> yPN = new ArrayList<>();
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        IntStream.range(0, samples).parallel().forEach(i -> {
+            double value = 0.f;
+            for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                value += ss.get(j).get(fiscalCode).getSolution()[i][r][0];
+            }
+            yPNarray[i] = value;
+        });
+        yPN = Arrays.stream(yPNarray).toList();
+        List<Double> S = x.stream().map(xi -> Math.sin(xi)).collect(Collectors.toList());
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(path2));
+        plt.plot().add(x, yPN);
+        //plt.plot().add(x, S);
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(Collections.min(yPN) * 1.1, Collections.max(yPN) * 1.1);
+        plt.show();*/
+        String[] codes = new String[tt.size()];
+        int index = 0;
+        for(Object o : tt.keySet()){
+            codes[index] = (String) o;
+            index++;
+        }
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
+        String[] finalCodes = codes;
+        for(int j = 0; j<codes.length; j++) {
+            List<Double> tYSampled1 = new ArrayList<>();
+            Double[] tYSampledArray1 = new Double[samples];
+            int finalJ = j;
+            IntStream.range(0, samples).parallel().forEach(i -> {
+                if (i < tt.get(finalCodes[finalJ]).keySet().size()) {
+                    tYSampledArray1[i] = tt.get(finalCodes[finalJ]).get((LocalDateTime) tt.get(finalCodes[finalJ]).keySet().toArray()[i]);
+                }
+            });
 
+            tYSampled1 = Arrays.stream(tYSampledArray1).toList();
+
+            Double[] yPNarray1 = new Double[samples];
+            List<Double> yPN1 = new ArrayList<>();
+            Double[] yPNarray2 = new Double[samples];
+            List<Double> yPN2 = new ArrayList<>();
+            int r = ss.get(0).get(finalCodes[finalJ]).getRegenerations().indexOf(ss.get(0).get(finalCodes[finalJ]).getInitialRegeneration());
+            IntStream.range(0, samples).parallel().forEach(i -> {
+                double value1 = 0.f;
+                double value2 = 0.f;
+                for (int k = 0; k < ss.size(); k++) { //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                    value1 += ss.get(k).get(finalCodes[finalJ]).getSolution()[i][r][0];
+                }
+                yPNarray1[i] = value1;
+            });
+            yPN1 = Arrays.stream(yPNarray1).toList();
+            plt.plot().add(x, tYSampled1);
+            plt.plot().add(x, yPN1);
+        }
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(-0.1,1.1);
+        plt.show();
+
+    }
 
 
     @Test
@@ -347,7 +410,7 @@ public class Simulator extends UIController {
                 ArrayList<Object> tmp_obj = tmp.remove(current_key); //IL REMOVE CANCELLA TUTTE LE DATE UGUALI A current_key QUINDI SE CI SONO DOPPIONI CANCELLA TUTTO
                 if (tmp_obj.get(1).equals(subjects)){
                     for (int s=0; s<subjects.size(); s++){
-                        nextContactTime.add(current_key);
+                        nextContactTime.add(current_key.truncatedTo(ChronoUnit.MINUTES));
                         nextRisk.add((Float)tmp_obj.get(0));
                         nextContact.add(subjects.get(s));
                     }
@@ -355,7 +418,7 @@ public class Simulator extends UIController {
                 else {
                     //System.out.println("current risk " + tmp_obj.get(0));
                     //System.out.println("current contact " + tmp_obj.get(1));
-                    nextContactTime.add(current_key);
+                    nextContactTime.add(current_key.truncatedTo(ChronoUnit.MINUTES));
                     nextRisk.add((Float)tmp_obj.get(0));
                     nextContact.add((String)tmp_obj.get(1));
                 }
@@ -538,8 +601,7 @@ public class Simulator extends UIController {
 
         //for(LocalDateTime l : tt.get("P0").keySet())
             //System.out.println(tt.get("P0").get(l));
-        plot(tt.get("P0"), pns, "P0", tt.get("P1"), "P1");
-
+        plot(tt, pns);
     }
 
     private ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent){
