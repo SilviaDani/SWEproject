@@ -31,9 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 10000;
-    TreeMap<LocalDateTime, ArrayList<Integer>> p1perTime = new TreeMap<>();
-    TreeMap<LocalDateTime, ArrayList<Integer>> p2perTime = new TreeMap<>();
+    final int maxReps = 1;
     @FXML
     private LineChart chart;
     private static ObservationDAO observationDAO;
@@ -45,10 +43,9 @@ public class Simulator extends UIController {
     String PATH; //XXX: environment variable
     static final int np = 2;
     int nContact = 0;
-    int max_nEnvironment = 5;
-    int min_nEnvironment = 4;
+    int max_nEnvironment = 6;
+    int min_nEnvironment = 5;
     //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
-    //FIXME potrebbe essere un problema del rischio dei vari eventi
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -173,7 +170,7 @@ public class Simulator extends UIController {
         plt.plot().add(x, yPN2);
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
         plt.ylim(-0.1,1.1);
-        plt.show();
+       // plt.show();
 
     }
 
@@ -196,9 +193,11 @@ public class Simulator extends UIController {
         for (int p=0; p<np; p++){
             subjects.clear();
             String current_subject = "P" + p;
+            System.out.println(current_subject);
             subjects.add(current_subject);
             Random r = new Random();
             int nEnvironment = r.nextInt(max_nEnvironment - min_nEnvironment) + min_nEnvironment;
+            System.out.println("nEnvironment" + p + ": " + nEnvironment);
             Type[] tt = new Environment[nEnvironment];
             LocalDateTime[] startDates = new LocalDateTime[nEnvironment];
             LocalDateTime[] endDates = new LocalDateTime[nEnvironment];
@@ -229,6 +228,7 @@ public class Simulator extends UIController {
                 np_masks.add(p, generateMasks(nEnvironment));
             }
 
+
             float[] risks = new float[nEnvironment];
             String[] contacts = new String[nEnvironment];
             for(int i = 0; i<nEnvironment; i++) {
@@ -236,6 +236,7 @@ public class Simulator extends UIController {
                 tt[i] = new Environment(np_masks.get(p)[i], np_riskLevels.get(p)[i], np_startDates.get(p)[i], np_endDates.get(p)[i]);
                 risks[i] = BigDecimal.valueOf(((Environment) tt[i]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
                 observationDAO.insertObservation(subjects, tt[i], np_startDates.get(p)[i], np_endDates.get(p)[i]);
+                System.out.println("aggiunta osservazione ");
             }
             np_risks.add(risks);
             np_contact.add(contacts);
@@ -287,7 +288,6 @@ public class Simulator extends UIController {
                 nc_masks.add(c, generateMasks(nContact));
             }
 
-
             float[] risks = new float[nContact];
             for (int i = 0; i < nContact; i++) {
                 mm[i] = new Contact(subjects, nc_masks.get(c)[i], nc_riskLevels.get(c)[i], nc_startDates.get(c)[i], nc_endDates.get(c)[i]);
@@ -327,25 +327,31 @@ public class Simulator extends UIController {
             nextContact.clear();
             nextContactTime.clear();
             nextRisk.clear();
-            for (int key_index=0; key_index< tmp.size(); key_index++){
+            System.out.println("tmp.size: " + tmp.size());
+            int tmp_size = tmp.size();
+            for (int key_index=0; key_index<tmp_size; key_index++){
                 LocalDateTime current_key = tmp.firstKey();
-                nextContactTime.add(current_key);
-                ArrayList<Object> tmp_obj = tmp.remove(current_key);
+                System.out.println("current key " + current_key);
+                ArrayList<Object> tmp_obj = tmp.remove(current_key); //IL REMOVE CANCELLA TUTTE LE DATE UGUALI A current_key QUINDI SE CI SONO DOPPIONI CANCELLA TUTTO
                 if (tmp_obj.get(1).equals(subjects)){
                     for (int s=0; s<subjects.size(); s++){
+                        nextContactTime.add(current_key);
                         nextRisk.add((Float)tmp_obj.get(0));
                         nextContact.add(subjects.get(s));
                     }
                 }
                 else {
+                    System.out.println("current risk " + tmp_obj.get(0));
+                    System.out.println("current contact " + tmp_obj.get(1));
+                    nextContactTime.add(current_key);
                     nextRisk.add((Float)tmp_obj.get(0));
                     nextContact.add((String)tmp_obj.get(1));
                 }
             }
             ArrayList<Integer> ids = new ArrayList<>();
+            System.out.println("nextContact.size: " + nextContact.size());
             for (int id = 0; id < nextContact.size(); id++) {
                 ids.add(id, id);
-                //System.out.println("ids array " + ids.get(id));
             }
             ArrayList<Integer> idsInfected = new ArrayList<>();
             for (int p=0; p<np; p++){
@@ -357,14 +363,13 @@ public class Simulator extends UIController {
                 TreeMap<LocalDateTime, Integer> date_state = new TreeMap<>();
                 states.add(p, date_state);
             }
-
+            System.out.println("states.size: " + states.size());
             while (nextContactTime.size() > 0) {
-                //System.out.println(id_states.values());
                 String nc = nextContact.remove(0);
                 LocalDateTime nct = nextContactTime.remove(0);
                 int event_id = ids.remove(0);
-                //System.out.println("event " + event_id);
-                //System.out.println("nc " + nc);
+                System.out.println("event " + event_id);
+                System.out.println("nc " + nc);
 
                 for (int p=0; p<np; p++){
                     if (nc.equals("P" + p)){
@@ -378,7 +383,7 @@ public class Simulator extends UIController {
                             float random = 0 + r.nextFloat() * (1 - 0);
                             if (random < nextRisk.remove(0)) { //Da sano a contagiato
                                 idsInfected.add(p, event_id);
-                                //System.out.println("da sano a contagiato evento " + event_id);
+                                System.out.println("da sano a contagiato evento " + event_id);
                                 LocalDateTime timeContagious = getSampleCC(nct, 12, 36);
                                 int position = 0;
                                 for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -390,10 +395,12 @@ public class Simulator extends UIController {
                                 ids.add(position, event_id);
                                 states.get(p).put(nct, 1);
                             } else {// resta sano
+                                System.out.println("da sano a sano evento " + event_id);
                                 states.get(p).put(nct, 0);
                             }
-                        } else if ((Object)idsInfected.get(p) != null && current_state == 1 && idsInfected.get(p) == event_id) { //contagiato //XXX
+                        } else if (idsInfected.get(p) != null && current_state == 1 && idsInfected.get(p) == event_id) { //contagiato //XXX
                             //da contagiato a contagioso
+                            System.out.println("da contagiato a contagioso evento " + event_id);
                             LocalDateTime timeHealing = getSampleCH(nct);
                             int position = 0;
                             for (int iterator = 0; iterator < nextContactTime.size(); iterator++) {
@@ -405,8 +412,9 @@ public class Simulator extends UIController {
                             states.get(p).put(nct, 2);
                             ids.add(position, event_id);
 
-                        } else if ((Object)idsInfected.get(p) != null && current_state == 2 && idsInfected.get(p) == event_id) { //contagioso
+                        } else if (idsInfected.get(p) != null && current_state == 2 && idsInfected.get(p) == event_id) { //contagioso
                             //da contagioso a guarito
+                            System.out.println("da contagiato a guarito evento " + event_id);
                             states.get(p).put(nct, 3);
                         }
                     }
@@ -418,6 +426,16 @@ public class Simulator extends UIController {
                 treesIIteration.add(convert(fill(states.get(p), t0)));
             }
             trees.add(treesIIteration);
+            for(int p = 0; p<treesIIteration.size(); p++) {
+                for(Map.Entry<LocalDateTime, Integer> entry : states.get(p).entrySet()) {
+                    Integer value = entry.getValue();
+                    System.out.println("states di " + p + " " + value);
+                }
+                for(Map.Entry<LocalDateTime, Integer> entry : treesIIteration.get(p).entrySet()) {
+                    Integer value = entry.getValue();
+                    //System.out.println("filled states di " + p + " " + value);
+                }
+            }
         }
         System.out.println(trees.size() + " " + trees.get(0).size());
 
@@ -481,9 +499,9 @@ public class Simulator extends UIController {
                 clusterSubjectsMet.put(subjects.get(i), observationDAO.getContactObservations(subjects.get(i), otherMembers));
             }
         }
-        System.out.println("---");
-        System.out.println(clusterSubjectsMet.keySet());
-        System.out.println(subjects.get(0));
+       // System.out.println("---");
+       // System.out.println(clusterSubjectsMet.keySet());
+       // System.out.println(subjects.get(0));
         for(String s : clusterSubjectsMet.keySet()){
             System.out.println(s+ " "+ clusterSubjectsMet.get(s));
         }
@@ -517,7 +535,7 @@ public class Simulator extends UIController {
         for (int i=0; i<(nEvent*2); i++){
             Random r = new Random();
             int hours = r.nextInt(144-0)+0;
-            LocalDateTime date = LocalDateTime.from(t0).plusHours(hours);
+            LocalDateTime date = t0.plusHours(hours);
             dates.add(date);
         }
         Collections.sort(dates);
@@ -529,8 +547,7 @@ public class Simulator extends UIController {
         String[] risk_levels = new String[nEvent];
         for (int i=0; i<nEvent; i++){
             String string_risk_level = "";
-            int risk_number = r.nextInt(3) + 1;
-            System.out.println(risk_number);
+            int risk_number = r.nextInt(3 - 1) + 1;
             if (risk_number == 1)
                 string_risk_level = "High";
             else if (risk_number == 2)
@@ -560,8 +577,7 @@ public class Simulator extends UIController {
         NormalDistribution n = new NormalDistribution(24, 3.5);
         double offset = n.sample();
         int hours = (int)Math.floor(offset);
-        int minutes = (int) Math.floor((offset - hours) * 60);
-        return LocalDateTime.from(date).plusHours(hours).plusMinutes(minutes);
+        return date.plusHours(hours);
         /*Random r = new Random();
         int randomHours = min + r.nextInt(max - min);
         return date.plusHours(randomHours);*/
@@ -571,7 +587,7 @@ public class Simulator extends UIController {
         Random r = new Random();
         double result = Math.log(1-r.nextFloat())/(-0.04);
         int randomHours = (int) Math.floor(result);
-        return LocalDateTime.from(date).plusHours(randomHours);
+        return date.plusHours(randomHours);
     }
 
     @AfterAll
@@ -586,7 +602,7 @@ public class Simulator extends UIController {
 
     private TreeMap<LocalDateTime,Integer> fill(TreeMap<LocalDateTime, Integer> treeMap, LocalDateTime t0){
         LocalDateTime t = LocalDateTime.from(t0);
-        final int minutes = 60;
+        final int hours = 1;
         //trovo 1 e metto tutti 1, poi trovo 2 e metto tutti 2, poi trovo 3 e metto tutti 3 fine.
        /* for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());*/
@@ -594,18 +610,21 @@ public class Simulator extends UIController {
         TreeMap<LocalDateTime, Integer> state = new TreeMap<>();
         int currentState = 0;
         while(t.isBefore(tLimit) && treeMap.size() > 0){
-            if(ChronoUnit.MINUTES.between(t, treeMap.firstKey())<minutes){
+
+            if(ChronoUnit.HOURS.between(t, treeMap.firstKey())<hours){
                 currentState = currentState<treeMap.firstEntry().getValue() && treeMap.firstEntry().getValue() == currentState+1 ?treeMap.firstEntry().getValue():currentState;
+                //CERTO CHE AMI COMPLICARTI LA VITA. UN SEMPLICE IF TI FACEVA SCHIFO?
                 treeMap.remove(treeMap.firstKey());
             }
             state.put(t, currentState);
-            t = t.plusMinutes(minutes);
+            t = t.plusHours(hours);
         }
         //complete
+        //SECONDO ME LA PARTE SOTTO è RIDONDANTE
         currentState = treeMap.size()==0 ? 0 : state.lastEntry().getValue();
         while(t.isBefore(tLimit)){
             state.put(t, currentState);
-            t = t.plusMinutes(minutes);
+            t = t.plusHours(hours);
         }
        /* System.out.println("---");
         System.out.println("---");
