@@ -14,6 +14,8 @@ import com.sweproject.model.Type;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import org.apache.commons.math3.distribution.WeibullDistribution;
+import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.models.stpn.TransientSolution;
@@ -26,6 +28,81 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+class Subject{
+    private int currentState;
+    private TreeMap<LocalDateTime, Integer> relevantTimestamps;
+    private String name;
+
+    public Subject(String name) {
+        this.name = name;
+        currentState = 0;
+        relevantTimestamps = new TreeMap<>();
+    }
+    public void initializeSubject(LocalDateTime ldt){
+        currentState = 0;
+        relevantTimestamps.clear();
+        relevantTimestamps.put(ldt, 0);
+    }
+    public String getName() {
+        return name;
+    }
+
+    public int getCurrentState() {
+        return currentState;
+    }
+
+    public TreeMap<LocalDateTime, Integer> getTimestamps() {
+        return relevantTimestamps;
+    }
+
+    public void changeState(LocalDateTime ldt){
+        if(currentState<3) {
+            currentState++;
+            relevantTimestamps.put(ldt, currentState);
+        }
+    }
+}
+class Event implements Comparator<Event>, Comparable<Event>{
+    protected LocalDateTime startDate;
+    protected LocalDateTime endDate;
+    protected Type type;
+    protected ArrayList<Subject> subject;
+
+    public Event(LocalDateTime startDate, LocalDateTime endDate, Type type, ArrayList<Subject> subject) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.type = type;
+        this.subject = subject;
+    }
+
+    @Override
+    public int compare(Event o1, Event o2) {
+        return o1.startDate.compareTo(o2.startDate);
+    }
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+    public Type getType() {
+        return type;
+    }
+    public ArrayList<Subject> getSubject() {
+        return subject;
+    }
+
+    @Override
+    public int compareTo(Event o) {
+        return startDate.compareTo(o.startDate);
+    }
+}
+class ChangeStateEvent extends Event{
+
+    public ChangeStateEvent(LocalDateTime startDate, ArrayList<Subject> subject) {
+        super(startDate, null, null, subject);
+    }
+}
 
 public class Simulator extends UIController {
     int samples = 144;
@@ -40,9 +117,9 @@ public class Simulator extends UIController {
     String path2 = "C:\\Python39\\python.exe";
     String path3 = "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
     String PYTHON_PATH; //XXX: environment variable
-    static final int np = 2;
-    int nContact = 1;
-    int max_nEnvironment = 3;
+    static final int np = 3;
+    int nContact = 2;
+    int max_nEnvironment = 5;
     int min_nEnvironment = 2;
     //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
 
@@ -315,7 +392,33 @@ public class Simulator extends UIController {
         Type [] mm = new Contact [nContact];
 
 
-        ArrayList<LocalDateTime[]> nc_startDates = new ArrayList<>();
+        LocalDateTime[] nc_startDates = new LocalDateTime[nContact];
+        LocalDateTime[] nc_endDates = new LocalDateTime[nContact];
+        String[] nc_riskLevels = new String[nContact];
+        Boolean[] nc_masks = new Boolean[nContact];
+        float[] nc_risks = new float[nContact];
+        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nContact));
+        int start = 0;
+        int end = 0;
+        for (int date = 0; date < dates.size(); date++) {
+            if (date % 2 == 0) {
+                nc_startDates[start] = dates.get(date);
+                start++;
+            } else {
+                nc_endDates[end] = dates.get(date);
+                end++;
+            }
+        }
+        nc_riskLevels = generateRiskLevels(nContact);
+        nc_masks = generateMasks(nContact);
+
+        for(int c = 0; c<nContact; c++){
+            mm[c] = new Contact(subjects, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
+            nc_risks[c] = BigDecimal.valueOf(((Contact) mm[c]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
+            observationDAO.insertObservation(subjects, mm[c], nc_startDates[c], nc_endDates[c]);
+        }
+
+        /*ArrayList<LocalDateTime[]> nc_startDates = new ArrayList<>();
         ArrayList<LocalDateTime[]> nc_endDates = new ArrayList<>();
         ArrayList<String[]> nc_riskLevels = new ArrayList<>();
         ArrayList<Boolean[]> nc_masks = new ArrayList<>();
@@ -357,13 +460,12 @@ public class Simulator extends UIController {
                 observationDAO.insertObservation(subjects, mm[i], nc_startDates.get(c)[i], nc_endDates.get(c)[i]);
             }
             nc_risks.add(risks);
-        }
+        }*/
 
 
         ArrayList<LocalDateTime> nextContactTime = new ArrayList<>();
         ArrayList<Float> nextRisk = new ArrayList<>();
         ArrayList<String> nextContact = new ArrayList<>();
-
         ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> trees = new ArrayList<>();
         //simulate
         for (int i=0; i<maxReps; i++) {
@@ -382,14 +484,11 @@ public class Simulator extends UIController {
                 }
             }
 
-            for (int j=0; j<nc_startDates.size(); j++){
-                for (int l=0; l<nc_startDates.get(j).length; l++){
+            for (int j=0; j<nc_startDates.length; j++){
                     ArrayList<Object> tmp_obj = new ArrayList<>();
-                    tmp_obj.add(nc_risks.get(j)[l]);
+                    tmp_obj.add(nc_risks[j]);
                     tmp_obj.add(subjects);
-
-                    tmp.put(nc_startDates.get(j)[l], tmp_obj);
-                }
+                    tmp.put(nc_startDates[j], tmp_obj);
             }
 
             nextContact.clear();
@@ -432,7 +531,7 @@ public class Simulator extends UIController {
                 TreeMap<LocalDateTime, Integer> date_state = new TreeMap<>();
                 states.add(p, date_state);
             }
-           // System.out.println("states.size: " + states.size());
+            // System.out.println("states.size: " + states.size());
             while (nextContactTime.size() > 0) {
                 String nc = nextContact.remove(0);
                 LocalDateTime nct = nextContactTime.remove(0);
@@ -448,7 +547,7 @@ public class Simulator extends UIController {
                             pStates.add(value);
                         }
                         int current_state = pStates.size() == 0 ? 0 : pStates.get(pStates.size() - 1); //XXX
-                         if (current_state == 0 && idsInfected.get(p) == null) { //sano
+                        if (current_state == 0 && idsInfected.get(p) == null) { //sano
                             float random = 0 + r.nextFloat() * (1 - 0);
                             if (random < nextRisk.remove(0)) { //Da sano a contagiato
                                 idsInfected.add(p, event_id);
@@ -509,7 +608,7 @@ public class Simulator extends UIController {
         //System.out.println(trees.size() + " " + trees.get(0).size());
 
         var indices = trees.get(0).get(0).keySet().toArray();
-       // System.out.println(Arrays.toString(indices));
+        // System.out.println(Arrays.toString(indices));
         HashMap<String, ArrayList<TreeMap<LocalDateTime, Integer>>> treeHM = new HashMap<>();
         for(int p = 0; p<np; p++){
             ArrayList<TreeMap<LocalDateTime, Integer>> t = new ArrayList<>();
@@ -572,9 +671,9 @@ public class Simulator extends UIController {
                 clusterSubjectsMet.put(subjects.get(i), observationDAO.getContactObservations(subjects.get(i), otherMembers));
             }
         }
-       // System.out.println("---");
-       // System.out.println(clusterSubjectsMet.keySet());
-       // System.out.println(subjects.get(0));
+        // System.out.println("---");
+        // System.out.println(clusterSubjectsMet.keySet());
+        // System.out.println(subjects.get(0));
         for(String s : clusterSubjectsMet.keySet()){
             System.out.println(s+ " "+ clusterSubjectsMet.get(s));
         }
@@ -598,8 +697,240 @@ public class Simulator extends UIController {
         }
 
         //for(LocalDateTime l : tt.get("P0").keySet())
-            //System.out.println(tt.get("P0").get(l));
+        //System.out.println(tt.get("P0").get(l));
         plot(tt, pns);
+
+    }
+
+    @Test
+    void simulate(){
+        try{
+        Random r = new Random();
+        LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
+        //creazione dei soggetti
+        ArrayList<Subject> subjects = new ArrayList<>();
+        for(int p = 0; p < np; p++){
+            subjects.add(new Subject("P"+p));
+        }
+        //creazione degli eventi ambientali
+        ArrayList<Event> events = new ArrayList<>();
+        for(int p = 0; p < np; p++){
+            int nEnvironment = r.nextInt(max_nEnvironment - min_nEnvironment) + min_nEnvironment;
+            LocalDateTime[] startDates = new LocalDateTime[nEnvironment];
+            LocalDateTime[] endDates = new LocalDateTime[nEnvironment];
+            ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nEnvironment));
+
+            int start = 0;
+            int end = 0;
+            for (int date = 0; date < dates.size(); date++) {
+                if (date % 2 == 0) {
+                    startDates[start] = dates.get(date);
+                    start++;
+                } else {
+                    endDates[end] = dates.get(date);
+                    end++;
+                }
+            }
+
+            String[] riskLevels = generateRiskLevels(nEnvironment);
+            Boolean[] masks = generateMasks(nEnvironment);
+
+            for(int i = 0; i < nEnvironment; i++){
+                ArrayList<Subject> s = new ArrayList<Subject>(Collections.singletonList(subjects.get(p)));
+                ArrayList<String> s_String = new ArrayList<>();
+                for(Subject sub : s){
+                    s_String.add(sub.getName());
+                }
+                Type t = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
+                events.add(new Event(startDates[i], endDates[i], t, s));
+
+                observationDAO.insertObservation(s_String, t, startDates[i], endDates[i]);
+            }
+        }
+
+            String[] nc_riskLevels;
+            Boolean[] nc_masks;
+            LocalDateTime[] nc_startDates = new LocalDateTime[nContact];
+            LocalDateTime[] nc_endDates = new LocalDateTime[nContact];
+            ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nContact));
+            int start = 0;
+            int end = 0;
+            for (int date = 0; date < dates.size(); date++) {
+                if (date % 2 == 0) {
+                    nc_startDates[start] = dates.get(date);
+                    start++;
+                } else {
+                    nc_endDates[end] = dates.get(date);
+                    end++;
+                }
+            }
+            nc_riskLevels = generateRiskLevels(nContact);
+            nc_masks = generateMasks(nContact);
+
+         for(int c = 0; c<nContact; c++){
+             ArrayList<String> s_String = new ArrayList<>();
+             for(Subject sub : subjects){
+                 s_String.add(sub.getName());
+             }
+             Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
+             events.add(new Event(nc_startDates[c], nc_endDates[c], t, subjects));
+             observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
+         }
+         Collections.sort(events);
+         /*for(Event e : events){
+             if(e.getSubject().size() == 1)
+                System.out.println(e.getStartDate() + " " + e.getSubject().get(0).getName());
+             else{
+                 for(Subject s : e.getSubject())
+                    System.out.println(e.getStartDate()+" "+s.getName());
+             }
+         }*/
+         //fine generazione eventi
+            ArrayList<Event> eventsCopy = new ArrayList<>(events);
+        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> timestamps = new ArrayList<>();
+        for(int rep = 0; rep<maxReps; rep++){
+                events = new ArrayList<>(eventsCopy);
+                for(Subject subject : subjects)
+                    subject.initializeSubject(t0);
+                while(events.size() > 0){
+                    Collections.sort(events);
+                    Event event = events.remove(0);
+                    if(event.getType() instanceof Environment){
+                        Subject subject = event.getSubject().get(0);
+                        if(subject.getCurrentState() == 0){
+                            float d = r.nextFloat();
+                            if(d < ((Environment) event.getType()).getRiskLevel()){
+                                LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
+                                subject.changeState(event.getStartDate());
+                                //rescheduling dell'evento "subject" diventa contagioso
+                                events.add(new ChangeStateEvent(ldt, event.getSubject()));
+                            }
+                        }
+                    }else if(event.getType() instanceof Contact){
+                        ArrayList<Subject> ss = event.getSubject();
+                        boolean isThereAtLeastOneContagious = false;
+                        for(Subject subject : ss){
+                            if(subject.getCurrentState() == 2)
+                                isThereAtLeastOneContagious = true;
+                        }
+                        if(isThereAtLeastOneContagious){
+                            for(Subject subject : ss){
+                                if(subject.getCurrentState()==0){
+                                    float d = r.nextFloat();
+                                    if(d < ((Contact) event.getType()).getRiskLevel()){
+                                        LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
+                                        subject.changeState(event.getStartDate());
+                                        //rescheduling dell'evento "subject" diventa contagioso
+                                        events.add(new ChangeStateEvent(ldt, new ArrayList<>(Collections.singletonList(subject))));
+                                    }
+                                }
+                            }
+                        }
+                    }else if(((ChangeStateEvent) event) instanceof ChangeStateEvent){
+                        Subject subject = event.getSubject().get(0);
+                        switch (subject.getCurrentState()) {
+                            case 1 -> {
+                                subject.changeState(event.getStartDate());
+                                //rescheduling dell'evento "subject" «guarisce»
+                                events.add(new ChangeStateEvent(getSampleCH(event.getStartDate()), event.getSubject()));
+                            }
+                            case 2 -> subject.changeState(event.getStartDate());
+                            default -> System.out.println("error");
+                        }
+                    }
+                }
+                //filling
+                //XXX copiato dalla vecchia funzione
+                ArrayList<TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new ArrayList<>();
+                for(Subject subject : subjects) {
+                    timestampsAtIthIteration.add(convert(fill(subject.getTimestamps(), t0)));
+                }
+                timestamps.add(timestampsAtIthIteration);
+            }
+        //XXX copiato dalla vecchia funzione
+        var indices = timestamps.get(0).get(0).keySet().toArray();
+        // System.out.println(Arrays.toString(indices));
+        HashMap<String, ArrayList<TreeMap<LocalDateTime, Integer>>> treeHM = new HashMap<>();
+        for(int p = 0; p<np; p++){
+            ArrayList<TreeMap<LocalDateTime, Integer>> t = new ArrayList<>();
+            for(int i = 0; i<timestamps.size(); i++){
+                t.add(timestamps.get(i).get(p));
+            }
+            treeHM.put("P"+p, t);
+        }
+        HashMap<String, TreeMap<LocalDateTime, Double>> tt = new HashMap<>();
+        for(String subject : treeHM.keySet()){
+            TreeMap<LocalDateTime, Double> t = new TreeMap<>();
+            for(int j = 0; j<indices.length; j++) {
+                double currentT = 0;
+                for (int i = 0; i < treeHM.get(subject).size(); i++) {
+                    currentT += treeHM.get(subject).get(i).get((LocalDateTime) indices[j]);
+                }
+                t.put((LocalDateTime) indices[j], currentT/treeHM.get(subject).size());
+            }
+            tt.put(subject, t);
+        }
+        //calcolo degli intervalli
+            for(int i = 0; i<tt.size(); i++) {
+                TreeMap<LocalDateTime, Integer>[] treesOfASubject = new TreeMap[treeHM.size()];
+                for(int j = 0; j<treeHM.size(); j++){
+                    treesOfASubject[j] = treeHM.get("P"+i).get(j);
+                }
+                var v = getVariance(treesOfASubject, tt.get("P"+i));
+                var ci = getConfidenceIntervalOffset(v, maxReps);
+                for (LocalDateTime l : v.keySet()) {
+                    System.out.println(i+" "+l + " " + v.get(l) + " -> " + tt.get("P"+i).get(l) + " +- " + ci.get(l));
+                }
+            }
+
+            //PN
+            ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
+            final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+            HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
+            ArrayList<String> subjects_String = new ArrayList<>();
+            for(Subject subject : subjects){
+                subjects_String.add(subject.getName());
+            }
+            if(max_iterations>0){
+                for(int i = 0; i<subjects.size(); i++){
+                    ArrayList<String> otherMembers = new ArrayList<>(subjects_String);
+                    otherMembers.remove(i);
+                    clusterSubjectsMet.put(subjects_String.get(i), observationDAO.getContactObservations(subjects_String.get(i), otherMembers));
+                }
+            }
+            // System.out.println("---");
+            // System.out.println(clusterSubjectsMet.keySet());
+            // System.out.println(subjects.get(0));
+            for(String s : clusterSubjectsMet.keySet()){
+                System.out.println(s+ " "+ clusterSubjectsMet.get(s));
+            }
+            System.out.println("---");
+            for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
+                HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
+                for(String member : subjects_String){
+                    System.out.println(member + " it:"+nIteration + " started");
+                    if(nIteration==0){
+                        try {
+                            pits.put(member, stpnAnalyzer.makeModel(member));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                    }
+                    System.out.println(member + " it:"+nIteration + " completed");
+                }
+                pns.add(pits);
+            }
+
+            //for(LocalDateTime l : tt.get("P0").keySet())
+            //System.out.println(tt.get("P0").get(l));
+            plot(tt, pns);
+        }catch(Exception e){
+           e.printStackTrace();
+        } finally {
+            clean();
+        }
     }
 
     private ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent){
