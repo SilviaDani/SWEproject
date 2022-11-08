@@ -103,25 +103,18 @@ class ChangeStateEvent extends Event{
         super(startDate, null, null, subject);
     }
 }
-
+//TODO add timer
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100000;
-    @FXML
-    private LineChart chart;
+    final int maxReps = 1000;
     private static ObservationDAO observationDAO;
     private STPNAnalyzer stpnAnalyzer;
-    //Cambiare percorso in base al computer utilizzato e a dove è installato python
-    String path1 = "C:\\Users\\super\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
-    String path2 = "C:\\Python39\\python.exe";
-    String path3 = "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe";
-    String PYTHON_PATH; //XXX: environment variable
+    String PYTHON_PATH;
     static final int np = 3;
-    int nContact = 2;
-    int max_nEnvironment = 5;
+    int nContact = 6;
+    int max_nEnvironment = 10;
     int min_nEnvironment = 2;
-    //FIXME il problema potrebbe essere che non prende le osservazioni dell'ambiente dei soggetti dopo P0.
 
     Simulator(){
         observationDAO = new ObservationDAO();
@@ -787,7 +780,15 @@ public class Simulator extends UIController {
          }*/
          //fine generazione eventi
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
-        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> timestamps = new ArrayList<>();
+            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>(); //TODO initialize this
+            for(Subject subject : subjects){
+                TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
+                for(int offset = 0; offset<144; offset++){
+                    tmpTree.put(LocalDateTime.from(t0).plusHours(offset), 0.0);
+                }
+                meanTrees.put(subject.getName(), tmpTree);
+            }
+//        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> timestamps = new ArrayList<>();
         for(int rep = 0; rep<maxReps; rep++){
                 events = new ArrayList<>(eventsCopy);
                 for(Subject subject : subjects)
@@ -841,14 +842,20 @@ public class Simulator extends UIController {
                 }
                 //filling
                 //XXX copiato dalla vecchia funzione
-                ArrayList<TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new ArrayList<>();
+                HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
                 for(Subject subject : subjects) {
-                    timestampsAtIthIteration.add(convert(fill(subject.getTimestamps(), t0)));
+                    timestampsAtIthIteration.put(subject.getName() ,convert(fill(subject.getTimestamps(), t0)));
                 }
-                timestamps.add(timestampsAtIthIteration);
+                for(Subject subject : subjects){
+                    for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
+                        double newValue = (meanTrees.get(subject.getName()).get(ldt) * (rep) + timestampsAtIthIteration.get(subject.getName()).get(ldt))/(rep+1);
+                        meanTrees.get(subject.getName()).replace(ldt, newValue);
+                    }
+                }
+                //timestamps.add(timestampsAtIthIteration);
             }
         //XXX copiato dalla vecchia funzione
-        var indices = timestamps.get(0).get(0).keySet().toArray();
+       /* var indices = timestamps.get(0).get(0).keySet().toArray();
         // System.out.println(Arrays.toString(indices));
         HashMap<String, ArrayList<TreeMap<LocalDateTime, Integer>>> treeHM = new HashMap<>();
         for(int p = 0; p<np; p++){
@@ -881,7 +888,7 @@ public class Simulator extends UIController {
                 for (LocalDateTime l : v.keySet()) {
                     System.out.println(i+" "+l + " " + v.get(l) + " -> " + tt.get("P"+i).get(l) + " +- " + ci.get(l));
                 }
-            }
+            }*/
 
             //PN
             ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
@@ -925,7 +932,9 @@ public class Simulator extends UIController {
 
             //for(LocalDateTime l : tt.get("P0").keySet())
             //System.out.println(tt.get("P0").get(l));
-            plot(tt, pns);
+            for(LocalDateTime ldt : meanTrees.get("P0").keySet())
+                System.out.println(ldt + " " + meanTrees.get("P0").get(ldt));
+            plot(meanTrees, pns);
         }catch(Exception e){
            e.printStackTrace();
         } finally {
@@ -937,7 +946,7 @@ public class Simulator extends UIController {
         ArrayList<LocalDateTime> dates = new ArrayList<>();
         for (int i=0; i<(nEvent*2); i++){
             Random r = new Random();
-            int hours = r.nextInt(144-0)+0;
+            int hours = r.nextInt(143-0)+1;
             LocalDateTime date = t0.plusHours(hours);
             dates.add(date);
         }
