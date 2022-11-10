@@ -1,6 +1,7 @@
 package com.sweproject.controller;
 
 import com.sweproject.analysis.STPNAnalyzer;
+import com.sweproject.dao.ObservationDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,20 +17,25 @@ import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 public class AnalysisPageController extends UIController implements Initializable {
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
+    ObservationDAO observationDAO;
 
     public AnalysisPageController(){
         stpnAnalyzer = new STPNAnalyzer(144,1);
+        observationDAO = new ObservationDAO();
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         TransientSolution analysis = null;
         try {
-            analysis = stpnAnalyzer.makeModel(user.getFiscalCode());
+            ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode());
+            analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), arrayList);
         } catch (Exception e) {
             e.printStackTrace();
         }

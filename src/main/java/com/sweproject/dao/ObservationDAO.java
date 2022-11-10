@@ -142,7 +142,7 @@ public class ObservationDAO extends DAO {
             }
             rs = statement.executeQuery("SELECT distinct UPPER(obs2.`fiscalCode`) as 'fiscalCode', `start_date`, `risk_level` FROM (`observations` obs1 join `observations` obs2 on obs1.`id` = obs2.`id`) join `events` on events.ID = obs1.`id` where obs1.`fiscalCode` = '" + FC + "' and UPPER(obs2.`fiscalCode`) IN (" + subjectList + ") and `start_date` > '" + start_time_analysis + "' order by start_date");
             arrayList = convertResultSet(rs);
-            System.out.println(arrayList.size());
+            //System.out.println(arrayList.size());
         }catch(SQLException e){
             e.printStackTrace();
         }finally {

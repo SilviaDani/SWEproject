@@ -58,7 +58,8 @@ public class ContagiousLevelPageController extends UIController implements Initi
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        pits.put(member, stpnAnalyzer.makeModel(member));
+                        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(member);
+                        pits.put(member, stpnAnalyzer.makeModel(member, arrayList));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

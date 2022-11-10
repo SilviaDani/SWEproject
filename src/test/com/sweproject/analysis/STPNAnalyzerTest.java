@@ -61,7 +61,8 @@ class STPNAnalyzerTest {
             observationDAO.insertObservation(subjects, tt[i], startDates[i], endDates[i]);
         }
         //creo il modello e lo analizzo
-        TransientSolution solution = stpnAnalyzer.makeModel(subjects.get(0));
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(subjects.get(0));
+        TransientSolution solution = stpnAnalyzer.makeModel(subjects.get(0), arrayList);
         //confronto punto punto il modello con una rete creata a parte (passandogli i pesi giusti)
         PetriNet pn = new PetriNet();
         Marking marking = new Marking();

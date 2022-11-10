@@ -12,6 +12,9 @@ import java.io.File;
 
 
 public class Main extends Application {
+
+    public static final boolean DEBUG = true;
+
     /* CODICE PER USARE DB
     *
     * LOGIN
@@ -59,5 +62,6 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
 }
 

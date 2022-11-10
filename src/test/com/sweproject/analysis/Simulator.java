@@ -25,9 +25,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import static com.sweproject.main.Main.DEBUG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.google.common.base.Stopwatch;
+import org.testfx.framework.junit5.Stop;
+
 class Subject{
     private int currentState;
     private TreeMap<LocalDateTime, Integer> relevantTimestamps;
@@ -107,18 +112,20 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10000;
     private static ObservationDAO observationDAO;
     private STPNAnalyzer stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 3;
-    int nContact = 6;
-    int max_nEnvironment = 10;
-    int min_nEnvironment = 2;
+    static final int np = 6;
+    int nContact = 10;
+    int max_nEnvironment = 20;
+    int min_nEnvironment = 10;
+    Stopwatch timer;
 
     Simulator(){
         observationDAO = new ObservationDAO();
         stpnAnalyzer = new STPNAnalyzer(samples, steps);
+        timer = Stopwatch.createUnstarted();
     }
 
     void plot(TreeMap<LocalDateTime, Double> t, ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) throws PythonExecutionException, IOException {
@@ -297,14 +304,20 @@ public class Simulator extends UIController {
                 for (int k = 0; k < ss.size(); k++) { //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
                     value1 += ss.get(k).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 }
+                //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 yPNarray1[i] = value1;
             });
             yPN1 = Arrays.stream(yPNarray1).toList();
-            plt.plot().add(x, tYSampled1);
-            plt.plot().add(x, yPN1);
+            plt.plot().add(x, tYSampled1).label("Sim "+codes[j]);
+            plt.plot().add(x, yPN1).label("PN "+codes[j]);
+            plt.legend();
         }
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
         plt.ylim(-0.1,1.1);
+        if(DEBUG){
+            timer.stop();
+            System.out.println("Tempo per eseguire il plot dei dati: "+timer);
+        }
         plt.show();
 
     }
@@ -677,12 +690,14 @@ public class Simulator extends UIController {
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        pits.put(member, stpnAnalyzer.makeModel(member));
+                        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(member);
+                        pits.put(member, stpnAnalyzer.makeModel(member, arrayList));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }else{
-                    pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                    ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(member);
+                    pits.put(member, stpnAnalyzer.makeFullModel(pns.get(nIteration-1), clusterSubjectsMet.get(member), arrayList));
                 }
                 System.out.println(member + " it:"+nIteration + " completed");
             }
@@ -698,6 +713,8 @@ public class Simulator extends UIController {
     @Test
     void simulate(){
         try{
+        if(DEBUG)
+            timer.start();
         Random r = new Random();
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
         //creazione dei soggetti
@@ -770,14 +787,11 @@ public class Simulator extends UIController {
              observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
          }
          Collections.sort(events);
-         /*for(Event e : events){
-             if(e.getSubject().size() == 1)
-                System.out.println(e.getStartDate() + " " + e.getSubject().get(0).getName());
-             else{
-                 for(Subject s : e.getSubject())
-                    System.out.println(e.getStartDate()+" "+s.getName());
-             }
-         }*/
+        if(DEBUG){
+            timer.stop();
+            System.out.println("Tempo per creare le osservazioni e caricarle sul database: " + timer);
+            timer.reset();
+        }
          //fine generazione eventi
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
             HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>(); //TODO initialize this
@@ -789,6 +803,9 @@ public class Simulator extends UIController {
                 meanTrees.put(subject.getName(), tmpTree);
             }
 //        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> timestamps = new ArrayList<>();
+            if(DEBUG) {
+                timer.start();
+            }
         for(int rep = 0; rep<maxReps; rep++){
                 events = new ArrayList<>(eventsCopy);
                 for(Subject subject : subjects)
@@ -854,43 +871,31 @@ public class Simulator extends UIController {
                 }
                 //timestamps.add(timestampsAtIthIteration);
             }
-        //XXX copiato dalla vecchia funzione
-       /* var indices = timestamps.get(0).get(0).keySet().toArray();
-        // System.out.println(Arrays.toString(indices));
-        HashMap<String, ArrayList<TreeMap<LocalDateTime, Integer>>> treeHM = new HashMap<>();
-        for(int p = 0; p<np; p++){
-            ArrayList<TreeMap<LocalDateTime, Integer>> t = new ArrayList<>();
-            for(int i = 0; i<timestamps.size(); i++){
-                t.add(timestamps.get(i).get(p));
-            }
-            treeHM.put("P"+p, t);
+        if(DEBUG){
+            timer.stop();
+            System.out.println("Tempo per eseguire "+ maxReps + " ripetizioni della simulazione: " + timer+"\nTempo medio per eseguire una ripetizione della simulazione: "+(timer.elapsed(TimeUnit.MILLISECONDS)/maxReps) + " ms");
+            timer.reset();
         }
-        HashMap<String, TreeMap<LocalDateTime, Double>> tt = new HashMap<>();
-        for(String subject : treeHM.keySet()){
-            TreeMap<LocalDateTime, Double> t = new TreeMap<>();
-            for(int j = 0; j<indices.length; j++) {
-                double currentT = 0;
-                for (int i = 0; i < treeHM.get(subject).size(); i++) {
-                    currentT += treeHM.get(subject).get(i).get((LocalDateTime) indices[j]);
-                }
-                t.put((LocalDateTime) indices[j], currentT/treeHM.get(subject).size());
+        if(DEBUG)
+            timer.start();
+        for(Subject subject : subjects){
+            for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
+                double theta = meanTrees.get(subject.getName()).get(ldt); // hat{theta} = mean(x).   mean(X) ~ N(theta, theta(1-theta)/n) per TLC
+                double z95bi = 1.96;
+                double offset = (1.96 * Math.sqrt(theta * (1-theta)/maxReps));
+                System.out.println("IC "+subject.getName() + " " + ldt + " = (" + (theta - offset) + ", " + (theta+offset) + ")");
             }
-            tt.put(subject, t);
         }
-        //calcolo degli intervalli
-            for(int i = 0; i<tt.size(); i++) {
-                TreeMap<LocalDateTime, Integer>[] treesOfASubject = new TreeMap[treeHM.size()];
-                for(int j = 0; j<treeHM.size(); j++){
-                    treesOfASubject[j] = treeHM.get("P"+i).get(j);
-                }
-                var v = getVariance(treesOfASubject, tt.get("P"+i));
-                var ci = getConfidenceIntervalOffset(v, maxReps);
-                for (LocalDateTime l : v.keySet()) {
-                    System.out.println(i+" "+l + " " + v.get(l) + " -> " + tt.get("P"+i).get(l) + " +- " + ci.get(l));
-                }
-            }*/
+        if(DEBUG){
+            timer.stop();
+            System.out.println("Tempo per calcolare gli intervalli di confidenza: "+timer);
+            timer.reset();
+        }
 
             //PN
+            if(DEBUG){
+                timer.start();
+            }
             ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
             final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
             HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
@@ -905,20 +910,31 @@ public class Simulator extends UIController {
                     clusterSubjectsMet.put(subjects_String.get(i), observationDAO.getContactObservations(subjects_String.get(i), otherMembers));
                 }
             }
+
+            HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+            for(String member : subjects_String){
+                envObs.put(member, observationDAO.getEnvironmentObservations(member));
+            }
             // System.out.println("---");
             // System.out.println(clusterSubjectsMet.keySet());
             // System.out.println(subjects.get(0));
-            for(String s : clusterSubjectsMet.keySet()){
+            /*for(String s : clusterSubjectsMet.keySet()){
                 System.out.println(s+ " "+ clusterSubjectsMet.get(s));
-            }
+            }*/
             System.out.println("---");
+            if(DEBUG){
+                timer.stop();
+                System.out.println("Tempo per fare retrieval dei dati dal database: "+timer);
+                timer.reset();
+                timer.start();
+            }
             for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
                 HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
                 for(String member : subjects_String){
                     System.out.println(member + " it:"+nIteration + " started");
                     if(nIteration==0){
                         try {
-                            pits.put(member, stpnAnalyzer.makeModel(member));
+                            pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -929,11 +945,12 @@ public class Simulator extends UIController {
                 }
                 pns.add(pits);
             }
-
-            //for(LocalDateTime l : tt.get("P0").keySet())
-            //System.out.println(tt.get("P0").get(l));
-            for(LocalDateTime ldt : meanTrees.get("P0").keySet())
-                System.out.println(ldt + " " + meanTrees.get("P0").get(ldt));
+            if(DEBUG){
+                timer.stop();
+                System.out.println("Tempo per eseguire analisi mediante reti di Petri: "+timer);
+                timer.reset();
+                timer.start();
+            }
             plot(meanTrees, pns);
         }catch(Exception e){
            e.printStackTrace();
