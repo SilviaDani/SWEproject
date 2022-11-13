@@ -29,6 +29,7 @@ public class STPNAnalyzer<R,S> {
     private ObservationDAO observationDAO;
     private int step;
     private int samples;
+    private boolean considerEnvironment = true;
 
     public STPNAnalyzer(int samples, int step) {
         this.observationDAO = new ObservationDAO();
@@ -97,97 +98,6 @@ public class STPNAnalyzer<R,S> {
         }
     }
 
-    //delete from here
-    public TransientSolution<R, S> mm(String fiscalCode) {
-        //retrieving data from DB
-        LocalDateTime now = LocalDateTime.now();
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(fiscalCode);
-        for(int i = 0; i<arrayList.size(); i++){
-            System.out.println(arrayList.get(i).get("start_date"));
-        }
-        if (arrayList.size() > 0) {
-            PetriNet pn = new PetriNet();
-            //creating the central node
-            Place contagious = pn.addPlace("Contagio");
-            Marking m = new Marking();
-            buildContagionEvolutionSection(pn, m, contagious);
-            //making first module
-            Place initialCondition = pn.addPlace("Condizione_iniziale");
-            m.addTokens(initialCondition, 1);
-            Place firstContact = pn.addPlace("Contatto_1");
-            Transition t_0 = pn.addTransition("t_0");
-            pn.addPrecondition(initialCondition, t_0);
-            pn.addPostcondition(t_0, firstContact);
-            double delta = ChronoUnit.MINUTES.between(now.truncatedTo(ChronoUnit.MINUTES).minusDays(6), (LocalDateTime) arrayList.get(0).get("start_date")) / 60;
-            System.out.println("delta 0" + delta);
-            t_0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(delta), MarkingExpr.from("1", pn)));
-            Transition effective0 = pn.addTransition("Efficace_0");
-            pn.addPrecondition(firstContact, effective0);
-            pn.addPostcondition(effective0, contagious);
-            effective0.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(arrayList.get(0).get("risk_level").toString(), pn)));
-            System.out.println("BBBBB" + arrayList.get(0).get("risk_level").toString());
-
-            System.out.println("effective 0 : " + arrayList.get(0).get("risk_level"));
-
-            Place lastPlace = firstContact;
-            //making intermediate modules
-            for (int i = 1; i < arrayList.size(); i++) {
-                Place iCondition = pn.addPlace("Condizione_" + i);
-                Transition uneffectiveLast = pn.addTransition("Non-efficace" + i);
-                pn.addPrecondition(lastPlace, uneffectiveLast);
-                pn.addPostcondition(uneffectiveLast, iCondition);
-                uneffectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(i - 1).get("risk_level")))), pn)));
-
-                System.out.println("uneffective "+ (i-1) +" : "+ (1 - (float) (arrayList.get(i - 1).get("risk_level"))));
-
-                Place iContact = pn.addPlace("Contatto_" + i);
-                Transition ti = pn.addTransition("t_" + i);
-                pn.addPrecondition(iCondition, ti);
-                pn.addPostcondition(ti, iContact);
-                delta = ChronoUnit.MINUTES.between((LocalDateTime) arrayList.get(i - 1).get("start_date"), (LocalDateTime) arrayList.get(i).get("start_date")) / 60;
-                System.out.println("delta"+ i + " " + delta);
-
-                ti.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(delta), MarkingExpr.from("1", pn)));
-                Transition effectiveLast = pn.addTransition("Efficace_" + i);
-                pn.addPrecondition(iContact, effectiveLast);
-                pn.addPostcondition(effectiveLast, contagious);
-                effectiveLast.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((float) (arrayList.get(i).get("risk_level"))), pn)));
-
-                System.out.println("effective " + i + " : "+ arrayList.get(i).get("risk_level").toString());
-
-                lastPlace = iContact;
-            }
-            Transition drop = pn.addTransition("Drop");
-            pn.addPrecondition(lastPlace, drop);
-            drop.addFeature(StochasticTransitionFeature.newDeterministicInstance(BigDecimal.valueOf(0), MarkingExpr.from(String.valueOf((1 - (float) (arrayList.get(arrayList.size() - 1).get("risk_level")))), pn)));
-
-            System.out.println("uneffective (last) " + (1 - (float) (arrayList.get(arrayList.size() - 1).get("risk_level"))));
-
-
-
-            // 144 -> 6 giorni
-            RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                    .timeStep(new BigDecimal(step)).build();
-
-            //TODO: add plots of other rewards and change title
-            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-            var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-            TransientSolution<DeterministicEnablingState, Marking> solution =
-                    analysis.compute(pn, m);
-
-            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            //new TransientSolutionViewer(rewardedSolution);
-            return (TransientSolution<R, S>) rewardedSolution;
-        } else {
-            System.out.println("The subject has no Environment observations of the last 6 days");
-            return null;
-        }
-
-    }
-    //to here
-
     public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s ){
         XYChart.Series<String, Float> series = new XYChart.Series();
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
@@ -213,7 +123,6 @@ public class STPNAnalyzer<R,S> {
         }
         return max*riskLevel;
     }
-
 
     public void buildContagionEvolutionSection(PetriNet net, Marking marking, Place contagio){
         //Generating Nodes
@@ -303,13 +212,6 @@ public class STPNAnalyzer<R,S> {
     }
 
     public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet) {
-        //can be deleted ...
-        /*for(int i = 0; i<clusterSubjectsMet.size(); i++){
-            for(String key : clusterSubjectsMet.get(i).keySet()){
-                System.out.println("CSM ["+i+"]["+key+"]:"+clusterSubjectsMet.get(i).get(key));
-            }
-        }*/
-        //... until here
         if (clusterSubjectsMet.size() > 0) {
             LocalDateTime now = LocalDateTime.now();
             PetriNet net = new PetriNet();
@@ -339,7 +241,6 @@ public class STPNAnalyzer<R,S> {
             for (int k = 0; k < j; k++) {
                 subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
             }
-            System.out.println(subjectsMet_ss.size()+"<-sm_ss");//XXX del me
             float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, now, (float) clusterSubjectsMet.get(j-1).get("risk_level")); //fixme
             float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1)/60.f;
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
@@ -518,12 +419,13 @@ public class STPNAnalyzer<R,S> {
     public XYChart.Series makeChart(ArrayList<HashMap<String, TransientSolution>> ss, String fiscalCode) {
         TransientSolution s = ss.get(0).get(fiscalCode);
         XYChart.Series<String, Float> series = new XYChart.Series();
+        int startingIndex = considerEnvironment?0:1;
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
         for(int m=0; m<s.getColumnStates().size(); m++){
             double step = s.getStep().doubleValue();
             for(int i=0, size = s.getSamplesNumber(); i<size; i++){
                 float value = 0.f;
-                for(int j = 1; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                for(int j = startingIndex; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
                     value += (float)ss.get(j).get(fiscalCode).getSolution()[i][r][m];
                 }
                 series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), value));

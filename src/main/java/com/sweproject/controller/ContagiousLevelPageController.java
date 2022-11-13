@@ -52,14 +52,17 @@ public class ContagiousLevelPageController extends UIController implements Initi
         }
 
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
+        HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+        for(String member : clusterMembers){
+            envObs.put(member, observationDAO.getEnvironmentObservations(member));
+        }
         for(int nIteration = 0; nIteration<=max_iterations; nIteration++){
             HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
             for(String member : clusterMembers){
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(member);
-                        pits.put(member, stpnAnalyzer.makeModel(member, arrayList));
+                        pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member)));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
