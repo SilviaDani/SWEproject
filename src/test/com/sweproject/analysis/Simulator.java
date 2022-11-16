@@ -15,12 +15,14 @@ import com.sweproject.model.Type;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.math3.distribution.ExponentialDistribution;
 import org.apache.commons.math3.distribution.WeibullDistribution;
 import org.checkerframework.checker.units.qual.A;
 import org.checkerframework.checker.units.qual.C;
 import org.jfree.data.io.CSV;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.oristool.math.expression.Expolynomial;
 import org.oristool.models.stpn.TransientSolution;
 
 import java.io.File;
@@ -42,6 +44,7 @@ class Subject{
     private int currentState;
     private TreeMap<LocalDateTime, Integer> relevantTimestamps;
     private String name;
+    private boolean isSymptomatic;
 
     public Subject(String name) {
         this.name = name;
@@ -52,6 +55,7 @@ class Subject{
         currentState = 0;
         relevantTimestamps.clear();
         relevantTimestamps.put(ldt, 0);
+        isSymptomatic = false;
     }
     public String getName() {
         return name;
@@ -70,6 +74,14 @@ class Subject{
             currentState++;
             relevantTimestamps.put(ldt, currentState);
         }
+    }
+
+    public void setSymptomatic(boolean symptomatic) {
+        isSymptomatic = symptomatic;
+    }
+
+    public boolean isSymptomatic() {
+        return isSymptomatic;
     }
 }
 class Event implements Comparator<Event>, Comparable<Event>{
@@ -117,14 +129,14 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100000;
+    final int maxReps = 10000;
     private static ObservationDAO observationDAO;
     private STPNAnalyzer stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 6;
-    int nContact = 20;
-    int max_nEnvironment = 20;
-    int min_nEnvironment = 15;
+    static final int np = 5;
+    int nContact = 5;
+    int max_nEnvironment = 10;
+    int min_nEnvironment = 5;
     File execTimes;
     File confInt;
     FileWriter outputFile;
@@ -209,16 +221,18 @@ public class Simulator extends UIController {
             int r = ss.get(0).get(finalCodes[finalJ]).getRegenerations().indexOf(ss.get(0).get(finalCodes[finalJ]).getInitialRegeneration());
             IntStream.range(0, samples).parallel().forEach(i -> {
                 double value1 = 0.f;
-                double value2 = 0.f;
                 for (int k = 0; k < ss.size(); k++) { //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
-                    value1 += ss.get(k).get(finalCodes[finalJ]).getSolution()[i][r][0];
+                    value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 }
                 //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 yPNarray1[i] = value1;
             });
             yPN1 = Arrays.stream(yPNarray1).toList();
-            plt.plot().add(x, tYSampled1).label("Sim "+codes[j]);
-            plt.plot().add(x, yPN1).label("PN "+codes[j]);
+            String style = "solid";
+            if(j>=5)
+                style = "dashed";
+            plt.plot().add(x, tYSampled1).label("Sim "+codes[j]).linestyle(style);
+            plt.plot().add(x, yPN1).label("PN "+codes[j]).linestyle(style);
             plt.legend();
         }
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
@@ -315,9 +329,11 @@ public class Simulator extends UIController {
 
          for(int c = 0; c<nContact; c++){
              ArrayList<String> s_String = new ArrayList<>();
-             for(Subject sub : subjects){
-                 s_String.add(sub.getName());
-             }
+             ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
+             Collections.shuffle(subjects_copy);
+             int upperBound = subjects_copy.size() >= 2 ? r.nextInt(subjects_copy.size()-2) + 2 : 2;
+             for(int i = 0; i<upperBound; i++)
+                 s_String.add(subjects_copy.get(i).getName());
              Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
              events.add(new Event(nc_startDates[c], nc_endDates[c], t, subjects));
              observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
@@ -385,8 +401,11 @@ public class Simulator extends UIController {
                         switch (subject.getCurrentState()) {
                             case 1 -> {
                                 subject.changeState(event.getStartDate());
+                                //se il valore random è < 0.1 il soggetto è asintomatico
+                                boolean isSymptomatic = r.nextFloat() <= 0.9f;
+                                subject.setSymptomatic(isSymptomatic);
                                 //rescheduling dell'evento "subject" «guarisce»
-                                events.add(new ChangeStateEvent(getSampleCH(event.getStartDate()), event.getSubject()));
+                                events.add(new ChangeStateEvent(getSampleCH(event.getStartDate(), subject), event.getSubject()));
                             }
                             case 2 -> subject.changeState(event.getStartDate());
                             default -> System.out.println("error");
@@ -782,7 +801,7 @@ public class Simulator extends UIController {
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
-       WeibullDistribution w = new WeibullDistribution(3.5, (double)13);
+       WeibullDistribution w = new WeibullDistribution(3.5, (double)14);
         double offset = w.sample() + min;
         if(offset>max)
             offset = max;/*
@@ -797,8 +816,28 @@ public class Simulator extends UIController {
 
     private LocalDateTime getSampleCH(LocalDateTime date) {
         Random r = new Random();
-        double result = Math.log(1-r.nextFloat())/(-0.04);
-        int randomHours = (int) Math.floor(result);
+        ExponentialDistribution e = new ExponentialDistribution(25); //1/25 = 0.04
+        int randomHours = (int) Math.floor(e.sample());
+        return date.plusHours(randomHours);
+    }
+
+    private LocalDateTime getSampleCH(LocalDateTime date, Subject subject) {
+        Random r = new Random();
+        int mean;
+        int randomHours;
+        if(subject.isSymptomatic()) {
+            mean = 10; //1/10 = 0.1
+            WeibullDistribution w = new WeibullDistribution(2, 11);
+
+            ExponentialDistribution e = new ExponentialDistribution(mean);
+            //System.out.println("now is " + date + " lower key :" + subject.getTimestamps().lowerKey(date));
+            double alreadyElapsedTime = ChronoUnit.MINUTES.between(subject.getTimestamps().lowerKey(date), date)/60.0;
+            randomHours = (int)Math.floor(w.sample() + 24 - alreadyElapsedTime + e.sample());
+        }else{
+            mean = 25;//1/25 = 0.04
+            ExponentialDistribution e = new ExponentialDistribution(mean);
+            randomHours = (int) Math.floor(e.sample());
+        }
         return date.plusHours(randomHours);
     }
 

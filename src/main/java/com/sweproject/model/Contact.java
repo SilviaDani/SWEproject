@@ -39,6 +39,8 @@ public class Contact extends Type{
             riskLevel = 0.99f;
             System.out.println("nan");
         }
+        if(riskLevel < 0.001)
+            riskLevel = 0.001f;
         //FIXME mettere valori plausibili
     }
 

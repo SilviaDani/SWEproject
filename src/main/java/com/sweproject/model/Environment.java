@@ -20,6 +20,12 @@ public class Environment extends Type{
             riskLevel *= 0.1f;
         riskLevel += r.nextFloat()/10 - 0.05f; // -> health state
         riskLevel *= 2 * Math.exp(minutes/40) / (1 + Math.exp(minutes/40)) - 1;
+        if(Float.isNaN(riskLevel)) {
+            riskLevel = 0.99f;
+            System.out.println("nan");
+        }
+        if(riskLevel < 0.001)
+            riskLevel = 0.001f;
         //FIXME mettere valori plausibili
     }
 
