@@ -136,13 +136,15 @@ public class Simulator extends UIController {
     static final int np = 5;
     int nContact = 5;
     int max_nEnvironment = 10;
-    int min_nEnvironment = 5;
+    int min_nEnvironment = 7;
     File execTimes;
     File confInt;
+    File RMSE;
     FileWriter outputFile;
     CSVWriter writer;
     ArrayList<String[]> outputStrings_execTimes;
     ArrayList<String[]> outputStrings_confInt;
+    ArrayList<String[]> outputStrings_RMSE;
     Stopwatch timer;
 
 
@@ -154,9 +156,12 @@ public class Simulator extends UIController {
             LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
             execTimes = new File("./execTimes_"+now.toString().replace(':', '_')+".csv");
             confInt = new File("./confInt_"+now.toString().replace(':', '_')+".csv");
+            RMSE = new File("./RMSE_"+now.toString().replace(':', '_')+".csv");
             outputStrings_execTimes = new ArrayList<>();
             outputStrings_confInt = new ArrayList<>();
+            outputStrings_RMSE = new ArrayList<>();
             outputStrings_confInt.add(new String[]{"Persona", "Timestamp", "Limite inferiore", "Limite superiore"});
+            outputStrings_RMSE.add(new String[]{"Persona", "Radice dell'errore quadratico medio"});
         }
     }
 
@@ -202,6 +207,7 @@ public class Simulator extends UIController {
         List<Double> x = NumpyUtils.linspace(0, samples, samples);
         Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
         String[] finalCodes = codes;
+        HashMap<String, List<Double>> hPN = new HashMap<>();
         for(int j = 0; j<codes.length; j++) {
             List<Double> tYSampled1 = new ArrayList<>();
             Double[] tYSampledArray1 = new Double[samples];
@@ -213,11 +219,8 @@ public class Simulator extends UIController {
             });
 
             tYSampled1 = Arrays.stream(tYSampledArray1).toList();
-
-            Double[] yPNarray1 = new Double[samples];
             List<Double> yPN1 = new ArrayList<>();
-            Double[] yPNarray2 = new Double[samples];
-            List<Double> yPN2 = new ArrayList<>();
+            Double[] yPNarray1 = new Double[samples];
             int r = ss.get(0).get(finalCodes[finalJ]).getRegenerations().indexOf(ss.get(0).get(finalCodes[finalJ]).getInitialRegeneration());
             IntStream.range(0, samples).parallel().forEach(i -> {
                 double value1 = 0.f;
@@ -228,6 +231,7 @@ public class Simulator extends UIController {
                 yPNarray1[i] = value1;
             });
             yPN1 = Arrays.stream(yPNarray1).toList();
+            hPN.put(codes[j], yPN1);
             String style = "solid";
             if(j>=5)
                 style = "dashed";
@@ -240,12 +244,25 @@ public class Simulator extends UIController {
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
+            timer.start();
+            for(String subject : tt.keySet()){
+                double rmse = 0;
+                int indexPN = 0;
+                for(LocalDateTime ldt : tt.get(subject).keySet()){
+                    rmse += Math.pow((tt.get(subject).get(ldt) - hPN.get(subject).get(indexPN)), 2);
+                    indexPN++;
+                }
+                rmse = Math.sqrt(rmse/tt.get(subject).keySet().size());
+                outputStrings_RMSE.add(new String[]{subject, String.valueOf(rmse)});
+            }
+            timer.stop();
+            outputStrings_execTimes.add(new String[]{"Tempo per calcolare gli errori", String.valueOf(timer)});
+            timer.reset();
             outputFile = new FileWriter(execTimes);
             writer = new CSVWriter(outputFile, ';',
                     CSVWriter.NO_QUOTE_CHARACTER,
                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                     CSVWriter.DEFAULT_LINE_END);
-            System.out.println(outputStrings_execTimes.get(0)[0] +" "+ outputStrings_execTimes.get(0)[1]);
             writer.writeAll(outputStrings_execTimes);
             writer.close();
             outputFile = new FileWriter(confInt);
@@ -254,6 +271,13 @@ public class Simulator extends UIController {
                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                     CSVWriter.DEFAULT_LINE_END);
             writer.writeAll(outputStrings_confInt);
+            writer.close();
+            outputFile = new FileWriter(RMSE);
+            writer=new CSVWriter(outputFile, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            writer.writeAll(outputStrings_RMSE);
             writer.close();
         }
         plt.show();
@@ -429,7 +453,7 @@ public class Simulator extends UIController {
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire "+ maxReps + " ripetizioni della simulazione", String.valueOf(timer)});
-            outputStrings_execTimes.add(new String[]{"Tempo medio per eseguire una ripetizione della simulazione", (timer.elapsed(TimeUnit.MILLISECONDS)/maxReps)+"ms"});
+            outputStrings_execTimes.add(new String[]{"Tempo medio per eseguire una ripetizione della simulazione", ((double)(timer.elapsed(TimeUnit.MILLISECONDS))/(double)(maxReps))+"ms"});
             timer.reset();
         }
         if(DEBUG)

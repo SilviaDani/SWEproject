@@ -232,12 +232,13 @@ public class STPNAnalyzer<R,S> {
             int i = 0; //index of contact
             int j = 0; //n. person met during contact counter
             String[] meeting_subjects = new String[clusterSubjectsMet.size()];
-            LocalDateTime meeting_time1 = (LocalDateTime) clusterSubjectsMet.get(i).get("start_date");
-            while (i < clusterSubjectsMet.size() && (LocalDateTime) clusterSubjectsMet.get(i).get("start_date") == meeting_time1) {
+            LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime)clusterSubjectsMet.get(i).get("start_date"));
+            while (i < clusterSubjectsMet.size() && ((LocalDateTime) clusterSubjectsMet.get(i).get("start_date")).equals(meeting_time1)) {
                 meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
                 j++;
                 i++;
             }
+            System.out.println(Arrays.toString(meeting_subjects));
             ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
             for (int k = 0; k < j; k++) {
                 subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
@@ -259,8 +260,8 @@ public class STPNAnalyzer<R,S> {
                 for (int n = 0; n < meeting_subjects.length; n++) {
                     meeting_subjects[n] = null;
                 }
-                LocalDateTime meeting_time2 = (LocalDateTime) clusterSubjectsMet.get(l).get("start_date");
-                while (l < clusterSubjectsMet.size() && (LocalDateTime) clusterSubjectsMet.get(l).get("start_date") == meeting_time2) {
+                LocalDateTime meeting_time2 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(l).get("start_date"));
+                while (l < clusterSubjectsMet.size() && ((LocalDateTime) clusterSubjectsMet.get(l).get("start_date")).equals(meeting_time2)) {
                     meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
                     j++;
                     l++;
