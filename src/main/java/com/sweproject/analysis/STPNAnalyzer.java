@@ -238,7 +238,6 @@ public class STPNAnalyzer<R,S> {
                 j++;
                 i++;
             }
-            System.out.println(Arrays.toString(meeting_subjects));
             ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
             for (int k = 0; k < j; k++) {
                 subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX

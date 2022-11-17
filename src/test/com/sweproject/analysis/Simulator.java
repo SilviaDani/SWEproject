@@ -134,9 +134,9 @@ public class Simulator extends UIController {
     private STPNAnalyzer stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 5;
-    int nContact = 5;
-    int max_nEnvironment = 10;
-    int min_nEnvironment = 7;
+    int nContact = 10;
+    int max_nEnvironment = 20;
+    int min_nEnvironment = 17;
     File execTimes;
     File confInt;
     File RMSE;
@@ -354,12 +354,16 @@ public class Simulator extends UIController {
          for(int c = 0; c<nContact; c++){
              ArrayList<String> s_String = new ArrayList<>();
              ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
+             ArrayList<Subject> partecipatingSubjects = new ArrayList<>();
              Collections.shuffle(subjects_copy);
              int upperBound = subjects_copy.size() >= 2 ? r.nextInt(subjects_copy.size()-2) + 2 : 2;
-             for(int i = 0; i<upperBound; i++)
+             for(int i = 0; i<upperBound; i++) {
                  s_String.add(subjects_copy.get(i).getName());
+                 partecipatingSubjects.add(subjects_copy.get(i));
+             }
              Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
-             events.add(new Event(nc_startDates[c], nc_endDates[c], t, subjects));
+
+             events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
              observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
          }
          Collections.sort(events);
