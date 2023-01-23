@@ -58,6 +58,21 @@ public class ObservationDAO extends DAO {
         return arrayList;
     }
 
+    public ArrayList<HashMap<String, Object>> getRelevantSymptomsObservations(String FC, LocalDateTime start_time_analysis){
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        try {
+            setConnection();
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = " + "'" + FC + "' and `is_relevant` = 1 and `type` = 'Symptoms' and start_date > '" + start_time_analysis + "' order by start_date");
+            arrayList = convertResultSet(rs);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
+
     public void changeRelevance(String selectedObservationID){
         try {
             setConnection();
@@ -151,4 +166,19 @@ public class ObservationDAO extends DAO {
         return arrayList;
     }
 
+    public ArrayList<HashMap<String, Object>> getTestObservations(String FC, LocalDateTime start_time_analysis){
+        //TODO I TEST CHE VANNO CONSIDERATI SONO ANCHE QUELLI PRIMA DEL TEMPO DELL'ANALISI?
+        ResultSet rs = null;
+        ArrayList<HashMap<String, Object>> arrayList = null;
+        try {
+            setConnection();
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` = 'CovidTest' and start_date > '" + start_time_analysis + "' order by start_date");
+            arrayList = convertResultSet(rs);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally {
+            closeConnection(rs);
+        }
+        return arrayList;
+    }
 }

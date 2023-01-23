@@ -17,6 +17,8 @@ import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -34,8 +36,13 @@ public class AnalysisPageController extends UIController implements Initializabl
     public void initialize(URL url, ResourceBundle resourceBundle) {
         TransientSolution analysis = null;
         try {
-            ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode());
-            analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), arrayList);
+            LocalDateTime right_now = LocalDateTime.now();
+            LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
+            LocalDateTime start_time_analysis = now.minusDays(6);
+            ArrayList<HashMap<String, Object>> environmentArrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode(), start_time_analysis);
+            ArrayList<HashMap<String, Object>> testArrayList = observationDAO.getTestObservations(user.getFiscalCode(), start_time_analysis);
+            ArrayList<HashMap<String, Object>> symptomsArrayList = observationDAO.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
+            analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
         } catch (Exception e) {
             e.printStackTrace();
         }

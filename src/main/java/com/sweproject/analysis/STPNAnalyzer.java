@@ -26,11 +26,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class STPNAnalyzer<R,S> {
-    private ObservationDAO observationDAO;
-    private int step;
-    private int samples;
-    private boolean considerEnvironment = true;
-    private LocalDateTime now;
+    protected ObservationDAO observationDAO;
+    protected int step;
+    protected int samples;
+    protected boolean considerEnvironment = true;
+    protected LocalDateTime now;
 
     public STPNAnalyzer(int samples, int step) {
         this.observationDAO = new ObservationDAO();
@@ -326,7 +326,7 @@ public class STPNAnalyzer<R,S> {
         return series;
     }
 
-    private TransientSolution<R,S> makeFakeNet(){
+    TransientSolution<R,S> makeFakeNet(){
         PetriNet fakeNet = new PetriNet();
         Marking marking = new Marking();
         fakeNet.addPlace("BlankNode");
