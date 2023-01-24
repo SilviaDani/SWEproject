@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
-import com.sweproject.dao.AccessDAO;
+import com.sweproject.gateway.AccessGateway;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,7 +25,7 @@ public class UserPageController extends UIController implements Initializable{
     @FXML private Button reservedArea_button;
 
     public UserPageController() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
     }
 
     public void enterRestrictedArea(ActionEvent event) throws IOException, SQLException {
@@ -54,7 +54,7 @@ public class UserPageController extends UIController implements Initializable{
     public void initialize(URL url, ResourceBundle resourceBundle) {
         name.setText("Welcome "+user.getName());
         try{
-            ArrayList<HashMap<String, Object>> user = accessDAO.selectDoctor(UIController.user.getFiscalCode());
+            ArrayList<HashMap<String, Object>> user = accessGateway.selectDoctor(UIController.user.getFiscalCode());
         if(user.size() == 0) {
             reservedArea_button.setVisible(false);
         }else{

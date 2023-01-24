@@ -1,7 +1,7 @@
 package com.sweproject.controller;
 
 import com.sweproject.model.Notifier;
-import com.sweproject.dao.AccessDAO;
+import com.sweproject.gateway.AccessGateway;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,12 +28,12 @@ public class LogInPageController extends UIController{
     PasswordField passwordField;
 
     public LogInPageController() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
     }
 
     public void logIn(ActionEvent event) throws IOException, SQLException {
         String FC = fiscalCode.getText();
-        ArrayList<HashMap<String, Object>> user = accessDAO.selectUser(FC);
+        ArrayList<HashMap<String, Object>> user = accessGateway.selectUser(FC);
         if(user.size() > 0){ //user.next() = true se non è vuoto, = false se è vuoto
             String password = BCrypt.hashpw(passwordField.getText(), user.get(0).get("salt").toString());
             String DBName = user.get(0).get("firstName").toString();

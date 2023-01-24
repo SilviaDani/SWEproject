@@ -1,6 +1,6 @@
 package com.sweproject.controller;
 
-import com.sweproject.dao.ObservationDAO;
+import com.sweproject.gateway.ObservationGateway;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class PatientsObservationsController extends UIController {
-    private ObservationDAO observationDAO;
+    private ObservationGateway observationDAO;
 
     @FXML
     ListView<String> observations;
@@ -27,7 +27,7 @@ public class PatientsObservationsController extends UIController {
     ListView<String> observationsId;
 
     public PatientsObservationsController() {
-        observationDAO = new ObservationDAO();
+        observationDAO = new ObservationGateway();
     }
 
     public void addObservations(String FC) throws SQLException {

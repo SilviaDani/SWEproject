@@ -1,11 +1,11 @@
-package com.sweproject.dao;
+package com.sweproject.gateway;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class AccessDAO extends DAO{
+public class AccessGateway extends Gateway {
 
     public ArrayList<HashMap<String, Object>> selectUser(String fiscalCode){
         ResultSet rs = null;

@@ -1,10 +1,6 @@
 package com.sweproject.model;
 
-import com.sweproject.dao.ObservationDAO;
-import com.sweproject.model.Observation;
-import com.sweproject.model.Subject;
-import com.sweproject.model.TimeRecord;
-import com.sweproject.model.Type;
+import com.sweproject.gateway.ObservationGateway;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -12,11 +8,11 @@ import java.util.ArrayList;
 
 public class Notifier {
     private Subject subject;
-    private ObservationDAO observationDAO;
+    private ObservationGateway observationDAO;
 
     public Notifier(String fiscalCode, String name, String surname) {
         subject = new Subject(fiscalCode, name,surname);
-        observationDAO = new ObservationDAO();
+        observationDAO = new ObservationGateway();
     }
 
     public void addObservation(ArrayList<String> cluster, Type eventType, LocalDateTime startDate, LocalDateTime endDate) throws SQLException {

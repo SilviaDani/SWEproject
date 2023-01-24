@@ -1,8 +1,7 @@
 package com.sweproject.analysis;
 
-import com.sweproject.analysis.STPNAnalyzer;
-import com.sweproject.dao.ObservationDAO;
-import com.sweproject.dao.ObservationDAOTest;
+import com.sweproject.gateway.ObservationGateway;
+import com.sweproject.gateway.ObservationGatewayTest;
 import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
 import org.junit.jupiter.api.AfterAll;
@@ -34,11 +33,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class STPNAnalyzerTest {
-    private static ObservationDAO observationDAO;
+    private static ObservationGateway observationDAO;
     private STPNAnalyzer stpnAnalyzer;
 
     STPNAnalyzerTest(){
-        observationDAO = new ObservationDAO();
+        observationDAO = new ObservationGateway();
         stpnAnalyzer = new STPNAnalyzer(144, 1);
     }
     @Test
@@ -579,7 +578,7 @@ class STPNAnalyzerTest {
     static void clean(){
         ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("p1");
         for(int i = 0; i<obs.size();i++){
-            ObservationDAOTest.deleteObservation(obs.get(i).get("id").toString());
+            ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
         }
     }
 

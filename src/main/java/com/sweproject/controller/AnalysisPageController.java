@@ -2,7 +2,7 @@ package com.sweproject.controller;
 
 import com.sweproject.analysis.STPNAnalyzer;
 import com.sweproject.analysis.STPNAnalyzer_ext;
-import com.sweproject.dao.ObservationDAO;
+import com.sweproject.gateway.ObservationGateway;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,12 +28,12 @@ public class AnalysisPageController extends UIController implements Initializabl
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
-    ObservationDAO observationDAO;
+    ObservationGateway observationDAO;
 
     public AnalysisPageController(){
         stpnAnalyzer = new STPNAnalyzer(144,1);
         stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
-        observationDAO = new ObservationDAO();
+        observationDAO = new ObservationGateway();
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

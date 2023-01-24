@@ -1,6 +1,6 @@
 package com.sweproject.controller;
 
-import com.sweproject.dao.AccessDAO;
+import com.sweproject.gateway.AccessGateway;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,7 +32,7 @@ public class SignUpPageController extends UIController {
     PasswordField confirmPasswordField;
 
     public SignUpPageController() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
     }
 
     public void signUp(ActionEvent event) throws IOException, SQLException {
@@ -42,7 +42,7 @@ public class SignUpPageController extends UIController {
         String salt = BCrypt.gensalt();
         String password = BCrypt.hashpw(passwordField.getText(), salt);
         String confirmPassword = BCrypt.hashpw(confirmPasswordField.getText(), salt);
-        if (accessDAO.selectUser(FC).size()>0){
+        if (accessGateway.selectUser(FC).size()>0){
             errorText.setText("This account already exists");
         }
         else{
@@ -53,7 +53,7 @@ public class SignUpPageController extends UIController {
                 errorText.setText("Passwords do not match");
             }
             else {
-                accessDAO.insertNewUser(FC, firstName, lastName, password, salt);
+                accessGateway.insertNewUser(FC, firstName, lastName, password, salt);
                 Parent root = FXMLLoader.load(getClass().getResource("/com/sweproject/FXML/index.fxml"));
                 stage = (Stage)((Node)event.getSource()).getScene().getWindow();
                 scene = new Scene(root);

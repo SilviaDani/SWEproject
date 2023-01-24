@@ -1,6 +1,5 @@
 package com.sweproject.controller;
 
-import com.sweproject.dao.ObservationDAO;
 import com.sweproject.model.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -15,7 +14,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.net.URL;

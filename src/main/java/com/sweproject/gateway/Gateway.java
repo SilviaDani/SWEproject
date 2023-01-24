@@ -1,18 +1,13 @@
-package com.sweproject.dao;
+package com.sweproject.gateway;
 
-import com.sweproject.model.Observation;
-
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
-public class DAO {
+public class Gateway {
     protected String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
     protected Connection connection;
     protected Statement statement;
@@ -29,7 +24,7 @@ public class DAO {
             System.out.println("Si è verificato un problema durante la connessione al database.");
         }
     }
-    public DAO() {
+    public Gateway() {
         Properties prop = new Properties();
         try{
             FileInputStream fis = new FileInputStream("src/main/res/database_login.config");

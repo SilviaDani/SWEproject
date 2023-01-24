@@ -1,6 +1,6 @@
 package com.sweproject.controller;
 
-import com.sweproject.dao.AccessDAO;
+import com.sweproject.gateway.AccessGateway;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -22,11 +22,11 @@ public class PatientsPageController extends UIController{
     ListView<String> patients;
 
     public PatientsPageController() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
     }
 
     public ObservableList<String> getPatients(String FC) throws SQLException {
-        ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectDoctor(FC);
+        ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectDoctor(FC);
         ObservableList <String> patientsObservableList = FXCollections.observableArrayList();
 
         for(int i = 0; i<arrayList.size(); i++){

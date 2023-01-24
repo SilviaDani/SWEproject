@@ -1,11 +1,9 @@
 package com.sweproject.main;
 
-import com.sweproject.dao.AccessDAO;
-import com.sweproject.dao.AccessDAOTest;
-import com.sweproject.dao.ObservationDAO;
-import com.sweproject.dao.ObservationDAOTest;
-import com.sweproject.model.Environment;
-import com.sweproject.model.Type;
+import com.sweproject.gateway.AccessGateway;
+import com.sweproject.gateway.AccessGatewayTest;
+import com.sweproject.gateway.ObservationGateway;
+import com.sweproject.gateway.ObservationGatewayTest;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -23,7 +21,6 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.matcher.control.LabeledMatchers;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -87,8 +84,8 @@ public class UITest extends Application {
 
         signUp(robot, FC,firstName, lastName, psw);
 
-        AccessDAO accessDAO = new AccessDAO();
-        ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectUser(FC);
+        AccessGateway accessGateway = new AccessGateway();
+        ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectUser(FC);
         assertNotEquals(0, arrayList.size());
         assertEquals(FC, arrayList.get(0).get("fiscalCode"));
         assertEquals(firstName, arrayList.get(0).get("firstName"));
@@ -341,7 +338,7 @@ public class UITest extends Application {
            }
        }
 
-        ObservationDAO observationDAO = new ObservationDAO();
+        ObservationGateway observationDAO = new ObservationGateway();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations("RSSMRA80A41H501Y");
         assertEquals(10, arrayList.size());//XXX cambia in base alle osservazioni che vengono create prima
         IDs = new ArrayList<>();
@@ -354,7 +351,7 @@ public class UITest extends Application {
         for(int i = 0; i<5; i++){
             switch (i){
                 case 0:
-                    assertEquals(4, ObservationDAOTest.findObservation(arrayList.get(i).get("ID").toString()));
+                    assertEquals(4, ObservationGatewayTest.findObservation(arrayList.get(i).get("ID").toString()));
                     assertEquals(startDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("start_date"));
                     assertEquals(endDate.truncatedTo(ChronoUnit.SECONDS), arrayList.get(i).get("end_date"));
                     assertEquals("Contact", arrayList.get(i).get("type"));
@@ -422,8 +419,8 @@ public class UITest extends Application {
         ArrayList<String> patients = new ArrayList<>();
         String patientCode = "RSSMRA80A41H501Y";
         patients.add(patientCode);
-        AccessDAOTest.insertDoctor("DoctorFiscalCode", patients);
-        ObservationDAO observationDAO = new ObservationDAO();
+        AccessGatewayTest.insertDoctor("DoctorFiscalCode", patients);
+        ObservationGateway observationDAO = new ObservationGateway();
         ArrayList<HashMap<String, Object>> arrayList = observationDAO.getRelevantObservations(patientCode);
         assertEquals(10, arrayList.size());
         signUp(robot, "DoctorFiscalCode", "DoctorName", "DoctorSurname", "password");
@@ -451,10 +448,10 @@ public class UITest extends Application {
     @AfterAll
     static void close(){
         for(String id : IDs)
-            ObservationDAOTest.deleteObservation(id);
-        AccessDAOTest.deleteUser("RSSMRA80A41H501Y");
-        AccessDAOTest.deleteUser("DoctorFiscalCode");
-        AccessDAOTest.deleteDoctor("DoctorFiscalCode");
+            ObservationGatewayTest.deleteObservation(id);
+        AccessGatewayTest.deleteUser("RSSMRA80A41H501Y");
+        AccessGatewayTest.deleteUser("DoctorFiscalCode");
+        AccessGatewayTest.deleteDoctor("DoctorFiscalCode");
         Platform.exit();
     }
 

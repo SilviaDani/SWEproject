@@ -1,8 +1,7 @@
-package com.sweproject.dao;
+package com.sweproject.gateway;
 
 import com.sweproject.model.*;
 
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -10,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ObservationDAO extends DAO {
+public class ObservationGateway extends Gateway {
 
     public void insertObservation(ArrayList<String> subjects, Type type, LocalDateTime startDate, LocalDateTime endDate){
         ResultSet rs = null;

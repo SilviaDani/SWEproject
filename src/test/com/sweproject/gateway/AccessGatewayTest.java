@@ -1,4 +1,4 @@
-package com.sweproject.dao;
+package com.sweproject.gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -12,28 +12,28 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AccessDAOTest {
-    private AccessDAO accessDAO;
+public class AccessGatewayTest {
+    private AccessGateway accessGateway;
 
     @Test
     void insertNewUser_selectUser() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
         String fiscalCode = "RSSMRA80A41H501Y";
         String name = "Maria";
         String surname = "Rossi";
         String password = "password";
         String salt = BCrypt.gensalt();
-        AccessDAOTest.deleteUser(fiscalCode);
+        AccessGatewayTest.deleteUser(fiscalCode);
         try {
-            accessDAO.insertNewUser(fiscalCode, name, surname, password, salt);
-            ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectUser(fiscalCode);
+            accessGateway.insertNewUser(fiscalCode, name, surname, password, salt);
+            ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectUser(fiscalCode);
             assertNotEquals(0,arrayList.size());
             assertEquals(fiscalCode, arrayList.get(0).get("fiscalCode"));
             assertEquals(name, arrayList.get(0).get("firstName"));
             assertEquals(surname, arrayList.get(0).get("surname"));
             assertEquals(password, arrayList.get(0).get("psw"));
             assertEquals(salt, arrayList.get(0).get("salt"));
-            AccessDAOTest.deleteUser(fiscalCode);
+            AccessGatewayTest.deleteUser(fiscalCode);
         }catch (Exception e){
             fail(e.getCause());
         }
@@ -43,28 +43,28 @@ public class AccessDAOTest {
 
     @Test
     void selectDoctor() {
-        accessDAO = new AccessDAO();
+        accessGateway = new AccessGateway();
         String fiscalCode = "RSSMRA80A41H501Y";
         String name = "Maria";
         String surname = "Rossi";
         String password = "password";
         String salt = BCrypt.gensalt();
-        AccessDAOTest.deleteUser(fiscalCode);
+        AccessGatewayTest.deleteUser(fiscalCode);
         try {
-            accessDAO.insertNewUser(fiscalCode, name, surname, password, salt);
+            accessGateway.insertNewUser(fiscalCode, name, surname, password, salt);
             ArrayList<String> patients = new ArrayList<>();
             patients.add("RSSLRD00A01H501E");
             patients.add("FRRFNC66A01H501D");
             deleteDoctor(fiscalCode);
             insertDoctor(fiscalCode, patients);
-            ArrayList<HashMap<String, Object>> arrayList = accessDAO.selectDoctor(fiscalCode);
+            ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectDoctor(fiscalCode);
             for(int i=0; i<2; i++) {
                 assertNotEquals(0, arrayList.size());
                 assertEquals(fiscalCode, arrayList.get(i).get("doctorFiscalCode"));
                 assertEquals(patients.get(patients.size() - 1 -i), arrayList.get(i).get("patientFiscalCode"));
             }
             deleteDoctor(fiscalCode);
-            AccessDAOTest.deleteUser(fiscalCode);
+            AccessGatewayTest.deleteUser(fiscalCode);
         }catch (Exception e){
             e.printStackTrace();
             fail(e.getCause());

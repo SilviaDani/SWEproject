@@ -12,24 +12,23 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.stage.Stage;
-import com.sweproject.dao.ObservationDAO;
+import com.sweproject.gateway.ObservationGateway;
 import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
 public class ContagiousLevelPageController extends UIController implements Initializable {
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
-    private ObservationDAO observationDAO;
+    private ObservationGateway observationDAO;
 
     public ContagiousLevelPageController(){
         stpnAnalyzer = new STPNAnalyzer(144, 1);
-        observationDAO = new ObservationDAO();
+        observationDAO = new ObservationGateway();
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

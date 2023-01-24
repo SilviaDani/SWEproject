@@ -1,6 +1,6 @@
 package com.sweproject.analysis;
 
-import com.sweproject.dao.ObservationDAO;
+import com.sweproject.gateway.ObservationGateway;
 import javafx.scene.chart.XYChart;
 import org.oristool.math.OmegaBigDecimal;
 import org.oristool.math.domain.DBMZone;
@@ -26,14 +26,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class STPNAnalyzer<R,S> {
-    protected ObservationDAO observationDAO;
+    protected ObservationGateway observationGateway;
     protected int step;
     protected int samples;
     protected boolean considerEnvironment = true;
     protected LocalDateTime now;
 
     public STPNAnalyzer(int samples, int step) {
-        this.observationDAO = new ObservationDAO();
+        this.observationGateway = new ObservationGateway();
         this.samples = samples;
         this.step = step;
         now = LocalDateTime.now();

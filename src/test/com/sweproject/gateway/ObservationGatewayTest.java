@@ -1,29 +1,26 @@
-package com.sweproject.dao;
+package com.sweproject.gateway;
 
-import com.sweproject.model.Subject;
 import com.sweproject.model.Symptoms;
 import com.sweproject.model.Type;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.transform.Result;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ObservationDAOTest {
+public class ObservationGatewayTest {
 
 
     @Test
     void AllFunctionsTest_insertWithEndDate() {
-        ObservationDAO observationDAO = new ObservationDAO();
+        ObservationGateway observationDAO = new ObservationGateway();
         ArrayList<String> subjects = new ArrayList<>();
         String fiscalCode = "RSSMRA80A41H501Y";
         subjects.add(fiscalCode);
@@ -51,7 +48,7 @@ public class ObservationDAOTest {
 
     @Test
     void AllFunctionsTest_insertWithoutEndDate() {
-        ObservationDAO observationDAO = new ObservationDAO();
+        ObservationGateway observationDAO = new ObservationGateway();
         ArrayList<String> subjects = new ArrayList<>();
         String fiscalCode = "RSSMRA80A41H501Y";
         subjects.add(fiscalCode);
