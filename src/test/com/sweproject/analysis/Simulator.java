@@ -585,7 +585,7 @@ public class Simulator extends UIController {
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        pits.put(member, stpnAnalyzer.makeModel(member));
+                       pits.put(member, stpnAnalyzer.makeModel(member, )); //FIXME FIXme fixme
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

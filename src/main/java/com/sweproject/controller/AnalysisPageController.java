@@ -1,6 +1,7 @@
 package com.sweproject.controller;
 
 import com.sweproject.analysis.STPNAnalyzer;
+import com.sweproject.analysis.STPNAnalyzer_ext;
 import com.sweproject.dao.ObservationDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,10 +27,12 @@ import java.util.ResourceBundle;
 public class AnalysisPageController extends UIController implements Initializable {
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
+    private STPNAnalyzer_ext stpnAnalyzer_ext;
     ObservationDAO observationDAO;
 
     public AnalysisPageController(){
         stpnAnalyzer = new STPNAnalyzer(144,1);
+        stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
         observationDAO = new ObservationDAO();
     }
     @Override
@@ -39,7 +42,7 @@ public class AnalysisPageController extends UIController implements Initializabl
             LocalDateTime right_now = LocalDateTime.now();
             LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
             LocalDateTime start_time_analysis = now.minusDays(6);
-            ArrayList<HashMap<String, Object>> environmentArrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode(), start_time_analysis);
+            ArrayList<HashMap<String, Object>> environmentArrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode());
             ArrayList<HashMap<String, Object>> testArrayList = observationDAO.getTestObservations(user.getFiscalCode(), start_time_analysis);
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationDAO.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);

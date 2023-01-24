@@ -16,11 +16,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class STPAnalyzer_ext<R,S> extends STPNAnalyzer{
-    public STPAnalyzer_ext(int samples, int step) {
+public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
+    public STPNAnalyzer_ext(int samples, int step) {
         super(samples, step);
     }
-    @Override
     public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         LocalDateTime endInterval = LocalDateTime.now();
         LocalDateTime now = endInterval.minusDays(6);
@@ -52,7 +51,14 @@ public class STPAnalyzer_ext<R,S> extends STPNAnalyzer{
                             float delta = (float) ChronoUnit.DAYS.between(date, environmentDate);
                             float risk_level = (float) environmentArrayList.get(environment).get("risk_level");
                             int result = (int) testArrayList.get(test).get("isPositive");
-                            float new_risk_level = result * (float)testArrayList.get(test).get("sensitivity") * delta/4;
+                            float new_risk_level;
+                            if (result == 1){
+                                new_risk_level = risk_level * (float)testArrayList.get(test).get("sensitivity") * delta/4;
+                            }
+                            else
+                                new_risk_level = risk_level * (1 - (float)testArrayList.get(test).get("sensitivity")) * delta/4;
+
+                            //TODO cercare curva di come varia l'efficienza di un test DELTA
                             //TODO TEMPO PRESO IN CONSIDERAZIONE TRA CONTATTO E TEST SUCCESSIVO EFFETTUATO INSERITO A CASO, SERVIREBBE UNA CURVA ma il tempo si riferisce per
                             // forza all'ultimo contatto? e contatto con l`ambiente o tutti o separati?
                             environmentArrayList.get(environment).replace("risk_level", risk_level, new_risk_level);
