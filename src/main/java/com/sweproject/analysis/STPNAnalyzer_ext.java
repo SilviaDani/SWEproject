@@ -23,33 +23,28 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         LocalDateTime endInterval = LocalDateTime.now();
         LocalDateTime now = endInterval.minusDays(6);
-        if (symptomsArrayList.size() > 0){
-            for (int symptom = symptomsArrayList.size() - 1; symptom <= 0 ; symptom--){
-                LocalDateTime date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
-                if (environmentArrayList.size() > 0) {
-                    for (int environment = environmentArrayList.size() - 1; environment <= 0; environment--){
-                        LocalDateTime environmentDate = (LocalDateTime) environmentArrayList.get(environment).get("start_date");
-                        if (environmentDate.isBefore(date)){
-                            float delta = (float) ChronoUnit.DAYS.between(date, environmentDate);
-                            float risk_level = (float) environmentArrayList.get(environment).get("risk_level");
+        if (environmentArrayList.size() > 0){
+            for (int contact = 0; contact < environmentArrayList.size(); contact++){
+                LocalDateTime contact_time = (LocalDateTime) environmentArrayList.get(contact).get("start_date");
+                if (symptomsArrayList.size() > 0){
+                    for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
+                        LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                        if (contact_time.isBefore(symptom_date)){
+                            float delta = (float) ChronoUnit.DAYS.between(contact_time, symptom_date);
+                            float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
                             float new_risk_level = risk_level * delta/4;
-                            //TODO funzione che fa presentare i sintomi casuale
-                            environmentArrayList.get(environment).replace("risk_level", risk_level, new_risk_level);
-                            //TODO CONTROLLA SE VA BENE IL METODO REPLACE
+                            //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
+                            // la probabilità perchè ora diminuisce sempre per forza
+                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);
                         }
                     }
                 }
-            }
-        }
-        if (testArrayList.size() > 0){
-            for (int test = testArrayList.size() - 1; test <= 0; test--){
-                LocalDateTime date = (LocalDateTime) testArrayList.get(test).get("start_date");
-                if (environmentArrayList.size() > 0) {
-                    for (int environment = environmentArrayList.size() - 1; environment <= 0; environment--){
-                        LocalDateTime environmentDate = (LocalDateTime) environmentArrayList.get(environment).get("start_date");
-                        if (environmentDate.isBefore(date)){
-                            float delta = (float) ChronoUnit.DAYS.between(date, environmentDate);
-                            float risk_level = (float) environmentArrayList.get(environment).get("risk_level");
+                if (testArrayList.size() > 0){
+                    for (int test = 0; test < testArrayList.size(); test++){
+                        LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                        if (contact_time.isBefore(test_time)){
+                            float delta = (float) ChronoUnit.DAYS.between(contact_time, test_time);
+                            float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
                             int result = (int) testArrayList.get(test).get("isPositive");
                             float new_risk_level;
                             if (result == 1){
@@ -57,18 +52,13 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             }
                             else
                                 new_risk_level = risk_level * (1 - (float)testArrayList.get(test).get("sensitivity")) * delta/4;
-
-                            //TODO cercare curva di come varia l'efficienza di un test DELTA
-                            //TODO TEMPO PRESO IN CONSIDERAZIONE TRA CONTATTO E TEST SUCCESSIVO EFFETTUATO INSERITO A CASO, SERVIREBBE UNA CURVA ma il tempo si riferisce per
-                            // forza all'ultimo contatto? e contatto con l`ambiente o tutti o separati?
-                            environmentArrayList.get(environment).replace("risk_level", risk_level, new_risk_level);
-                            //TODO CONTROLLA SE VA BENE IL METODO REPLACE
+                            //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
+                            // la probabilità perchè ora diminuisce sempre per forza
+                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);
                         }
                     }
                 }
             }
-        }
-        if(environmentArrayList.size() > 0) {
             PetriNet net = new PetriNet();
             Marking marking = new Marking();
             //Generating Nodes
