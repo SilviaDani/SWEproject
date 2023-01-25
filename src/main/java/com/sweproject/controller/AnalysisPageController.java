@@ -56,7 +56,7 @@ public class AnalysisPageController extends UIController implements Initializabl
         } catch (Exception e) {
             e.printStackTrace();
         }
-        XYChart.Series series = stpnAnalyzer.makeChart(analysis);
+        XYChart.Series series = stpnAnalyzer_ext.makeChart(analysis);
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();

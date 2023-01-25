@@ -2,6 +2,7 @@ package com.sweproject.analysis;
 
 import com.sweproject.model.CovidTest;
 import com.sweproject.model.CovidTestType;
+import com.sweproject.model.Symptoms;
 import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
 import org.oristool.models.stpn.trans.RegTransient;
@@ -28,16 +29,14 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
                 LocalDateTime contact_time = (LocalDateTime) environmentArrayList.get(contact).get("start_date");
+                float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
+                double cumulativeRiskLevel = risk_level;
                 if (symptomsArrayList.size() > 0){
                     for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
                         LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                         if (contact_time.isBefore(symptom_date)){
-                            float delta = (float) ChronoUnit.DAYS.between(contact_time, symptom_date);
-                            float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
-                            float new_risk_level = risk_level * delta/4;
-                            //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
-                            // la probabilità perchè ora diminuisce sempre per forza
-                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);
+                            Symptoms symptoms = new Symptoms();
+                            cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
                         }
                     }
                 }
@@ -47,17 +46,15 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         if (contact_time.isBefore(test_time)){
                             CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
                             System.out.println("Covid CCC" + covidTest.getName());
-                            float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
                             double testEvidence = covidTest.isInfected(contact_time, test_time);
                             System.out.println(testEvidence);
-                            double new_risk_level;
-                            new_risk_level = risk_level * testEvidence;
-                            //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
-                            // la probabilità perchè ora diminuisce sempre per forza
-                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);*/
+                            cumulativeRiskLevel+=testEvidence;
                         }
                     }
                 }
+                cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size());
+                System.out.println(cumulativeRiskLevel);
+                environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
             }
             PetriNet net = new PetriNet();
             Marking marking = new Marking();
@@ -86,6 +83,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             net.addPrecondition(p2, u0);
 
             Transition lastTransition = u0;
+            System.out.println("ENV_ARRAY_SIZE "+environmentArrayList.size());
             for (int i = 1; i < environmentArrayList.size(); i++) {
                 Place p3 = net.addPlace("Dopo incontro " + i);
                 Place p4 = net.addPlace("Incontro " + (i + 1));
@@ -127,7 +125,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     }
 
     public float addTimeRelevance(float elapsedTime, float risk){
-        risk = risk * 1/elapsedTime;
+        //TODO
+       // risk = risk * 1/elapsedTime;
         //TODO funzione di riduzione del rischio tirata a caso per ora
         return risk;
     }
