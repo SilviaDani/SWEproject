@@ -87,9 +87,9 @@ public class CovidTest extends Type {
         double testEvidence = 1;
         if(delta>0){
             if(this.isPositive)
-                testEvidence = w.density(delta) * correctionValue * this.specificity; //suppongo che i falsi positivi non esistano
+                testEvidence = w.density(delta) * correctionValue * this.sensitivity + (1 - this.sensitivity); //suppongo che i falsi positivi non esistano
             else
-                testEvidence = w.density(delta) * correctionValue * (1 - this.sensitivity) + ((1 - w.density(delta) * correctionValue) * 1);/*dal link dottorsartori.it si legge che la probabilità di avere un falso negativo
+                testEvidence = this.specificity * w.density(delta) * correctionValue;/*dal link dottorsartori.it si legge che la probabilità di avere un falso negativo
                 va dal 100% se effettuato lo stesso giorno dell'infezione al 20% il giorno della massima infettività, quindi sovrastimo questa misura e dico che nel punto di massima precisione del test è certo non avere
                 falsi negativi*/
             testEvidence /= this.sensitivity;//da Bayes: P(evento i mi ha infettato | stato di salute corrente (=infetto) (=posterior)) = P(di essere infetto | è colpa dell'evento i (=likelihood)) * P(evento i mi ha infettato (è la prior))/ P(di essere infetto)

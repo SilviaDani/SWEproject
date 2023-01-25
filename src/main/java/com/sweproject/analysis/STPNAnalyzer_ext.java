@@ -54,7 +54,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             new_risk_level = risk_level * testEvidence;
                             //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
                             // la probabilità perchè ora diminuisce sempre per forza
-                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);*/
+                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);
                         }
                     }
                 }

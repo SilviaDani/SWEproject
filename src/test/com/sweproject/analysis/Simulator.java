@@ -8,9 +8,7 @@ import com.opencsv.CSVWriter;
 import com.sweproject.controller.UIController;
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.gateway.ObservationGatewayTest;
-import com.sweproject.model.Contact;
-import com.sweproject.model.Environment;
-import com.sweproject.model.Type;
+import com.sweproject.model.*;
 import org.apache.commons.math3.distribution.ExponentialDistribution;
 import org.apache.commons.math3.distribution.WeibullDistribution;
 import org.junit.jupiter.api.AfterAll;
@@ -364,7 +362,10 @@ public class Simulator extends UIController {
         }
          //fine generazione eventi
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
-            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>(); //TODO initialize this
+            ArrayList<Event> testCopy = new ArrayList<>(tests);
+            ArrayList<Event> symptomCopy = new ArrayList<>(symptoms);
+            //TODO inizializzare array di test e sintomi come per events
+            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
             for(Subject subject : subjects){
                 TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
                 for(int offset = 0; offset<144; offset++){
@@ -372,22 +373,46 @@ public class Simulator extends UIController {
                 }
                 meanTrees.put(subject.getName(), tmpTree);
             }
-//        ArrayList<ArrayList<TreeMap<LocalDateTime, Integer>>> timestamps = new ArrayList<>();
             if(DEBUG) {
                 timer.start();
             }
         for(int rep = 0; rep<maxReps; rep++){
                 events = new ArrayList<>(eventsCopy);
+                tests = new ArrayList<>(testCopy);
+                symptoms = new ArrayList<>(symptomCopy);
                 for(Subject subject : subjects)
                     subject.initializeSubject(t0);
                 while(events.size() > 0){
                     Collections.sort(events);
                     Event event = events.remove(0);
+                    LocalDateTime contact_time = event.getStartDate();
                     if(event.getType() instanceof Environment){
                         Subject subject = event.getSubject().get(0);
                         if(subject.getCurrentState() == 0){
                             float d = r.nextFloat();
-                            if(d < ((Environment) event.getType()).getRiskLevel()){
+                            float risk_level = ((Environment) event.getType()).getRiskLevel();
+                            if (tests.size() > 0) {
+                                for (int test = 0; test < tests.size(); test++) {
+                                    LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                    if (contact_time.isBefore(test_time)) {
+                                        CovidTest covidTest = new CovidTest((CovidTestType) tests.get(test).getTestType(), (boolean) tests.get(test).getIsPositive());
+                                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                                        risk_level += testEvidence;
+                                    }
+                                }
+                            }
+                            if (symptoms.size() > 0) {
+                                for (int symptom = 0; symptom < symptoms.size(); symptom++) {
+                                    LocalDateTime symptom_time = (LocalDateTime) symptoms.get(symptom).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                    if (contact_time.isBefore(symptom_time)) {
+                                        Symptoms covidSymptom = new Symptoms();
+                                        double testEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
+                                        risk_level += testEvidence;
+                                    }
+                                }
+                            }
+                            risk_level \= tests.size() + symptoms.size();
+                            if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
                                 //rescheduling dell'evento "subject" diventa contagioso
@@ -405,7 +430,29 @@ public class Simulator extends UIController {
                             for(Subject subject : ss){
                                 if(subject.getCurrentState()==0){
                                     float d = r.nextFloat();
-                                    if(d < ((Contact) event.getType()).getRiskLevel()){
+                                    float risk_level = ((Contact) event.getType()).getRiskLevel();
+                                    if (tests.size() > 0) {
+                                        for (int test = 0; test < tests.size(); test++) {
+                                            LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                            if (contact_time.isBefore(test_time)) {
+                                                CovidTest covidTest = new CovidTest((CovidTestType) tests.get(test).getTestType(), (boolean) tests.get(test).getIsPositive());
+                                                double testEvidence = covidTest.isInfected(contact_time, test_time);
+                                                risk_level += testEvidence;
+                                            }
+                                        }
+                                    }
+                                    if (symptoms.size() > 0) {
+                                        for (int symptom = 0; symptom < symptoms.size(); symptom++) {
+                                            LocalDateTime symptom_time = (LocalDateTime) symptoms.get(symptom).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                            if (contact_time.isBefore(symptom_time)) {
+                                                Symptoms covidSymptom = new Symptoms();
+                                                double testEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
+                                                risk_level += testEvidence;
+                                            }
+                                        }
+                                    }
+                                    risk_level \= tests.size() + symptoms.size();
+                                    if(d < risk_level){
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                         subject.changeState(event.getStartDate());
                                         //rescheduling dell'evento "subject" diventa contagioso
