@@ -1,5 +1,7 @@
 package com.sweproject.analysis;
 
+import com.sweproject.model.CovidTest;
+import com.sweproject.model.CovidTestType;
 import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
 import org.oristool.models.stpn.trans.RegTransient;
@@ -43,18 +45,16 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     for (int test = 0; test < testArrayList.size(); test++){
                         LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
                         if (contact_time.isBefore(test_time)){
-                            float delta = (float) ChronoUnit.DAYS.between(contact_time, test_time);
+                            CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                            System.out.println("Covid CCC" + covidTest.getName());
                             float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
-                            int result = (int) testArrayList.get(test).get("isPositive");
-                            float new_risk_level;
-                            if (result == 1){
-                                new_risk_level = risk_level * (float)testArrayList.get(test).get("sensitivity") * delta/4;
-                            }
-                            else
-                                new_risk_level = risk_level * (1 - (float)testArrayList.get(test).get("sensitivity")) * delta/4;
+                            double testEvidence = covidTest.isInfected(contact_time, test_time);
+                            System.out.println(testEvidence);
+                            double new_risk_level;
+                            new_risk_level = risk_level * testEvidence;
                             //TODO sostituire delta/4 con un valore basato su una curva e fare in modo di valutare per bene
                             // la probabilità perchè ora diminuisce sempre per forza
-                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);
+                            environmentArrayList.get(contact).replace("risk_level", risk_level, new_risk_level);*/
                         }
                     }
                 }

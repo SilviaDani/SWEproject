@@ -3,6 +3,7 @@ package com.sweproject.controller;
 import com.sweproject.analysis.STPNAnalyzer;
 import com.sweproject.analysis.STPNAnalyzer_ext;
 import com.sweproject.gateway.ObservationGateway;
+import com.sweproject.model.CovidTestType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,12 +29,12 @@ public class AnalysisPageController extends UIController implements Initializabl
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
-    ObservationGateway observationDAO;
+    ObservationGateway observationGateway;
 
     public AnalysisPageController(){
         stpnAnalyzer = new STPNAnalyzer(144,1);
         stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
-        observationDAO = new ObservationGateway();
+        observationGateway = new ObservationGateway();
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -42,9 +43,15 @@ public class AnalysisPageController extends UIController implements Initializabl
             LocalDateTime right_now = LocalDateTime.now();
             LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
             LocalDateTime start_time_analysis = now.minusDays(6);
-            ArrayList<HashMap<String, Object>> environmentArrayList = observationDAO.getEnvironmentObservations(user.getFiscalCode());
-            ArrayList<HashMap<String, Object>> testArrayList = observationDAO.getTestObservations(user.getFiscalCode(), start_time_analysis);
-            ArrayList<HashMap<String, Object>> symptomsArrayList = observationDAO.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
+            ArrayList<HashMap<String, Object>> environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
+            ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
+            for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
+                String rawType = (String) testArrayList.get(testIndex).get("type");
+                String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+                testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
+                testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+            }
+            ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
         } catch (Exception e) {
             e.printStackTrace();

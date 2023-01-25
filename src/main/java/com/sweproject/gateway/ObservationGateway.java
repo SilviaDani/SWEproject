@@ -171,7 +171,7 @@ public class ObservationGateway extends Gateway {
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
             setConnection();
-            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` = 'CovidTest' and start_date > '" + start_time_analysis + "' order by start_date");
+            rs = statement.executeQuery("SELECT * FROM `events` join `observations` on events.ID = observations.id where `fiscalCode` = '" + FC + "' and `type` like 'Covid_test%' and start_date > '" + start_time_analysis + "' order by start_date");
             arrayList = convertResultSet(rs);
         }catch(SQLException e){
             e.printStackTrace();
