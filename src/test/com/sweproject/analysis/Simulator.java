@@ -117,14 +117,18 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 100000;
-    private static ObservationGateway observationDAO;
-    private STPNAnalyzer stpnAnalyzer;
+    final int maxReps = 5000;
+    private static ObservationGateway observationGateway;
+    private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 8;
+    static final int np = 3;
     int nContact = 14;
     int max_nEnvironment = 16;
     int min_nEnvironment = 8;
+    int max_nSymptoms = 3;
+    int min_nSymptoms = 1;
+    int max_nCovTests = 2;
+    int min_nCovTests = 1;
     File execTimes;
     File confInt;
     File RMSE;
@@ -137,8 +141,8 @@ public class Simulator extends UIController {
 
 
     Simulator(){
-        observationDAO = new ObservationGateway();
-        stpnAnalyzer = new STPNAnalyzer(samples, steps);
+        observationGateway = new ObservationGateway();
+        stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
         timer = Stopwatch.createUnstarted();
         if(DEBUG){
             LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
@@ -316,7 +320,7 @@ public class Simulator extends UIController {
                 Type t = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
                 events.add(new Event(startDates[i], endDates[i], t, s));
 
-                observationDAO.insertObservation(s_String, t, startDates[i], endDates[i]);
+                observationGateway.insertObservation(s_String, t, startDates[i], endDates[i]);
             }
         }
 
@@ -352,7 +356,7 @@ public class Simulator extends UIController {
              Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
 
              events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
-             observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
+             observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
          }
          Collections.sort(events);
         if(DEBUG){
@@ -360,6 +364,67 @@ public class Simulator extends UIController {
             outputStrings_execTimes.add(new String[]{"Tempo per creare le osservazioni e caricarle sul database", String.valueOf(timer)});
             timer.reset();
         }
+        //inizio generazione dei sintomi
+        ArrayList<Event> symptoms = new ArrayList<>();
+        for(int person = 0; person < np; person++){
+            int actual_nSymptoms = Math.round(min_nSymptoms + r.nextFloat() * (max_nSymptoms - min_nSymptoms));
+            LocalDateTime[] startDates = new LocalDateTime[actual_nSymptoms];
+            LocalDateTime[] endDates = new LocalDateTime[actual_nSymptoms];
+            ArrayList<LocalDateTime> datesSymp = new ArrayList<>(generateDates(t0, actual_nSymptoms));
+
+            int startSymp = 0;
+            int endSymp = 0;
+            for (int date = 0; date < datesSymp.size(); date++) {
+                if (date % 2 == 0) {
+                    startDates[startSymp] = datesSymp.get(date);
+                    startSymp++;
+                } else {
+                    endDates[endSymp] = datesSymp.get(date);
+                    endSymp++;
+                }
+            }
+            for(int nSymptom = 0; nSymptom < actual_nSymptoms; nSymptom++){
+                ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
+                Type t = new Symptoms();
+                symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom],t,s));
+                ArrayList<String> s_String = new ArrayList<>();
+                for(Subject sub : s){
+                    s_String.add(sub.getName());
+                }
+                observationGateway.insertObservation(s_String, t, startDates[nSymptom], endDates[nSymptom]);
+            }
+        }
+        //inizio generazione dei test covid
+        ArrayList<Event> tests = new ArrayList<>();
+            for(int person = 0; person < np; person++){
+                int actual_nCovTests = Math.round(min_nCovTests + r.nextFloat() * (max_nCovTests - min_nCovTests));
+                LocalDateTime[] startDates = new LocalDateTime[actual_nCovTests];
+                LocalDateTime[] endDates = new LocalDateTime[actual_nCovTests];
+                ArrayList<LocalDateTime> datesCovTests = new ArrayList<>(generateDates(t0, actual_nCovTests));
+
+                int startCovTests = 0;
+                int endCovTests = 0;
+                for (int date = 0; date < datesCovTests.size(); date++) {
+                    if (date % 2 == 0) {
+                        startDates[startCovTests] = datesCovTests.get(date);
+                        startCovTests++;
+                    } else {
+                        endDates[endCovTests] = datesCovTests.get(date);
+                        endCovTests++;
+                    }
+                }
+                for(int nCovTest = 0; nCovTest < actual_nCovTests; nCovTest++){
+                    ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
+                    Type t = new CovidTest(r.nextFloat()>0.5f?CovidTestType.MOLECULAR:CovidTestType.ANTIGEN, r.nextFloat()>0.5f);
+                    tests.add(new Event(startDates[nCovTest], endDates[nCovTest],t,s));
+                    ArrayList<String> s_String = new ArrayList<>();
+                    for(Subject sub : s){
+                        s_String.add(sub.getName());
+                    }
+                    observationGateway.insertObservation(s_String, t, startDates[nCovTest], null);
+                }
+            }
+
          //fine generazione eventi
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
             ArrayList<Event> testCopy = new ArrayList<>(tests);
@@ -395,7 +460,7 @@ public class Simulator extends UIController {
                                 for (int test = 0; test < tests.size(); test++) {
                                     LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
                                     if (contact_time.isBefore(test_time)) {
-                                        CovidTest covidTest = new CovidTest((CovidTestType) tests.get(test).getTestType(), (boolean) tests.get(test).getIsPositive());
+                                        CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest)tests.get(test).getType()).isPositive());
                                         double testEvidence = covidTest.isInfected(contact_time, test_time);
                                         risk_level += testEvidence;
                                     }
@@ -411,7 +476,7 @@ public class Simulator extends UIController {
                                     }
                                 }
                             }
-                            risk_level \= tests.size() + symptoms.size();
+                            risk_level /= (tests.size() + symptoms.size());
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
@@ -435,7 +500,7 @@ public class Simulator extends UIController {
                                         for (int test = 0; test < tests.size(); test++) {
                                             LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
                                             if (contact_time.isBefore(test_time)) {
-                                                CovidTest covidTest = new CovidTest((CovidTestType) tests.get(test).getTestType(), (boolean) tests.get(test).getIsPositive());
+                                                CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest)tests.get(test).getType()).isPositive());
                                                 double testEvidence = covidTest.isInfected(contact_time, test_time);
                                                 risk_level += testEvidence;
                                             }
@@ -451,7 +516,7 @@ public class Simulator extends UIController {
                                             }
                                         }
                                     }
-                                    risk_level \= tests.size() + symptoms.size();
+                                    risk_level /= tests.size() + symptoms.size();
                                     if(d < risk_level){
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                         subject.changeState(event.getStartDate());
@@ -528,13 +593,13 @@ public class Simulator extends UIController {
                 for(int i = 0; i<subjects.size(); i++){
                     ArrayList<String> otherMembers = new ArrayList<>(subjects_String);
                     otherMembers.remove(i);
-                    clusterSubjectsMet.put(subjects_String.get(i), observationDAO.getContactObservations(subjects_String.get(i), otherMembers));
+                    clusterSubjectsMet.put(subjects_String.get(i), observationGateway.getContactObservations(subjects_String.get(i), otherMembers));
                 }
             }
 
             HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
             for(String member : subjects_String){
-                envObs.put(member, observationDAO.getEnvironmentObservations(member));
+                envObs.put(member, observationGateway.getEnvironmentObservations(member));
             }
             System.out.println("---");
             if(DEBUG){
@@ -619,7 +684,7 @@ public class Simulator extends UIController {
                     Type t = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
                     events.add(new Event(startDates[i], endDates[i], t, s));
 
-                    observationDAO.insertObservation(s_String, t, startDates[i], endDates[i]);
+                    observationGateway.insertObservation(s_String, t, startDates[i], endDates[i]);
                 }
             }
 
@@ -655,7 +720,7 @@ public class Simulator extends UIController {
                 Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
 
                 events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
-                observationDAO.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
+                observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
             }
             Collections.sort(events);
             if(DEBUG){
@@ -677,13 +742,13 @@ public class Simulator extends UIController {
                 for(int i = 0; i<subjects.size(); i++){
                     ArrayList<String> otherMembers = new ArrayList<>(subjects_String);
                     otherMembers.remove(i);
-                    clusterSubjectsMet.put(subjects_String.get(i), observationDAO.getContactObservations(subjects_String.get(i), otherMembers));
+                    clusterSubjectsMet.put(subjects_String.get(i), observationGateway.getContactObservations(subjects_String.get(i), otherMembers));
                 }
             }
 
             HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
             for(String member : subjects_String){
-                envObs.put(member, observationDAO.getEnvironmentObservations(member));
+                envObs.put(member, observationGateway.getEnvironmentObservations(member));
             }
             System.out.println("---");
             if(DEBUG){
@@ -915,7 +980,7 @@ public class Simulator extends UIController {
     @AfterAll
     static void clean(){
         for(int p=0; p<np; p++) {
-            ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("P"+p);
+            ArrayList<HashMap<String, Object>> obs = observationGateway.getObservations("P"+p);
             for (int i = 0; i < obs.size(); i++) {
                 ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
             }

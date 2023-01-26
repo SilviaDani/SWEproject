@@ -53,6 +53,7 @@ public class AnalysisPageController extends UIController implements Initializabl
             }
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
+            //analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), environmentArrayList);
         } catch (Exception e) {
             e.printStackTrace();
         }

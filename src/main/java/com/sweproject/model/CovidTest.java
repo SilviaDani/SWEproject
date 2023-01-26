@@ -66,6 +66,14 @@ public class CovidTest extends Type {
         return "Covid_test-" + type + "-" + isPositive;
     }
 
+    public CovidTestType getTestType() {
+        return type;
+    }
+
+    public boolean isPositive() {
+        return isPositive;
+    }
+
     public double isInfected(LocalDateTime contactDate, LocalDateTime testDate) throws Exception {
         WeibullDistribution w;
         Random r = new Random();
