@@ -588,8 +588,12 @@ public class Simulator extends UIController {
             }
 
             HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
             for(String member : subjects_String){
                 envObs.put(member, observationGateway.getEnvironmentObservations(member));
+                testObs.put(member, observationGateway.getTestObservations(member, t0));
+                sympObs.put(member, observationGateway.getRelevantSymptomsObservations(member, t0));
             }
             System.out.println("---");
             if(DEBUG){
@@ -604,7 +608,7 @@ public class Simulator extends UIController {
                     //System.out.println(member + " it:"+nIteration + " started");
                     if(nIteration==0){
                         try {
-                            pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member)));
+                            pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member), testObs.get(member), sympObs.get(member)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
