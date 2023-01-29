@@ -401,9 +401,14 @@ public class Simulator extends UIController {
                 LocalDateTime[] startDates = new LocalDateTime[actual_nCovTests];
                 ArrayList<LocalDateTime> datesCovTests = new ArrayList<>(generateDates(t0, actual_nCovTests));
 
+                int idx = 0;
                 for (int date = 0; date < datesCovTests.size(); date++) {
-                    startDates[date] = datesCovTests.get(date);
+                    if (date%2 == 0) {
+                        startDates[idx] = datesCovTests.get(idx);
+                        idx++;
+                    }
                 }
+
                 for(int nCovTest = 0; nCovTest < actual_nCovTests; nCovTest++){
                     ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
                     Type t = new CovidTest(r.nextFloat()>0.5f?CovidTestType.MOLECULAR:CovidTestType.ANTIGEN, r.nextFloat()>0.5f);

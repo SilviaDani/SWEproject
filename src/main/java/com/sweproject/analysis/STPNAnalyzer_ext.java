@@ -24,6 +24,15 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         super(samples, step);
     }
     public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+
+        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
+            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+
+
         LocalDateTime endInterval = LocalDateTime.now();
         LocalDateTime now = endInterval.minusDays(6);
         if (environmentArrayList.size() > 0){

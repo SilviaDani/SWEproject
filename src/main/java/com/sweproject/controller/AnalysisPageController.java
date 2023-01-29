@@ -45,12 +45,6 @@ public class AnalysisPageController extends UIController implements Initializabl
             LocalDateTime start_time_analysis = now.minusDays(6);
             ArrayList<HashMap<String, Object>> environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
             ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
-            for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
-                String rawType = (String) testArrayList.get(testIndex).get("type");
-                String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
-                testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
-                testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
-            }
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
             //analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), environmentArrayList);
