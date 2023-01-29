@@ -506,7 +506,7 @@ public class Simulator extends UIController {
                                             }
                                         }
                                     }
-                                    risk_level /= tests.size() + symptoms.size();
+                                    risk_level /= (tests.size() + symptoms.size() + 1);
                                     if(d < risk_level){
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                         subject.changeState(event.getStartDate());
@@ -516,7 +516,7 @@ public class Simulator extends UIController {
                                 }
                             }
                         }
-                    }else if(((ChangeStateEvent) event) instanceof ChangeStateEvent){
+                    }else if(event instanceof ChangeStateEvent){
                         Subject subject = event.getSubject().get(0);
                         switch (subject.getCurrentState()) {
                             case 1 -> {
