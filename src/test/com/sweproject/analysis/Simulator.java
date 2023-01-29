@@ -488,7 +488,7 @@ public class Simulator extends UIController {
                                     float risk_level = ((Contact) event.getType()).getRiskLevel();
                                     if (tests.size() > 0) {
                                         for (int test = 0; test < tests.size(); test++) {
-                                            LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                            LocalDateTime test_time = tests.get(test).getStartDate();
                                             if (contact_time.isBefore(test_time)) {
                                                 CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest)tests.get(test).getType()).isPositive());
                                                 double testEvidence = covidTest.isInfected(contact_time, test_time);
@@ -498,7 +498,7 @@ public class Simulator extends UIController {
                                     }
                                     if (symptoms.size() > 0) {
                                         for (int symptom = 0; symptom < symptoms.size(); symptom++) {
-                                            LocalDateTime symptom_time = (LocalDateTime) symptoms.get(symptom).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                            LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                             if (contact_time.isBefore(symptom_time)) {
                                                 Symptoms covidSymptom = new Symptoms();
                                                 double testEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
