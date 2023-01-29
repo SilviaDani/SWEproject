@@ -52,7 +52,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         }
                     }
                 }
-                cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size());
+                cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
                 System.out.println(cumulativeRiskLevel);
                 environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
             }

@@ -286,7 +286,7 @@ public class Simulator extends UIController {
         //creazione dei soggetti
         ArrayList<Subject> subjects = new ArrayList<>();
         for(int p = 0; p < np; p++){
-            subjects.add(new Subject("P"+p));
+            subjects.add(new Subject("P" + p));
         }
         //creazione degli eventi ambientali
         ArrayList<Event> events = new ArrayList<>();
@@ -343,12 +343,12 @@ public class Simulator extends UIController {
             nc_riskLevels = generateRiskLevels(nContact);
             nc_masks = generateMasks(nContact);
 
-         for(int c = 0; c<nContact; c++){
+         for(int c = 0; c < nContact; c++){
              ArrayList<String> s_String = new ArrayList<>();
              ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
              ArrayList<Subject> partecipatingSubjects = new ArrayList<>();
              Collections.shuffle(subjects_copy);
-             int upperBound = subjects_copy.size() >= 2 ? r.nextInt(subjects_copy.size()-2) + 2 : 2;
+             int upperBound = subjects_copy.size() >= 2 ? r.nextInt(subjects_copy.size() - 2) + 2 : 2;
              for(int i = 0; i<upperBound; i++) {
                  s_String.add(subjects_copy.get(i).getName());
                  partecipatingSubjects.add(subjects_copy.get(i));
@@ -386,7 +386,7 @@ public class Simulator extends UIController {
             for(int nSymptom = 0; nSymptom < actual_nSymptoms; nSymptom++){
                 ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
                 Type t = new Symptoms();
-                symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom],t,s));
+                symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom], t, s));
                 ArrayList<String> s_String = new ArrayList<>();
                 for(Subject sub : s){
                     s_String.add(sub.getName());
@@ -399,24 +399,15 @@ public class Simulator extends UIController {
             for(int person = 0; person < np; person++){
                 int actual_nCovTests = Math.round(min_nCovTests + r.nextFloat() * (max_nCovTests - min_nCovTests));
                 LocalDateTime[] startDates = new LocalDateTime[actual_nCovTests];
-                LocalDateTime[] endDates = new LocalDateTime[actual_nCovTests];
                 ArrayList<LocalDateTime> datesCovTests = new ArrayList<>(generateDates(t0, actual_nCovTests));
 
-                int startCovTests = 0;
-                int endCovTests = 0;
                 for (int date = 0; date < datesCovTests.size(); date++) {
-                    if (date % 2 == 0) {
-                        startDates[startCovTests] = datesCovTests.get(date);
-                        startCovTests++;
-                    } else {
-                        endDates[endCovTests] = datesCovTests.get(date);
-                        endCovTests++;
-                    }
+                    startDates[date] = datesCovTests.get(date);
                 }
                 for(int nCovTest = 0; nCovTest < actual_nCovTests; nCovTest++){
                     ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
                     Type t = new CovidTest(r.nextFloat()>0.5f?CovidTestType.MOLECULAR:CovidTestType.ANTIGEN, r.nextFloat()>0.5f);
-                    tests.add(new Event(startDates[nCovTest], endDates[nCovTest],t,s));
+                    tests.add(new Event(startDates[nCovTest], null, t, s));
                     ArrayList<String> s_String = new ArrayList<>();
                     for(Subject sub : s){
                         s_String.add(sub.getName());
@@ -429,7 +420,6 @@ public class Simulator extends UIController {
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
             ArrayList<Event> testCopy = new ArrayList<>(tests);
             ArrayList<Event> symptomCopy = new ArrayList<>(symptoms);
-            //TODO inizializzare array di test e sintomi come per events
             HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
             for(Subject subject : subjects){
                 TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
@@ -458,7 +448,7 @@ public class Simulator extends UIController {
                             float risk_level = ((Environment) event.getType()).getRiskLevel();
                             if (tests.size() > 0) {
                                 for (int test = 0; test < tests.size(); test++) {
-                                    LocalDateTime test_time = (LocalDateTime) tests.get(test).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                    LocalDateTime test_time = tests.get(test).getStartDate();
                                     if (contact_time.isBefore(test_time)) {
                                         CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest)tests.get(test).getType()).isPositive());
                                         double testEvidence = covidTest.isInfected(contact_time, test_time);
@@ -468,7 +458,7 @@ public class Simulator extends UIController {
                             }
                             if (symptoms.size() > 0) {
                                 for (int symptom = 0; symptom < symptoms.size(); symptom++) {
-                                    LocalDateTime symptom_time = (LocalDateTime) symptoms.get(symptom).getStartDate(); //TODO sistema in base a come è l'arraylist
+                                    LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                     if (contact_time.isBefore(symptom_time)) {
                                         Symptoms covidSymptom = new Symptoms();
                                         double testEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
@@ -476,7 +466,7 @@ public class Simulator extends UIController {
                                     }
                                 }
                             }
-                            risk_level /= (tests.size() + symptoms.size());
+                            risk_level /= (tests.size() + symptoms.size() + 1);
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
