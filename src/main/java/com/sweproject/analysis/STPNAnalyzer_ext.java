@@ -121,10 +121,12 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             for (int event = 0; event < eventsArrayList.size(); event++){
                 LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
                 int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
-                for (int j = delta; j < size; j += step){
-                    float y = (float)(s.getSolution()[j][r][m] * (double)eventsArrayList.get(event).get("risk_level"));
-                    float oldY = series.getData().get(j).getYValue();
-                    series.getData().get(j).setYValue(y + oldY);
+                for (int i = 0; i < size; i += step){
+                    for (int j = delta; j < size; j += step){
+                        float y = (float)(s.getSolution()[i][r][m] * (double)eventsArrayList.get(event).get("risk_level"));
+                        float oldY = series.getData().get(j).getYValue();
+                        series.getData().get(j).setYValue(y + oldY);
+                    }
                 }
             }
         }
