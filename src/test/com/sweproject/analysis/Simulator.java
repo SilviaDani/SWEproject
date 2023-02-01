@@ -613,7 +613,7 @@ public class Simulator extends UIController {
                     //System.out.println(member + " it:"+nIteration + " started");
                     if(nIteration==0){
                         try {
-                            pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member), testObs.get(member), sympObs.get(member)));
+                            pits.put(member, stpnAnalyzer.makeModel2(member, envObs.get(member), testObs.get(member), sympObs.get(member)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
