@@ -235,6 +235,155 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return series;
     }
 
+    public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                    ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+
+       for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
+            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+
+        LocalDateTime endInterval = LocalDateTime.now();
+       LocalDateTime initialTime = endInterval.minusDays(6);
+        boolean showsSymptoms = false;
+
+        for (int contact = 0; contact < clusterSubjectsMet.size(); contact++){
+                showsSymptoms = false;
+                LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
+                float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
+                double cumulativeRiskLevel = risk_level;
+                if (symptomsArrayList.size() > 0){
+                    for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
+                        LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                        if (contact_time.isBefore(symptom_date)){
+                            Symptoms symptoms = new Symptoms();
+                            cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
+                            showsSymptoms = true;
+                        }
+                    }
+                }
+                if (testArrayList.size() > 0){
+                    for (int test = 0; test < testArrayList.size(); test++){
+                        LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                        if (contact_time.isBefore(test_time)){
+                            CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                            System.out.println("Covid CCC" + covidTest.getName());
+                            double testEvidence = covidTest.isInfected(contact_time, test_time);
+                            System.out.println(testEvidence);
+                            cumulativeRiskLevel+=testEvidence;
+                        }
+                    }
+                }
+                cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
+                System.out.println(cumulativeRiskLevel + " prima");
+                cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
+                System.out.println(cumulativeRiskLevel + " dopo");
+                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            }
+
+        if (clusterSubjectsMet.size() > 0) {
+            PetriNet net = new PetriNet();
+            //creating the central node
+            Marking marking = new Marking();
+            Place Contagio = net.addPlace("Contagio");
+            buildContagionEvolutionSection(net, marking, Contagio);
+            Place p1 = net.addPlace("Condizione iniziale");
+            Place p2 = net.addPlace("Primo incontro");
+            marking.setTokens(p1, 1);
+            Transition t0 = net.addTransition("t0");
+            Transition e0 = net.addTransition("effective0");
+            Transition u0 = net.addTransition("uneffective0");
+
+            Transition lastTransition = u0;
+            //dato un tempo "meeting_time1" si segna quante persone, oltre al soggetto analizzato, hanno partecipato
+            int i = 0; //index of contact
+            int j = 0; //n. person met during contact counter
+            String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+            LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime)clusterSubjectsMet.get(i).get("start_date"));
+            while (i < clusterSubjectsMet.size() && ((LocalDateTime) clusterSubjectsMet.get(i).get("start_date")).equals(meeting_time1)) {
+                meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                j++;
+                i++;
+            }
+            ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
+            for (int k = 0; k < j; k++) {
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
+            }
+            float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, (float) clusterSubjectsMet.get(j-1).get("risk_level"));
+            float delta = (float) ChronoUnit.MINUTES.between(initialTime, meeting_time1) / 60.f;
+            float elapsedTime = (float) ChronoUnit.MINUTES.between(endInterval, meeting_time1) / 60.f;
+            effectiveness = addTimeRelevance(elapsedTime, effectiveness);
+
+            t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
+            e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(effectiveness), net)));
+            u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1-effectiveness), net)));
+            net.addPrecondition(p1,t0);
+            net.addPostcondition(t0,p2);
+            net.addPrecondition(p2, e0);
+            net.addPostcondition(e0, Contagio);
+            net.addPrecondition(p2, u0);
+            //making intermediate modules
+            int p = 0; //index for transitions
+            for (int l = i; l < clusterSubjectsMet.size(); l++) { //fixme
+                j = 0;
+                for (int n = 0; n < meeting_subjects.length; n++) {
+                    meeting_subjects[n] = null;
+                }
+                LocalDateTime meeting_time2 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(l).get("start_date"));
+                while (l < clusterSubjectsMet.size() && ((LocalDateTime) clusterSubjectsMet.get(l).get("start_date")).equals(meeting_time2)) {
+                    meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                    j++;
+                    l++;
+                }
+                subjectsMet_ss.clear();
+                for (int k = 0; k < j; k++) {
+                    subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
+                }
+                p++;
+
+                Place p3 = net.addPlace("Dopo incontro "+p);
+                Place p4 = net.addPlace("Incontro "+(p+1));
+                Transition t1 = net.addTransition("t "+p), e1 = net.addTransition("effective "+p), u1 = net.addTransition("uneffective "+p);
+                delta = (float) ChronoUnit.MINUTES.between(meeting_time1, meeting_time2) / 60.f;
+                effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time2, step, (float) clusterSubjectsMet.get(l-1).get("risk_level"));
+                elapsedTime = (float) ChronoUnit.MINUTES.between(endInterval, meeting_time2) / 60.f;
+                effectiveness = addTimeRelevance(elapsedTime, effectiveness);
+
+                t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
+                e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(effectiveness), net)));
+                u1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - effectiveness), net)));
+                net.addPostcondition(lastTransition, p3);
+                net.addPrecondition(p3, t1);
+                net.addPostcondition(t1, p4);
+                net.addPrecondition(p4, e1);
+                net.addPostcondition(e1, Contagio);
+                net.addPrecondition(p4, u1);
+                lastTransition = u1;
+                meeting_time1 = meeting_time2;
+            }
+            RegTransient analysis = RegTransient.builder()
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .timeStep(new BigDecimal(step)).build();
+
+            //TODO: add plots of other rewards and change title
+            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+            var rewardRates = TransientSolution.rewardRates("Contagioso");
+
+            TransientSolution<DeterministicEnablingState, Marking> solution =
+                    analysis.compute(net, marking);
+
+            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
+            //new TransientSolutionViewer(rewardedSolution);
+            return (TransientSolution<R, S>) rewardedSolution;
+        } else {
+            System.out.println("The subject has no 'Contact' observations of the last 6 days");
+            return makeFakeNet();
+        }
+    }
+
+
     private double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
         //leggere i dati dal file cvs
         double updatedRiskLevel = cumulativeRiskLevel;

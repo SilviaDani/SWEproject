@@ -39,11 +39,12 @@ public class AnalysisPageController extends UIController implements Initializabl
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         TransientSolution analysis = null;
+        ArrayList<HashMap<String, Object>> environmentArrayList = null;
+        LocalDateTime right_now = LocalDateTime.now();
+        LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime start_time_analysis = now.minusDays(6);
         try {
-            LocalDateTime right_now = LocalDateTime.now();
-            LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
-            LocalDateTime start_time_analysis = now.minusDays(6);
-            ArrayList<HashMap<String, Object>> environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
+            environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
             ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
@@ -51,7 +52,7 @@ public class AnalysisPageController extends UIController implements Initializabl
         } catch (Exception e) {
             e.printStackTrace();
         }
-        XYChart.Series series = stpnAnalyzer_ext.makeChart(analysis);
+        XYChart.Series series = stpnAnalyzer_ext.makeChart(analysis, environmentArrayList, start_time_analysis);
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
