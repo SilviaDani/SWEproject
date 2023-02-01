@@ -7,6 +7,7 @@ import com.opencsv.CSVReaderBuilder;
 import com.sweproject.model.CovidTest;
 import com.sweproject.model.CovidTestType;
 import com.sweproject.model.Symptoms;
+import javafx.scene.chart.XYChart;
 import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
 import org.oristool.models.stpn.trans.RegTransient;
@@ -85,49 +86,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             //Generating Nodes
             Place Contagio = net.addPlace("Contagio");
             buildContagionEvolutionSection(net, marking, Contagio);
-            Place p1 = net.addPlace("Condizione iniziale");
-            Place p2 = net.addPlace("Primo incontro");
-            marking.setTokens(p1, 1);
-            Transition t0 = net.addTransition("t0");
-            Transition e0 = net.addTransition("effective0");
-            Transition u0 = net.addTransition("uneffective0");
-            LocalDateTime eventDate = (LocalDateTime) environmentArrayList.get(0).get("start_date");
-            float delta = (float) ChronoUnit.MINUTES.between(now, eventDate) / 60.f;
-            float elapsedTime = (float) ChronoUnit.MINUTES.between(endInterval, eventDate) / 60.f;
-            t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-            float risk_level = (float) environmentArrayList.get(0).get("risk_level");
-            risk_level = addTimeRelevance(elapsedTime, risk_level);
-            e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(risk_level), net)));
-            u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - risk_level), net)));
+            marking.setTokens(Contagio, 1);
 
-            net.addPrecondition(p1, t0);
-            net.addPostcondition(t0, p2);
-            net.addPrecondition(p2, e0);
-            net.addPostcondition(e0, Contagio);
-            net.addPrecondition(p2, u0);
 
-            Transition lastTransition = u0;
-            System.out.println("ENV_ARRAY_SIZE "+environmentArrayList.size());
-            for (int i = 1; i < environmentArrayList.size(); i++) {
-                Place p3 = net.addPlace("Dopo incontro " + i);
-                Place p4 = net.addPlace("Incontro " + (i + 1));
-                Transition t1 = net.addTransition("t " + i), e1 = net.addTransition("effective " + i), u1 = net.addTransition("uneffective " + i);
-                eventDate = (LocalDateTime) environmentArrayList.get(i).get("start_date");;
-                delta = (float) ChronoUnit.MINUTES.between((LocalDateTime) environmentArrayList.get(i - 1).get("start_date"), eventDate) / 60.f;
-                elapsedTime = (float) ChronoUnit.MINUTES.between(endInterval, eventDate) / 60.f;
-                t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-                risk_level = (float) environmentArrayList.get(i).get("risk_level");
-                risk_level = addTimeRelevance(elapsedTime, risk_level);
-                e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(risk_level), net)));
-                u1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - risk_level), net)));
-                net.addPostcondition(lastTransition, p3);
-                net.addPrecondition(p3, t1);
-                net.addPostcondition(t1, p4);
-                net.addPrecondition(p4, e1);
-                net.addPostcondition(e1, Contagio);
-                net.addPrecondition(p4, u1);
-                lastTransition = u1;
-            }
             // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
@@ -146,6 +107,28 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             System.out.println("The subject has no 'Environment' observations of the last 6 days");
             return super.makeFakeNet();
         }
+    }
+
+    public <S, R> XYChart.Series makeChart(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
+        XYChart.Series<String, Float> series = new XYChart.Series();
+        int size = s.getSamplesNumber();
+        for (int i = 0; i < size; i++){
+            series.getData().add(new XYChart.Data<>(String.valueOf(i), 0.f));
+        }
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m = 0; m < s.getColumnStates().size(); m++){
+            double step = s.getStep().doubleValue();
+            for (int event = 0; event < eventsArrayList.size(); event++){
+                LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
+                int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
+                for (int j = delta; j < size; j += step){
+                    float y = (float)(s.getSolution()[j][r][m] * (double)eventsArrayList.get(event).get("risk_level"));
+                    float oldY = series.getData().get(j).getYValue();
+                    series.getData().get(j).setYValue(y + oldY);
+                }
+            }
+        }
+        return series;
     }
 
     private double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
