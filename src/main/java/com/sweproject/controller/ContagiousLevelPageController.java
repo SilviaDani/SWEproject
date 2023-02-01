@@ -1,6 +1,7 @@
 package com.sweproject.controller;
 
 import com.sweproject.analysis.STPNAnalyzer;
+import com.sweproject.analysis.STPNAnalyzer_ext;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +18,8 @@ import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -24,11 +27,12 @@ import java.util.ResourceBundle;
 public class ContagiousLevelPageController extends UIController implements Initializable {
     @FXML private LineChart chart;
     private STPNAnalyzer stpnAnalyzer;
-    private ObservationGateway observationDAO;
+    private STPNAnalyzer_ext stpnAnalyzer_ext;
+    private ObservationGateway observationGateway;
 
     public ContagiousLevelPageController(){
-        stpnAnalyzer = new STPNAnalyzer(144, 1);
-        observationDAO = new ObservationGateway();
+        stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
+        observationGateway = new ObservationGateway();
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -40,7 +44,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             for(int i = 0; i<clusterMembers.size(); i++){
             ArrayList<String> otherMembers = new ArrayList<>(clusterMembers);
             otherMembers.remove(i);
-            clusterSubjectsMet.put(clusterMembers.get(i), observationDAO.getContactObservations(clusterMembers.get(i), otherMembers));
+            clusterSubjectsMet.put(clusterMembers.get(i), observationGateway.getContactObservations(clusterMembers.get(i), otherMembers));
             }
         }
 
@@ -52,8 +56,15 @@ public class ContagiousLevelPageController extends UIController implements Initi
 
         ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
         HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+        HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
+        HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
+        LocalDateTime right_now = LocalDateTime.now();
+        LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime start_time_analysis = now.minusDays(6);
         for(String member : clusterMembers){
-            envObs.put(member, observationDAO.getEnvironmentObservations(member));
+            envObs.put(member, observationGateway.getEnvironmentObservations(member));
+            testObs.put(member, observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis));
+            sympObs.put(member, observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis));
         }
         for(int nIteration = 0; nIteration<=max_iterations; nIteration++){
             HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
@@ -61,18 +72,24 @@ public class ContagiousLevelPageController extends UIController implements Initi
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        pits.put(member, stpnAnalyzer.makeModel(member, envObs.get(member)));
+                        pits.put(member, stpnAnalyzer_ext.makeModel(member, envObs.get(member), testObs.get(member), sympObs.get(member)));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }else{
-                    pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                    try {
+                        pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        //pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                    } catch (Exception e) {
+                        System.out.println("EXC");
+                        e.printStackTrace();
+                    }
                 }
                 System.out.println(member + " it:"+nIteration + " completed");
             }
             pns.add(pits);
         }
-        XYChart.Series series = stpnAnalyzer.makeChart(pns, user.getFiscalCode().toUpperCase());
+        XYChart.Series series = stpnAnalyzer_ext.makeChart(pns, user.getFiscalCode().toUpperCase());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
