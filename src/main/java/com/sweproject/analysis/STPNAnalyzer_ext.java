@@ -18,8 +18,6 @@ import org.oristool.petrinet.PetriNet;
 import org.oristool.petrinet.Place;
 import org.oristool.petrinet.Transition;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -137,8 +135,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             return makeFakeNet();
         }
     }
-    public TransientSolution<R,S> makeModel2(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
-
+    public TransientSolution<R,S> makeModel2(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type");
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
@@ -380,6 +377,122 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
     }
 
+
+    public XYChart.Series<String, Float> makeClusterModel2(LocalDateTime pastStartTime, HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                           ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+
+        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
+            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+
+        LocalDateTime endInterval = LocalDateTime.now();
+        LocalDateTime initialTime = endInterval.minusDays(6);
+        boolean showsSymptoms = false;
+
+        for (int contact = 0; contact < clusterSubjectsMet.size(); contact++){
+            showsSymptoms = false;
+            LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
+            float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
+            double cumulativeRiskLevel = risk_level;
+            if (symptomsArrayList.size() > 0){
+                for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
+                    LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                    if (contact_time.isBefore(symptom_date)){
+                        Symptoms symptoms = new Symptoms();
+                        cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
+                        showsSymptoms = true;
+                    }
+                }
+            }
+            if (testArrayList.size() > 0){
+                for (int test = 0; test < testArrayList.size(); test++){
+                    LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                    if (contact_time.isBefore(test_time)){
+                        CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                        System.out.println("Covid CCC" + covidTest.getName());
+                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                        System.out.println(testEvidence);
+                        cumulativeRiskLevel+=testEvidence;
+                    }
+                }
+            }
+            cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
+            System.out.println(cumulativeRiskLevel + " prima");
+            cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
+            System.out.println(cumulativeRiskLevel + " dopo");
+            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+        }
+        XYChart.Series<String, Float> series = new XYChart.Series();
+        int size = subjects_ss.get(0).getSamplesNumber();
+        for (int l = 0; l < size; l++) {
+            series.getData().add(new XYChart.Data<>(String.valueOf(l), 0.f));
+        }
+        if (clusterSubjectsMet.size() > 0) {
+            PetriNet net = new PetriNet();
+            //creating the central node
+            Marking marking = new Marking();
+            Place Contagio = net.addPlace("Contagio");
+            buildContagionEvolutionSection(net, marking, Contagio);
+            marking.setTokens(Contagio, 1);
+
+
+            //dato un tempo "meeting_time1" si segna quante persone, oltre al soggetto analizzato, hanno partecipato
+            int i = 0; //index of contact
+            int j = 0; //n. person met during contact counter
+            String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+            LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
+            while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
+                meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                j++;
+                i++;
+            }
+            ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
+            for (int k = 0; k < j; k++) {
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
+            }
+            RegTransient analysis = RegTransient.builder()
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .timeStep(new BigDecimal(step)).build();
+
+            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+            var rewardRates = TransientSolution.rewardRates("Contagioso");
+
+            TransientSolution<DeterministicEnablingState, Marking> solution =
+                    analysis.compute(net, marking);
+
+            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
+            //new TransientSolutionViewer(rewardedSolution);
+            TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
+            float max = 0;
+
+            int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+            for (int m = 0; m < s.getColumnStates().size(); m++) {
+                double step = s.getStep().doubleValue();
+                for (int event = 0; event < clusterSubjectsMet.size(); event++) {
+                    LocalDateTime eventTime = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(event).get("start_date"));
+                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
+                    for (int subject = 0; subject < clusterSubjectsMet.size(); subject++) {
+                        //TODO CONTROLLA ARRAYLIST DA SCORRERE
+                        int r_i = subjects_ss.get(subject).getRegenerations().indexOf(s.getInitialRegeneration());
+                        for (int jj = delta; jj < size; jj += step){
+                            for (int m_i = 0; m < subjects_ss.get(subject).getColumnStates().size(); m_i++) {
+                                float tmp = (float) subjects_ss.get(subject).getSolution()[jj][r_i][m_i]; //TODO MOLTIPLICARE PER IL RISK LEVEL DEL CONTATTO NEL CLUSTER
+                                if (tmp > max)
+                                    max = tmp;
+                            }
+                            float y = (float)(s.getSolution()[i][r][m] * max);
+                            float oldY = series.getData().get(j).getYValue();
+                            series.getData().get(j).setYValue(y + oldY);
+                        }
+                    }
+                }
+            }
+        }
+        return series;
+    }
 
     private double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
         //leggere i dati dal file cvs

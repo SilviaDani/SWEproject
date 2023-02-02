@@ -47,7 +47,7 @@ public class AnalysisPageController extends UIController implements Initializabl
             environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
             ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
-            analysis = stpnAnalyzer_ext.makeModel2(user.getFiscalCode(), environmentArrayList, testArrayList, symptomsArrayList);
+            analysis = stpnAnalyzer_ext.makeModel2(environmentArrayList, testArrayList, symptomsArrayList);
             //analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), environmentArrayList);
         } catch (Exception e) {
             e.printStackTrace();

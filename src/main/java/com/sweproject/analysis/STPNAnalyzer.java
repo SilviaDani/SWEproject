@@ -310,9 +310,9 @@ public class STPNAnalyzer<R,S> {
         XYChart.Series<String, Float> series = new XYChart.Series();
         int startingIndex = considerEnvironment?0:1;
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
-        for(int m=0; m<s.getColumnStates().size(); m++){
+        for(int m = 0; m < s.getColumnStates().size(); m++){
             double step = s.getStep().doubleValue();
-            for(int i=0, size = s.getSamplesNumber(); i<size; i++){
+            for(int i = 0, size = s.getSamplesNumber(); i<size; i += step){
                 float value = 0.f;
                 for(int j = startingIndex; j<ss.size();j++){
                     value += (float)ss.get(j).get(fiscalCode).getSolution()[i][r][m];

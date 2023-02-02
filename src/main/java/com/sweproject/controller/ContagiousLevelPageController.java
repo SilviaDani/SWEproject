@@ -54,7 +54,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             System.out.println(s+ " "+ clusterSubjectsMet.get(s));
         }
 
-        ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
+        ArrayList<HashMap<String, XYChart.Series>> pns = new ArrayList<>();
         HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
         HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
         HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
@@ -67,18 +67,19 @@ public class ContagiousLevelPageController extends UIController implements Initi
             sympObs.put(member, observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis));
         }
         for(int nIteration = 0; nIteration<=max_iterations; nIteration++){
-            HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
+            HashMap<String, XYChart.Series> pits = new HashMap<>();//p^it_s
             for(String member : clusterMembers){
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        pits.put(member, stpnAnalyzer_ext.makeModel2(member, envObs.get(member), testObs.get(member), sympObs.get(member)));
+                        var s = stpnAnalyzer_ext.makeModel2(envObs.get(member), testObs.get(member), sympObs.get(member));
+                        pits.put(member, stpnAnalyzer_ext.makeChart2(s, envObs.get(member),start_time_analysis));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }else{
                     try {
-                        pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        pits.put(member, stpnAnalyzer_ext.makeClusterModel2(start_time_analysis, pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
                         //pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
                     } catch (Exception e) {
                         System.out.println("EXC");
