@@ -21,11 +21,6 @@ public class Notifier {
         observationDAO.insertObservation(cluster, eventType, startDate, endDate);
     }
 
-
-    public void getProbabilityOfBeingInfected(){//FIXME
-        subject.getProbabilityOfBeingInfected();
-    }
-
     //for testing
     public Subject getSubject() {
         return subject;

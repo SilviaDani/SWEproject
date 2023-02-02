@@ -124,7 +124,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
-            //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
             var rewardRates = TransientSolution.rewardRates("Contagioso");
 
@@ -196,7 +195,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
-            //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
             var rewardRates = TransientSolution.rewardRates("Contagioso");
 
@@ -309,7 +307,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             }
             ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
             for (int k = 0; k < j; k++) {
-                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
             }
             float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, (float) clusterSubjectsMet.get(j-1).get("risk_level"));
             float delta = (float) ChronoUnit.MINUTES.between(initialTime, meeting_time1) / 60.f;
@@ -326,7 +324,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             net.addPrecondition(p2, u0);
             //making intermediate modules
             int p = 0; //index for transitions
-            for (int l = i; l < clusterSubjectsMet.size(); l++) { //fixme
+            for (int l = i; l < clusterSubjectsMet.size(); l++) {
                 j = 0;
                 for (int n = 0; n < meeting_subjects.length; n++) {
                     meeting_subjects[n] = null;
@@ -367,7 +365,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
-            //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
             var rewardRates = TransientSolution.rewardRates("Contagioso");
 
@@ -467,9 +464,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     }
 
     public float addTimeRelevance(float elapsedTime, float risk){
-        //TODO
+        //TODO forse va fatto qualcosa. Forse però. Forse va bene così
        // risk = risk * 1/elapsedTime;
-        //TODO funzione di riduzione del rischio tirata a caso per ora
         return risk;
     }
 }

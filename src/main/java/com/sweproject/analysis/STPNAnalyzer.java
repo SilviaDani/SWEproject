@@ -85,7 +85,6 @@ public class STPNAnalyzer<R,S> {
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
-            //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
             var rewardRates = TransientSolution.rewardRates("Contagioso");
 
@@ -113,7 +112,6 @@ public class STPNAnalyzer<R,S> {
     }
 
     public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution> ss, LocalDateTime meeting_time, int step, float riskLevel){
-        //TODO inserire quanto è stretto un contatto
         int delta = (int) ((ChronoUnit.MINUTES.between(now.truncatedTo(ChronoUnit.MINUTES).minusDays(6), meeting_time) / 60)/step);
         //System.out.println(delta);
         int r = ss.get(0).getRegenerations().indexOf(ss.get(0).getInitialRegeneration());
@@ -240,7 +238,7 @@ public class STPNAnalyzer<R,S> {
             }
             ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
             for (int k = 0; k < j; k++) {
-                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k])); //XXX
+                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
             }
             float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, (float) clusterSubjectsMet.get(j-1).get("risk_level"));
             float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1)/60.f;
@@ -254,7 +252,7 @@ public class STPNAnalyzer<R,S> {
             net.addPrecondition(p2, u0);
             //making intermediate modules
             int p = 0; //index for transitions
-            for (int l = i; l < clusterSubjectsMet.size(); l++) { //fixme
+            for (int l = i; l < clusterSubjectsMet.size(); l++) {
                 j = 0;
                 for (int n = 0; n < meeting_subjects.length; n++) {
                     meeting_subjects[n] = null;
@@ -293,7 +291,6 @@ public class STPNAnalyzer<R,S> {
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
 
-            //TODO: add plots of other rewards and change title
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
             var rewardRates = TransientSolution.rewardRates("Contagioso");
 
@@ -317,7 +314,7 @@ public class STPNAnalyzer<R,S> {
             double step = s.getStep().doubleValue();
             for(int i=0, size = s.getSamplesNumber(); i<size; i++){
                 float value = 0.f;
-                for(int j = startingIndex; j<ss.size();j++){ //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                for(int j = startingIndex; j<ss.size();j++){
                     value += (float)ss.get(j).get(fiscalCode).getSolution()[i][r][m];
                 }
                 series.getData().add(new XYChart.Data((String.valueOf((int)(i * step))), value));

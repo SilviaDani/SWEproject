@@ -1,5 +1,5 @@
 package com.sweproject.model;
-//XXX TimeRecord serve?
+//non serve ma si lascia, magari in futuro si potrebbe anche togliere completamente.
 public class TimeRecord {
     
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 public class Subject {
     private ArrayList<Observation> observationRecord;
     private ArrayList<Prescription> prescriptionRecord;
-    //TODO add infos about the subject (ie name...)
     private String fiscalCode;
     private String name;
     private String surname;
@@ -24,10 +23,6 @@ public class Subject {
 
     public void addPrescription(Prescription prescription){
         prescriptionRecord.add(prescription);
-    }
-
-    public void getProbabilityOfBeingInfected(){
-        //TODO
     }
 
     public ArrayList<Observation> getObservationRecord() {

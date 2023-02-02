@@ -12,11 +12,7 @@ public class Tracer extends Notifier{
     }
 
     public void editObservation(Observation observation){
-        //TODO
         observation.setAsIrrelevant();
     }
 
-    public void getProbabilityOfBeingInfected(Subject subject){//FIXME
-        subject.getProbabilityOfBeingInfected();
-    }
 }

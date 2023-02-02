@@ -113,11 +113,12 @@ class ChangeStateEvent extends Event{
         super(startDate, null, null, subject);
     }
 }
-//TODO add timer
+
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
     final int maxReps = 5000;
+    boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
@@ -138,6 +139,7 @@ public class Simulator extends UIController {
     ArrayList<String[]> outputStrings_confInt;
     ArrayList<String[]> outputStrings_RMSE;
     Stopwatch timer;
+
 
 
     Simulator(){
@@ -190,6 +192,7 @@ public class Simulator extends UIController {
         plt.show();
     }
     void plot(HashMap<String, TreeMap<LocalDateTime, Double>> tt, ArrayList<HashMap<String, TransientSolution>> ss) throws PythonExecutionException, IOException {
+        int startingIndex = considerEnvironment?0:1;
         String[] codes = new String[tt.size()];
         int index = 0;
         for(Object o : tt.keySet()){
@@ -216,7 +219,7 @@ public class Simulator extends UIController {
             int r = ss.get(0).get(finalCodes[finalJ]).getRegenerations().indexOf(ss.get(0).get(finalCodes[finalJ]).getInitialRegeneration());
             IntStream.range(0, samples).parallel().forEach(i -> {
                 double value1 = 0.f;
-                for (int k = 0; k < ss.size(); k++) { //FIXME: j=1 -> j=0 se vogliamo tenere di conto anche l'ambiente
+                for (int k = startingIndex; k < ss.size(); k++) {
                     value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 }
                 //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
@@ -538,7 +541,6 @@ public class Simulator extends UIController {
                     }
                 }
                 //filling
-                //XXX copiato dalla vecchia funzione
                 HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
                 for(Subject subject : subjects) {
                     timestampsAtIthIteration.put(subject.getName() ,convert(fill(subject.getTimestamps(), t0)));
@@ -783,7 +785,7 @@ public class Simulator extends UIController {
 
             Stopwatch simTimer = Stopwatch.createUnstarted();
             ArrayList<Event> eventsCopy = new ArrayList<>(events);
-            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>(); //TODO initialize this
+            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
             for(Subject subject : subjects){
                 TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
                 for(int offset = 0; offset<144; offset++){
@@ -852,7 +854,6 @@ public class Simulator extends UIController {
                     }
                 }
                 //filling
-                //XXX copiato dalla vecchia funzione
                 HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
                 for(Subject subject : subjects) {
                     timestampsAtIthIteration.put(subject.getName() ,convert(fill(subject.getTimestamps(), t0)));
