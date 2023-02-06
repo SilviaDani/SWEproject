@@ -156,7 +156,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                         if (contact_time.isBefore(symptom_date)){
                             Symptoms symptoms = new Symptoms();
-                            cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
+                            double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date);
+                            cumulativeRiskLevel += sympEvidence;
+                            System.out.println("Symp " + sympEvidence);
                             showsSymptoms = true;
                         }
                     }
@@ -222,12 +224,35 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 for (int j = delta; j < size; j += step){
                     float y = (float)(s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level"));
                     float oldY = series.getData().get(j).getYValue();
-                    series.getData().get(j).setYValue(y + oldY);
+                    series.getData().get(j).setYValue( y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
                     i++;
                 }
             }
         }
         return series;
+    }
+    public HashMap<Integer, Double> computeAnalysis(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
+        HashMap<Integer, Double> output = new HashMap<>();
+        int size = s.getSamplesNumber();
+        for (int i = 0; i < size; i++){
+            output.put(i, 0.0);
+        }
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m = 0; m < s.getColumnStates().size(); m++){
+            double step = s.getStep().doubleValue();
+            for (int event = 0; event < eventsArrayList.size(); event++){
+                LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
+                int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
+                int i = 0;
+                for (int j = delta; j < size; j += step){
+                    double y = s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level");
+                    double oldY = output.get(j);
+                    output.replace(j,  y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                    i++;
+                }
+            }
+        }
+        return output;
     }
 
     public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
@@ -378,7 +403,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     }
 
 
-    public XYChart.Series<String, Float> makeClusterModel2(LocalDateTime pastStartTime, HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+    public XYChart.Series<String, Float> makeClusterModel2(LocalDateTime pastStartTime, HashMap<String, XYChart.Series<String,Float>> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
                                                            ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
 
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
@@ -426,8 +451,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
         }
         XYChart.Series<String, Float> series = new XYChart.Series();
-        int size = subjects_ss.get(0).getSamplesNumber();
-        for (int l = 0; l < size; l++) {
+        for (int l = 0; l < samples; l++) {
             series.getData().add(new XYChart.Data<>(String.valueOf(l), 0.f));
         }
         if (clusterSubjectsMet.size() > 0) {
@@ -438,21 +462,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             buildContagionEvolutionSection(net, marking, Contagio);
             marking.setTokens(Contagio, 1);
 
-
-            //dato un tempo "meeting_time1" si segna quante persone, oltre al soggetto analizzato, hanno partecipato
-            int i = 0; //index of contact
-            int j = 0; //n. person met during contact counter
-            String[] meeting_subjects = new String[clusterSubjectsMet.size()];
-            LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
-            while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
-                meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
-                j++;
-                i++;
-            }
-            ArrayList<TransientSolution> subjectsMet_ss = new ArrayList<>();
-            for (int k = 0; k < j; k++) {
-                subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
-            }
             RegTransient analysis = RegTransient.builder()
                     .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
                     .timeStep(new BigDecimal(step)).build();
@@ -466,32 +475,147 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
             //new TransientSolutionViewer(rewardedSolution);
             TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
-            float max = 0;
 
+            double max = 0.0;
+            int i = 0;
+            int j = 0;
             int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
             for (int m = 0; m < s.getColumnStates().size(); m++) {
-                double step = s.getStep().doubleValue();
-                for (int event = 0; event < clusterSubjectsMet.size(); event++) {
-                    LocalDateTime eventTime = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(event).get("start_date"));
-                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
-                    for (int subject = 0; subject < clusterSubjectsMet.size(); subject++) {
-                        //TODO CONTROLLA ARRAYLIST DA SCORRERE
-                        int r_i = subjects_ss.get(subject).getRegenerations().indexOf(s.getInitialRegeneration());
-                        for (int jj = delta; jj < size; jj += step){
-                            for (int m_i = 0; m < subjects_ss.get(subject).getColumnStates().size(); m_i++) {
-                                float tmp = (float) subjects_ss.get(subject).getSolution()[jj][r_i][m_i]; //TODO MOLTIPLICARE PER IL RISK LEVEL DEL CONTATTO NEL CLUSTER
-                                if (tmp > max)
-                                    max = tmp;
-                            }
-                            float y = (float)(s.getSolution()[i][r][m] * max);
-                            float oldY = series.getData().get(j).getYValue();
-                            series.getData().get(j).setYValue(y + oldY);
+                while (i < clusterSubjectsMet.size()) {
+                    j = 0;
+                    String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+                    LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
+                    while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
+                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                        j++;
+                        i++;
+                    }
+                    int index = 0;
+                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
+                    for (int jj = delta; jj < samples; jj += step) {
+                        for (int k = 0; k < j; k++) {
+                            double tmp = subjects_ss.get(meeting_subjects[k]).getData().get(jj).getYValue();
+                            if (tmp > max)
+                                max = tmp;
                         }
+                        double y = max * (float) clusterSubjectsMet.get(j - 1).get("risk_level") * s.getSolution()[index][r][m];
+                        double oldY = series.getData().get(jj).getYValue();
+                        series.getData().get(jj).setYValue((float) (y + oldY));
+                        index++;
                     }
                 }
             }
         }
         return series;
+    }
+    public HashMap<Integer, Double> makeClusterModel3(LocalDateTime pastStartTime, HashMap<String, HashMap<Integer, Double>> subjects_solutions, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                           ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+
+        for (int testIndex = 0; testIndex < testArrayList.size(); testIndex++) {
+            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR") ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+
+        LocalDateTime endInterval = LocalDateTime.now();
+        LocalDateTime initialTime = endInterval.minusDays(6);
+        boolean showsSymptoms = false;
+
+        for (int contact = 0; contact < clusterSubjectsMet.size(); contact++) {
+            showsSymptoms = false;
+            LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
+            float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
+            double cumulativeRiskLevel = risk_level;
+            if (symptomsArrayList.size() > 0) {
+                for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
+                    LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                    if (contact_time.isBefore(symptom_date)) {
+                        Symptoms symptoms = new Symptoms();
+                        cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
+                        showsSymptoms = true;
+                    }
+                }
+            }
+            if (testArrayList.size() > 0) {
+                for (int test = 0; test < testArrayList.size(); test++) {
+                    LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                    if (contact_time.isBefore(test_time)) {
+                        CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                        System.out.println("Covid CCC" + covidTest.getName());
+                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                        System.out.println(testEvidence);
+                        cumulativeRiskLevel += testEvidence;
+                    }
+                }
+            }
+            cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
+            System.out.println(cumulativeRiskLevel + " prima");
+            cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
+            System.out.println(cumulativeRiskLevel + " dopo");
+            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+        }
+
+        HashMap<Integer, Double> output = new HashMap<>();
+        int size = subjects_solutions.get(subjects_solutions.keySet().iterator().next()).size();
+        for (int i = 0; i < size; i++) {
+            output.put(i, 0.0);
+        }
+        if (clusterSubjectsMet.size() > 0) {
+            PetriNet net = new PetriNet();
+            //creating the central node
+            Marking marking = new Marking();
+            Place Contagio = net.addPlace("Contagio");
+            buildContagionEvolutionSection(net, marking, Contagio);
+            marking.setTokens(Contagio, 1);
+
+            RegTransient analysis = RegTransient.builder()
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .timeStep(new BigDecimal(step)).build();
+
+            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+            var rewardRates = TransientSolution.rewardRates("Contagioso");
+
+            TransientSolution<DeterministicEnablingState, Marking> solution =
+                    analysis.compute(net, marking);
+
+            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
+            //new TransientSolutionViewer(rewardedSolution);
+            TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
+
+            int i = 0; //index of contact
+            int j = 0; //n. person met during contact counter
+            int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+            for (int m = 0; m < s.getColumnStates().size(); m++) {
+                while(i < clusterSubjectsMet.size()) { //itera sugli eventi
+                    j = 0;
+                    String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+                    LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
+                    while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
+                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                        j++;
+                        i++;
+                    }
+                    System.out.println("Print i " + i);
+                    int index = 0;
+                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
+                    for (int jj = delta; jj < size; jj += step) {
+                        double maxRisk = 0.0;
+                        for (int k = 0; k < j; k++) {
+                            double tmp = subjects_solutions.get(meeting_subjects[k]).get(jj);
+                            if (tmp > maxRisk)
+                                maxRisk = tmp;
+                        }
+                        double oldY = output.get(jj);
+                        double y = maxRisk * (float) clusterSubjectsMet.get(j - 1).get("risk_level") * s.getSolution()[index][r][m];
+                        output.put(jj, y + oldY);
+                        index++;
+                    }
+                }
+            }
+
+        }
+        return output;
     }
 
     private double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
@@ -542,6 +666,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             csvreader.close();
 
             double nSymp = 0;
+            double nCov = 0;
             LocalDateTime cTime = contact_time;
             cTime = cTime.withHour(0).withMinute(0);
             if(contact_time.getYear() != 2022)
@@ -551,6 +676,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             for( LocalDateTime ldt = cTime ; ldt.isAfter(cTime.minusWeeks(2)); ldt = ldt.minusDays(1)){
                 nSymp += covidSymp.get(ldt);
             }
+            nCov = nSymp;
             if(cTime.isAfter(LocalDateTime.of(2022,1,1,0,0).plusWeeks(16))&&cTime.isBefore(LocalDateTime.of(2022, 1, 1,0,0).plusWeeks(42))){
                 //non ci sono i dati relativi a questo periodo
             }else {
@@ -573,12 +699,26 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return updatedRiskLevel;
+        return updatedRiskLevel; //FIXME il rischio è altissimo se una persona mostra i sintomi. Come likelihood che indica quale soggetto è più a rischio può andare bene però è un po'brutto quando si plotta il grafico.
     }
 
     public float addTimeRelevance(float elapsedTime, float risk){
         //TODO forse va fatto qualcosa. Forse però. Forse va bene così
        // risk = risk * 1/elapsedTime;
         return risk;
+    }
+
+    public XYChart.Series makeChart2(ArrayList<HashMap<String, XYChart.Series<String,Float>>> pns, String fiscalCode) {
+        XYChart.Series<String, Float> output = new XYChart.Series<>();
+        for(int singleStep = 0; singleStep < samples; singleStep+=step){
+            float value = 0.0f;
+            for(int i = 0; i < pns.size(); i++) {
+                if (pns.get(i).get(fiscalCode) != null) {
+                    value += (1-value) * pns.get(i).get(fiscalCode).getData().get(singleStep).getYValue();
+                }
+            }
+            output.getData().add(new XYChart.Data<>(String.valueOf(singleStep), value));
+        }
+        return output;
     }
 }

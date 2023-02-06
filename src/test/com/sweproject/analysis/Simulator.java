@@ -122,12 +122,12 @@ public class Simulator extends UIController {
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 3;
-    int nContact = 14;
-    int max_nEnvironment = 16;
-    int min_nEnvironment = 8;
-    int max_nSymptoms = 3;
-    int min_nSymptoms = 1;
+    static final int np = 4;
+    int nContact = 3;
+    int max_nEnvironment = 6;
+    int min_nEnvironment = 2;
+    int max_nSymptoms = 2;
+    int min_nSymptoms = 0;
     int max_nCovTests = 2;
     int min_nCovTests = 1;
     File execTimes;
@@ -236,6 +236,92 @@ public class Simulator extends UIController {
         }
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
         plt.ylim(-0.1,1.1);
+        if(DEBUG){
+            timer.stop();
+            outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
+            timer.start();
+            for(String subject : tt.keySet()){
+                double rmse = 0;
+                int indexPN = 0;
+                for(LocalDateTime ldt : tt.get(subject).keySet()){
+                    rmse += Math.pow((tt.get(subject).get(ldt) - hPN.get(subject).get(indexPN)), 2);
+                    indexPN++;
+                }
+                rmse = Math.sqrt(rmse/tt.get(subject).keySet().size());
+                outputStrings_RMSE.add(new String[]{subject, String.valueOf(rmse)});
+            }
+            timer.stop();
+            outputStrings_execTimes.add(new String[]{"Tempo per calcolare gli errori", String.valueOf(timer)});
+            timer.reset();
+            outputFile = new FileWriter(execTimes);
+            writer = new CSVWriter(outputFile, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            writer.writeAll(outputStrings_execTimes);
+            writer.close();
+            outputFile = new FileWriter(confInt);
+            writer=new CSVWriter(outputFile, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            writer.writeAll(outputStrings_confInt);
+            writer.close();
+            outputFile = new FileWriter(RMSE);
+            writer=new CSVWriter(outputFile, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            writer.writeAll(outputStrings_RMSE);
+            writer.close();
+        }
+        plt.show();
+    }
+    void plot2(HashMap<String, TreeMap<LocalDateTime, Double>> tt, ArrayList<HashMap<String, HashMap<Integer, Double>>> ss) throws PythonExecutionException, IOException {
+        int startingIndex = considerEnvironment?0:1;
+        String[] codes = new String[tt.size()];
+        int index = 0;
+        for(Object o : tt.keySet()){
+            codes[index] = (String) o;
+            index++;
+        }
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
+        String[] finalCodes = codes;
+        HashMap<String, List<Double>> hPN = new HashMap<>();
+        for(int j = 0; j<codes.length; j++) {
+            List<Double> tYSampled1 = new ArrayList<>();
+            Double[] tYSampledArray1 = new Double[samples];
+            int finalJ = j;
+            IntStream.range(0, samples).parallel().forEach(i -> {
+                if (i < tt.get(finalCodes[finalJ]).keySet().size()) {
+                    tYSampledArray1[i] = tt.get(finalCodes[finalJ]).get((LocalDateTime) tt.get(finalCodes[finalJ]).keySet().toArray()[i]);
+                }
+            });
+
+            tYSampled1 = Arrays.stream(tYSampledArray1).toList();
+            List<Double> yPN1 = new ArrayList<>();
+            Double[] yPNarray1 = new Double[samples];
+            IntStream.range(0, samples).parallel().forEach(i -> {
+                double value1 = 0.0;
+                for (int k = startingIndex; k < ss.size(); k++) {
+                    //value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).get(i);
+                    value1 +=  ss.get(k).get(finalCodes[finalJ]).get(i);
+                }
+                //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
+                yPNarray1[i] = value1;
+            });
+            yPN1 = Arrays.stream(yPNarray1).toList();
+            hPN.put(codes[j], yPN1);
+            String style = "solid";
+            if(j>=5)
+                style = "dashed";
+            plt.plot().add(x, tYSampled1).label("Sim "+codes[j]).linestyle(style);
+            plt.plot().add(x, yPN1).label("PN "+codes[j]).linestyle(style);
+            plt.legend();
+        }
+        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
+        plt.ylim(-0.1,100000);
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
@@ -579,7 +665,7 @@ public class Simulator extends UIController {
             if(DEBUG){
                 timer.start();
             }
-            ArrayList<HashMap<String, TransientSolution>> pns = new ArrayList<>();
+            ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
             final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
             HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
             ArrayList<String> subjects_String = new ArrayList<>();
@@ -610,17 +696,20 @@ public class Simulator extends UIController {
                 timer.start();
             }
             for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
-                HashMap<String, TransientSolution> pits = new HashMap<>();//p^it_s
+                HashMap<String, HashMap<Integer, Double>> pits = new HashMap<>();//p^it_s
                 for(String member : subjects_String){
                     //System.out.println(member + " it:"+nIteration + " started");
                     if(nIteration==0){
                         try {
-                            pits.put(member, stpnAnalyzer.makeModel2(envObs.get(member), testObs.get(member), sympObs.get(member)));
+                            TransientSolution s = stpnAnalyzer.makeModel2(envObs.get(member), testObs.get(member), sympObs.get(member));
+                            pits.put(member, stpnAnalyzer.computeAnalysis(s, envObs.get(member), t0));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }else{
-                        pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                        //pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
+                        //TransientSolution s = stpnAnalyzer.makeClusterModel2();
+                        pits.put(member, stpnAnalyzer.makeClusterModel3(t0, pns.get(nIteration-1),  clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
                     }
                     //System.out.println(member + " it:"+nIteration + " completed");
                 }
@@ -632,7 +721,7 @@ public class Simulator extends UIController {
                 timer.reset();
                 timer.start();
             }
-            plot(meanTrees, pns);
+            plot2(meanTrees, pns);
         }catch(Exception e){
            e.printStackTrace();
         } finally {

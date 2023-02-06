@@ -90,7 +90,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             }
             pns.add(pits);
         }
-        XYChart.Series series = stpnAnalyzer_ext.makeChart(pns, user.getFiscalCode().toUpperCase());
+        XYChart.Series series = stpnAnalyzer_ext.makeChart2(pns, user.getFiscalCode().toUpperCase());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
