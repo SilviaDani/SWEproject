@@ -498,14 +498,12 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
 
                     double step = s.getStep().doubleValue();
-                    for (int event = 0; event < max_risks.size(); event++){
-                        int index = 0;
-                        for (int jj = delta; jj < samples; jj += step){
-                            float y = (float)(s.getSolution()[index][r][m] * max);
-                            float oldY = series.getData().get(jj).getYValue();
-                            series.getData().get(jj).setYValue(y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
-                            index++;
-                        }
+                    int index = 0;
+                    for (int jj = delta; jj < samples; jj += step){
+                        float y = (float)(s.getSolution()[index][r][m] * max);
+                        float oldY = series.getData().get(jj).getYValue();
+                        series.getData().get(jj).setYValue(y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                        index++;
                     }
                     /*int index = 0;
                     int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
