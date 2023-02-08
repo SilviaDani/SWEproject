@@ -496,7 +496,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         if (tmp > max)
                             max = tmp;
                     }
-
                     double step = s.getStep().doubleValue();
                     int index = 0;
                     for (int jj = delta; jj < samples; jj += step){
@@ -505,21 +504,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         series.getData().get(jj).setYValue(y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
                         index++;
                     }
-                    /*int index = 0;
-                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
-                    for (int jj = delta; jj < samples; jj += step) {
-                        for (int k = 0; k < j; k++) {
-                            double tmp = subjects_ss.get(meeting_subjects[k]).getData().get(jj).getYValue();
-                            if (tmp > max)
-                                max = tmp;
-                        }
-                        double y = max * (float) clusterSubjectsMet.get(j - 1).get("risk_level") * s.getSolution()[index][r][m];
-                        double oldY = series.getData().get(jj).getYValue();
-                        series.getData().get(jj).setYValue((float) (y + oldY));
-                        index++;
-                    }
-
-                     */
                 }
             }
         }
@@ -614,18 +598,19 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         i++;
                     }
                     System.out.println("Print i " + i);
-                    int index = 0;
+                    double maxRisk = 0.0;
                     int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
-                    for (int jj = delta; jj < size; jj += step) {
-                        double maxRisk = 0.0;
-                        for (int k = 0; k < j; k++) {
-                            double tmp = subjects_solutions.get(meeting_subjects[k]).get(jj);
-                            if (tmp > maxRisk)
-                                maxRisk = tmp;
-                        }
+                    for (int k = 0; k < j; k++) {
+                        double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
+                        if (tmp > maxRisk)
+                            maxRisk = tmp;
+                    }
+                    double step = s.getStep().doubleValue();
+                    int index = 0;
+                    for (int jj = delta; jj < samples; jj += step){
+                        double y = s.getSolution()[index][r][m] * maxRisk;
                         double oldY = output.get(jj);
-                        double y = maxRisk * (float) clusterSubjectsMet.get(j - 1).get("risk_level") * s.getSolution()[index][r][m];
-                        output.put(jj, y + oldY);
+                        output.put(jj, y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
                         index++;
                     }
                 }
@@ -635,7 +620,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return output;
     }
 
-    private double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
+    public double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
         //leggere i dati dal file cvs
         double updatedRiskLevel = cumulativeRiskLevel;
         CSVReader reader = null;

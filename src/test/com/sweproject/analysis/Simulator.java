@@ -529,6 +529,7 @@ public class Simulator extends UIController {
                 events = new ArrayList<>(eventsCopy);
                 tests = new ArrayList<>(testCopy);
                 symptoms = new ArrayList<>(symptomCopy);
+                boolean showsSymptoms = false;
                 for(Subject subject : subjects)
                     subject.initializeSubject(t0);
                 while(events.size() > 0){
@@ -551,6 +552,7 @@ public class Simulator extends UIController {
                                 }
                             }
                             if (symptoms.size() > 0) {
+                                showsSymptoms = true;
                                 for (int symptom = 0; symptom < symptoms.size(); symptom++) {
                                     LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                     if (contact_time.isBefore(symptom_time)) {
@@ -561,6 +563,7 @@ public class Simulator extends UIController {
                                 }
                             }
                             risk_level /= (tests.size() + symptoms.size() + 1);
+                            risk_level = (float) stpnAnalyzer.updateRiskLevel(risk_level, contact_time, showsSymptoms);
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
@@ -592,6 +595,7 @@ public class Simulator extends UIController {
                                     }
                                     if (symptoms.size() > 0) {
                                         for (int symptom = 0; symptom < symptoms.size(); symptom++) {
+                                            showsSymptoms = true;
                                             LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                             if (contact_time.isBefore(symptom_time)) {
                                                 Symptoms covidSymptom = new Symptoms();
@@ -601,6 +605,7 @@ public class Simulator extends UIController {
                                         }
                                     }
                                     risk_level /= (tests.size() + symptoms.size() + 1);
+                                    risk_level = (float) stpnAnalyzer.updateRiskLevel(risk_level, contact_time, showsSymptoms);
                                     if(d < risk_level){
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                         subject.changeState(event.getStartDate());
