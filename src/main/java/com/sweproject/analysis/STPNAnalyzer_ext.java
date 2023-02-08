@@ -691,9 +691,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 nSymp += fluSymp.get(nearestDate) + fluSymp.get(nearestDate.minusWeeks(1));
             }
             if(showsSymptoms) {
-                updatedRiskLevel = cumulativeRiskLevel / (nSymp / 59110000);
+                updatedRiskLevel = cumulativeRiskLevel;
             }else{
-                updatedRiskLevel = cumulativeRiskLevel / (1-(nSymp / 59110000));
+                updatedRiskLevel = cumulativeRiskLevel;
             }
             System.out.println(updatedRiskLevel);
         } catch (Exception e) {

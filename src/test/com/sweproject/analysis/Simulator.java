@@ -123,11 +123,11 @@ public class Simulator extends UIController {
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 3;
+    int nContact = 4;
     int max_nEnvironment = 6;
     int min_nEnvironment = 2;
     int max_nSymptoms = 2;
-    int min_nSymptoms = 0;
+    int min_nSymptoms = 1;
     int max_nCovTests = 2;
     int min_nCovTests = 1;
     File execTimes;
@@ -321,7 +321,7 @@ public class Simulator extends UIController {
             plt.legend();
         }
         plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(-0.1,100000);
+        plt.ylim(-0.1,1.1);
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
