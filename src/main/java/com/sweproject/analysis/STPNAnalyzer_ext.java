@@ -176,18 +176,20 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
                 double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+                double [] cumulativeRiskLevel2;
+                cumulativeRiskLevel2= updateRiskLevel(contact_time);
+                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+                System.out.println(cumulativeRiskLevel + " prima");
                 if (showsSymptoms){
-                    double [] cumulativeRiskLevel2;
-                    cumulativeRiskLevel2= updateRiskLevel(contact_time);
-                    double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                    System.out.println(cumulativeRiskLevel + " prima");
-                    cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                    System.out.println(cumulativeRiskLevel + " dopo");
-                    environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                    cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                 }
                 else{
-                    environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+                    cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                    //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                 }
+                System.out.println(cumulativeRiskLevel + " dopo");
+                environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
             }
             PetriNet net = new PetriNet();
             Marking marking = new Marking();
@@ -453,18 +455,20 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 }
             }
             double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            double [] cumulativeRiskLevel2;
+            cumulativeRiskLevel2= updateRiskLevel(contact_time);
+            double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+            System.out.println(cumulativeRiskLevel + " prima");
             if (showsSymptoms){
-                double [] cumulativeRiskLevel2;
-                cumulativeRiskLevel2= updateRiskLevel(contact_time);
-                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                System.out.println(cumulativeRiskLevel + " prima");
-                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                System.out.println(cumulativeRiskLevel + " dopo");
-                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
             }
             else{
-                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
+            System.out.println(cumulativeRiskLevel + " dopo");
+            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
         }
         XYChart.Series<String, Float> series = new XYChart.Series();
         for (int l = 0; l < samples; l++) {
@@ -567,18 +571,20 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 }
             }
             double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            double [] cumulativeRiskLevel2;
+            cumulativeRiskLevel2= updateRiskLevel(contact_time);
+            double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+            System.out.println(cumulativeRiskLevel + " prima");
             if (showsSymptoms){
-                double [] cumulativeRiskLevel2;
-                cumulativeRiskLevel2= updateRiskLevel(contact_time);
-                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                System.out.println(cumulativeRiskLevel + " prima");
-                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                System.out.println(cumulativeRiskLevel + " dopo");
-                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
             }
             else{
-                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
+            System.out.println(cumulativeRiskLevel + " dopo");
+            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
         }
 
         HashMap<Integer, Double> output = new HashMap<>();
