@@ -421,7 +421,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             showsSymptoms = false;
             LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
             float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
-            double cumulativeRiskLevel = risk_level;
+            double cumulativeRiskLevel = 0;
             if (symptomsArrayList.size() > 0){
                 for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
                     LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
@@ -444,7 +444,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
             }
-            cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
+            double cumulativeRiskLevel1 = (cumulativeRiskLevel + 1) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
             System.out.println(cumulativeRiskLevel + " prima");
             cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
             System.out.println(cumulativeRiskLevel + " dopo");
