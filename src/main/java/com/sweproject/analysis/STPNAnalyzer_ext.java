@@ -696,12 +696,13 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         nearestDate = ldt;
                     }
                 }
-                nSymp += fluSymp.get(nearestDate) + fluSymp.get(nearestDate.minusWeeks(1));
+                nSymp += fluSymp.get(nearestDate) /*+ fluSymp.get(nearestDate.minusWeeks(1))*/;
             }
+            System.out.println(nSymp + " " + nSymp/59110000);
             if(showsSymptoms) {
-                updatedRiskLevel = cumulativeRiskLevel;
+                updatedRiskLevel = cumulativeRiskLevel / (nSymp / 59110000);
             }else{
-                updatedRiskLevel = cumulativeRiskLevel;
+                updatedRiskLevel = cumulativeRiskLevel / (1-(nSymp / 59110000));
             }
             System.out.println(updatedRiskLevel);
         } catch (Exception e) {
