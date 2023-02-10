@@ -175,13 +175,19 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         }
                     }
                 }
-                double cumulativeRiskLevel1 = (cumulativeRiskLevel + 1) / (symptomsArrayList.size() + testArrayList.size() + 1);
                 double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
-                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                System.out.println(cumulativeRiskLevel + " prima");
-                cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
-                System.out.println(cumulativeRiskLevel + " dopo");
-                environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                if (showsSymptoms){
+                    double [] cumulativeRiskLevel2;
+                    cumulativeRiskLevel2= updateRiskLevel(contact_time);
+                    double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                    System.out.println(cumulativeRiskLevel + " prima");
+                    cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                    System.out.println(cumulativeRiskLevel + " dopo");
+                    environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                }
+                else{
+                    environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+                }
             }
             PetriNet net = new PetriNet();
             Marking marking = new Marking();
@@ -446,13 +452,19 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
             }
-            double cumulativeRiskLevel1 = (cumulativeRiskLevel + 1) / (symptomsArrayList.size() + testArrayList.size() + 1);
             double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
-            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-            System.out.println(cumulativeRiskLevel + " prima");
-            cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
-            System.out.println(cumulativeRiskLevel + " dopo");
-            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            if (showsSymptoms){
+                double [] cumulativeRiskLevel2;
+                cumulativeRiskLevel2= updateRiskLevel(contact_time);
+                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                System.out.println(cumulativeRiskLevel + " prima");
+                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                System.out.println(cumulativeRiskLevel + " dopo");
+                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            }
+            else{
+                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+            }
         }
         XYChart.Series<String, Float> series = new XYChart.Series();
         for (int l = 0; l < samples; l++) {
@@ -554,13 +566,19 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
             }
-            double cumulativeRiskLevel1 = (cumulativeRiskLevel + 1) / (symptomsArrayList.size() + testArrayList.size() + 1);
             double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
-            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-            System.out.println(cumulativeRiskLevel + " prima");
-            cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
-            System.out.println(cumulativeRiskLevel + " dopo");
-            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            if (showsSymptoms){
+                double [] cumulativeRiskLevel2;
+                cumulativeRiskLevel2= updateRiskLevel(contact_time);
+                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                System.out.println(cumulativeRiskLevel + " prima");
+                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3 / (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                System.out.println(cumulativeRiskLevel + " dopo");
+                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            }
+            else{
+                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel3);
+            }
         }
 
         HashMap<Integer, Double> output = new HashMap<>();
@@ -626,9 +644,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return output;
     }
 
-    public double updateRiskLevel(double cumulativeRiskLevel, LocalDateTime contact_time, boolean showsSymptoms) {
+    public double[] updateRiskLevel(LocalDateTime contact_time) {
         //leggere i dati dal file cvs
-        double updatedRiskLevel = cumulativeRiskLevel;
+        double[] cumulativeRiskLevel2 = new double[2];
         CSVReader reader = null;
         try{
             //covid file
@@ -665,10 +683,13 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     if (ext[0].matches("\\d+")) {
                         double nCont = Double.parseDouble(ext[1]);
                         nCont = nCont * 59110000/1000;
-                        fluSymp.put(LocalDateTime.of(2022,1,1,0,0).plusWeeks(Integer.parseInt(ext[0])-1), (int) nCont); //alcuni dati si riferiscono alla fine del 2021 ma conviene trattarli come se fossero tutti del 2022 perché considero solo una stagione influenzale
+                        for (int day = 0; day < 7; day++){
+                            fluSymp.put(LocalDateTime.of(2022,1,1,0,0).plusWeeks(Integer.parseInt(ext[0])-1).plusDays(day), (int) nCont); //alcuni dati si riferiscono alla fine del 2021 ma conviene trattarli come se fossero tutti del 2022 perché considero solo una stagione influenzale
+                        }
                     }
                 }
             }
+            //STA ROBA SOTTO SERVE A QUALCOSA?
             fluSymp.put(LocalDateTime.of(2021,1,1,0,0).plusWeeks(40), fluSymp.get(LocalDateTime.of(2022,1,1,0,0).plusWeeks(40)));
             fluSymp.put(LocalDateTime.of(2021,1,1,0,0).plusWeeks(41), fluSymp.get(LocalDateTime.of(2022,1,1,0,0).plusWeeks(41)));
             csvreader.close();
@@ -681,33 +702,20 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 cTime = cTime.withYear(2022); //mi baso sui dati del 2022
 
             //Considero che una persona abbia i sintomi per 2 settimane e quindi quando calcolo quante persone hanno i sintomi del covid considero tutti quelli che hanno iniziato a mostrare i sintomi nelle ultime 2 settimane
-            for( LocalDateTime ldt = cTime ; ldt.isAfter(cTime.minusWeeks(2)); ldt = ldt.minusDays(1)){
-                nSymp += covidSymp.get(ldt);
+            for(LocalDateTime ldt = cTime ; ldt.isAfter(cTime.minusWeeks(2)); ldt = ldt.minusDays(1)){
+                nCov += covidSymp.get(ldt);
             }
-            nCov = nSymp;
             if(cTime.isAfter(LocalDateTime.of(2022,1,1,0,0).plusWeeks(16))&&cTime.isBefore(LocalDateTime.of(2022, 1, 1,0,0).plusWeeks(42))){
                 //non ci sono i dati relativi a questo periodo
             }else {
-                LocalDateTime nearestDate = LocalDateTime.of(1980, 1, 1, 0, 0);
-                long deltaHours = Long.MAX_VALUE;
-                for (LocalDateTime ldt : fluSymp.keySet()) {
-                    if (ldt.isBefore(cTime) && ChronoUnit.HOURS.between(ldt, cTime) < deltaHours) {
-                        deltaHours = ChronoUnit.HOURS.between(ldt, cTime);
-                        nearestDate = ldt;
-                    }
-                }
-                nSymp += fluSymp.get(nearestDate) + fluSymp.get(nearestDate.minusWeeks(1));
+                nSymp += fluSymp.get(cTime);
             }
-            if(showsSymptoms) {
-                updatedRiskLevel = cumulativeRiskLevel;
-            }else{
-                updatedRiskLevel = cumulativeRiskLevel;
-            }
-            System.out.println(updatedRiskLevel);
+            cumulativeRiskLevel2[0] = nCov / 59110000;
+            cumulativeRiskLevel2[1] = nSymp / 59110000;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return updatedRiskLevel; //FIXME il rischio è altissimo se una persona mostra i sintomi. Come likelihood che indica quale soggetto è più a rischio può andare bene però è un po'brutto quando si plotta il grafico.
+        return cumulativeRiskLevel2; //FIXME il rischio è altissimo se una persona mostra i sintomi. Come likelihood che indica quale soggetto è più a rischio può andare bene però è un po'brutto quando si plotta il grafico.
     }
 
     public float addTimeRelevance(float elapsedTime, float risk){
