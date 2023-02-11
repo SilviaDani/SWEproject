@@ -562,8 +562,22 @@ public class Simulator extends UIController {
                                     }
                                 }
                             }
-                            risk_level /= (tests.size() + symptoms.size() + 1);
-                            risk_level = (float) stpnAnalyzer.updateRiskLevel(risk_level, contact_time, showsSymptoms);
+                            double cumulativeRiskLevel = risk_level;
+                            double cumulativeRiskLevel3 = cumulativeRiskLevel / (symptoms.size() + tests.size() + 1);
+                            double [] cumulativeRiskLevel2;
+                            cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
+                            double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+                            System.out.println(cumulativeRiskLevel + " prima");
+                            if (showsSymptoms){
+                                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                            }
+                            else{
+                                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                            }
+                            System.out.println(cumulativeRiskLevel + " dopo");
+                            risk_level = (float) cumulativeRiskLevel;
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
@@ -604,8 +618,23 @@ public class Simulator extends UIController {
                                             }
                                         }
                                     }
-                                    risk_level /= (tests.size() + symptoms.size() + 1);
-                                    risk_level = (float) stpnAnalyzer.updateRiskLevel(risk_level, contact_time, showsSymptoms);
+                                    double cumulativeRiskLevel = risk_level;
+                                    double cumulativeRiskLevel3 = cumulativeRiskLevel / (symptoms.size() + tests.size() + 1);
+                                    double [] cumulativeRiskLevel2;
+                                    cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
+                                    double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                                    cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+                                    System.out.println(cumulativeRiskLevel + " prima");
+                                    if (showsSymptoms){
+                                        cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                                    }
+                                    else{
+                                        cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                                        //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                                    }
+                                    System.out.println(cumulativeRiskLevel + " dopo");
+                                    risk_level = (float) cumulativeRiskLevel;
+
                                     if(d < risk_level){
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                         subject.changeState(event.getStartDate());

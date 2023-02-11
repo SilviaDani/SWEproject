@@ -33,7 +33,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         super(samples, step);
     }
 
-    public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+    /*public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type");
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
@@ -135,6 +135,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             return makeFakeNet();
         }
     }
+   */
     public TransientSolution<R,S> makeModel2(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type");
@@ -265,7 +266,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return output;
     }
 
-    public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+    /*public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
 
        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
@@ -411,7 +412,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             return makeFakeNet();
         }
     }
-
+*/
 
     public XYChart.Series<String, Float> makeClusterModel2(LocalDateTime pastStartTime, HashMap<String, XYChart.Series<String,Float>> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
                                                            ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
