@@ -173,9 +173,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         }
                     }
                 }
-                double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+                double cumulativeRiskLevel3 = (cumulativeRiskLevel) / (symptomsArrayList.size() + testArrayList.size() + 1);
                 double [] cumulativeRiskLevel2;
-                cumulativeRiskLevel2= updateRiskLevel(contact_time);
+                cumulativeRiskLevel2 = updateRiskLevel(contact_time);
                 double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
                 cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
                 System.out.println(cumulativeRiskLevel + " prima");
@@ -474,7 +474,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
             }
-            double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            double cumulativeRiskLevel3 = (cumulativeRiskLevel) / (symptomsArrayList.size() + testArrayList.size() + 1);
             double [] cumulativeRiskLevel2;
             cumulativeRiskLevel2= updateRiskLevel(contact_time);
             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];

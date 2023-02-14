@@ -122,14 +122,14 @@ public class Simulator extends UIController {
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 1;
+    static final int np = 2;
     int nContact = 0;
-    int max_nEnvironment = 2;
-    int min_nEnvironment = 1;
+    int max_nEnvironment = 6;
+    int min_nEnvironment = 5;
     int max_nSymptoms = 0;
     int min_nSymptoms = 0;
-    int max_nCovTests = 0;
-    int min_nCovTests = 0;
+    int max_nCovTests = 10;
+    int min_nCovTests = 10;
     File execTimes;
     File confInt;
     File RMSE;
@@ -568,7 +568,7 @@ public class Simulator extends UIController {
                             cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
                             cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                            System.out.println(cumulativeRiskLevel + " prima");
+                           //fixme System.out.println(cumulativeRiskLevel + " prima");
                             if (showsSymptoms){
                                 cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                             }
@@ -576,7 +576,7 @@ public class Simulator extends UIController {
                                 cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                             }
-                            System.out.println(cumulativeRiskLevel + " dopo");
+                           //fixme System.out.println(cumulativeRiskLevel + " dopo");
                             risk_level = (float) cumulativeRiskLevel;
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -624,7 +624,7 @@ public class Simulator extends UIController {
                                     cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                                     double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
                                     cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                                    System.out.println(cumulativeRiskLevel + " prima");
+                                   //fixme System.out.println(cumulativeRiskLevel + " prima");
                                     if (showsSymptoms){
                                         cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                                     }
@@ -632,7 +632,7 @@ public class Simulator extends UIController {
                                         cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                                         //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                                     }
-                                    System.out.println(cumulativeRiskLevel + " dopo");
+                                   //fixme System.out.println(cumulativeRiskLevel + " dopo");
                                     risk_level = (float) cumulativeRiskLevel;
 
                                     if(d < risk_level){
