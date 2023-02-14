@@ -122,14 +122,14 @@ public class Simulator extends UIController {
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 4;
-    int nContact = 4;
-    int max_nEnvironment = 6;
-    int min_nEnvironment = 2;
-    int max_nSymptoms = 2;
-    int min_nSymptoms = 1;
-    int max_nCovTests = 2;
-    int min_nCovTests = 1;
+    static final int np = 1;
+    int nContact = 0;
+    int max_nEnvironment = 2;
+    int min_nEnvironment = 1;
+    int max_nSymptoms = 0;
+    int min_nSymptoms = 0;
+    int max_nCovTests = 0;
+    int min_nCovTests = 0;
     File execTimes;
     File confInt;
     File RMSE;
@@ -305,8 +305,8 @@ public class Simulator extends UIController {
             IntStream.range(0, samples).parallel().forEach(i -> {
                 double value1 = 0.0;
                 for (int k = startingIndex; k < ss.size(); k++) {
-                    //value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).get(i);
-                    value1 +=  ss.get(k).get(finalCodes[finalJ]).get(i);
+                    value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).get(i);
+                    //value1 +=  ss.get(k).get(finalCodes[finalJ]).get(i);
                 }
                 //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
                 yPNarray1[i] = value1;
@@ -735,7 +735,7 @@ public class Simulator extends UIController {
                     //System.out.println(member + " it:"+nIteration + " started");
                     if(nIteration==0){
                         try {
-                            TransientSolution s = stpnAnalyzer.makeModel2(envObs.get(member), testObs.get(member), sympObs.get(member));
+                            TransientSolution s = stpnAnalyzer.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member));
                             pits.put(member, stpnAnalyzer.computeAnalysis(s, envObs.get(member), t0));
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -743,7 +743,7 @@ public class Simulator extends UIController {
                     }else{
                         //pits.put(member, stpnAnalyzer.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
                         //TransientSolution s = stpnAnalyzer.makeClusterModel2();
-                        pits.put(member, stpnAnalyzer.makeClusterModel3(t0, pns.get(nIteration-1),  clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        pits.put(member, stpnAnalyzer.makeClusterModel(t0, pns.get(nIteration-1),  clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
                     }
                     //System.out.println(member + " it:"+nIteration + " completed");
                 }

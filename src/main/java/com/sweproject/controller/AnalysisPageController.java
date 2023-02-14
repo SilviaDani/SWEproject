@@ -3,7 +3,6 @@ package com.sweproject.controller;
 import com.sweproject.analysis.STPNAnalyzer;
 import com.sweproject.analysis.STPNAnalyzer_ext;
 import com.sweproject.gateway.ObservationGateway;
-import com.sweproject.model.CovidTestType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -47,12 +46,12 @@ public class AnalysisPageController extends UIController implements Initializabl
             environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
             ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
-            analysis = stpnAnalyzer_ext.makeModel2(environmentArrayList, testArrayList, symptomsArrayList);
+            analysis = stpnAnalyzer_ext.makeModel(environmentArrayList, testArrayList, symptomsArrayList);
             //analysis = stpnAnalyzer.makeModel(user.getFiscalCode(), environmentArrayList);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        XYChart.Series series = stpnAnalyzer_ext.makeChart2(analysis, environmentArrayList, start_time_analysis);
+        XYChart.Series series = stpnAnalyzer_ext.adaptForApp(stpnAnalyzer_ext.computeAnalysis(analysis, environmentArrayList, start_time_analysis));
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();

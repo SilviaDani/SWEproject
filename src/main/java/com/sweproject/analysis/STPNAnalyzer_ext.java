@@ -8,15 +8,12 @@ import com.sweproject.model.CovidTest;
 import com.sweproject.model.CovidTestType;
 import com.sweproject.model.Symptoms;
 import javafx.scene.chart.XYChart;
-import org.oristool.models.stpn.MarkingExpr;
 import org.oristool.models.stpn.TransientSolution;
 import org.oristool.models.stpn.trans.RegTransient;
 import org.oristool.models.stpn.trees.DeterministicEnablingState;
-import org.oristool.models.stpn.trees.StochasticTransitionFeature;
 import org.oristool.petrinet.Marking;
 import org.oristool.petrinet.PetriNet;
 import org.oristool.petrinet.Place;
-import org.oristool.petrinet.Transition;
 
 import java.io.FileReader;
 import java.io.Reader;
@@ -136,7 +133,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
     }
    */
-    public TransientSolution<R,S> makeModel2(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+    public TransientSolution<R,S> makeModel(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type");
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
@@ -219,29 +216,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
     }
 
-    public <S, R> XYChart.Series makeChart2(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
-        XYChart.Series<String, Float> series = new XYChart.Series();
-        int size = s.getSamplesNumber();
-        for (int i = 0; i < size; i++){
-            series.getData().add(new XYChart.Data<>(String.valueOf(i), 0.f));
-        }
-        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
-        for(int m = 0; m < s.getColumnStates().size(); m++){
-            double step = s.getStep().doubleValue();
-            for (int event = 0; event < eventsArrayList.size(); event++){
-                LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
-                int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
-                int i = 0;
-                for (int j = delta; j < size; j += step){
-                    float y = (float)(s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level"));
-                    float oldY = series.getData().get(j).getYValue();
-                    series.getData().get(j).setYValue(y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
-                    i++;
-                }
-            }
-        }
-        return series;
-    }
     public HashMap<Integer, Double> computeAnalysis(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
         HashMap<Integer, Double> output = new HashMap<>();
         int size = s.getSamplesNumber();
@@ -265,6 +239,37 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
         return output;
     }
+
+    public <S, R> XYChart.Series adaptForApp(HashMap<Integer, Double> s){
+        XYChart.Series<String, Float> series = new XYChart.Series();
+        for(int sample : s.keySet()) {
+            series.getData().add(new XYChart.Data<>(String.valueOf(sample), s.get(sample).floatValue()));
+        }
+        return series;
+    }
+    /*public HashMap<Integer, Double> adaptForSim(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
+        HashMap<Integer, Double> output = new HashMap<>();
+        int size = s.getSamplesNumber();
+        for (int i = 0; i < size; i++){
+            output.put(i, 0.0);
+        }
+        int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        for(int m = 0; m < s.getColumnStates().size(); m++){
+            double step = s.getStep().doubleValue();
+            for (int event = 0; event < eventsArrayList.size(); event++){
+                LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
+                int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
+                int i = 0;
+                for (int j = delta; j < size; j += step){
+                    double y = s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level");
+                    double oldY = output.get(j);
+                    output.replace(j,  y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                    i++;
+                }
+            }
+        }
+        return output;
+    }*/
 
     /*public TransientSolution<R, S> makeClusterModel(HashMap<String, TransientSolution> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
@@ -414,124 +419,22 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     }
 */
 
-    public XYChart.Series<String, Float> makeClusterModel2(LocalDateTime pastStartTime, HashMap<String, XYChart.Series<String,Float>> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
-                                                           ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+    public XYChart.Series makeClusterModelForApp(LocalDateTime pastStartTime, HashMap<String, XYChart.Series<String,Float>> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                 ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception{
+        HashMap<String, HashMap<Integer, Double>> subjects_solutions = new HashMap<>();
+        for(String s : subjects_ss.keySet()){
+            HashMap<Integer, Double> sol = new HashMap<>();
 
-        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
-            String rawType = (String) testArrayList.get(testIndex).get("type");
-            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
-            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
-            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+            for(int i = 0; i < samples; i++){
+                sol.put(i, subjects_ss.get(s).getData().get(i).getYValue().doubleValue());
+            }
+            subjects_solutions.put(s, sol);
         }
-
-        LocalDateTime endInterval = LocalDateTime.now();
-        LocalDateTime initialTime = endInterval.minusDays(6);
-        boolean showsSymptoms = false;
-
-        for (int contact = 0; contact < clusterSubjectsMet.size(); contact++){
-            showsSymptoms = false;
-            LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
-            float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
-            double cumulativeRiskLevel = 0;
-            if (symptomsArrayList.size() > 0){
-                for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
-                    LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
-                    if (contact_time.isBefore(symptom_date)){
-                        Symptoms symptoms = new Symptoms();
-                        cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
-                        showsSymptoms = true;
-                    }
-                }
-            }
-            if (testArrayList.size() > 0){
-                for (int test = 0; test < testArrayList.size(); test++){
-                    LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
-                    if (contact_time.isBefore(test_time)){
-                        CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
-                        System.out.println("Covid CCC" + covidTest.getName());
-                        double testEvidence = covidTest.isInfected(contact_time, test_time);
-                        System.out.println(testEvidence);
-                        cumulativeRiskLevel+=testEvidence;
-                    }
-                }
-            }
-            double cumulativeRiskLevel3 = (cumulativeRiskLevel + risk_level) / (symptomsArrayList.size() + testArrayList.size() + 1);
-            double [] cumulativeRiskLevel2;
-            cumulativeRiskLevel2= updateRiskLevel(contact_time);
-            double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-            cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-            System.out.println(cumulativeRiskLevel + " prima");
-            if (showsSymptoms){
-                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-            }
-            else{
-                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
-            }
-            System.out.println(cumulativeRiskLevel + " dopo");
-            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
-        }
-        XYChart.Series<String, Float> series = new XYChart.Series();
-        for (int l = 0; l < samples; l++) {
-            series.getData().add(new XYChart.Data<>(String.valueOf(l), 0.f));
-        }
-        if (clusterSubjectsMet.size() > 0) {
-            PetriNet net = new PetriNet();
-            //creating the central node
-            Marking marking = new Marking();
-            Place Contagio = net.addPlace("Contagio");
-            buildContagionEvolutionSection(net, marking, Contagio);
-            marking.setTokens(Contagio, 1);
-
-            RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                    .timeStep(new BigDecimal(step)).build();
-
-            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-            var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-            TransientSolution<DeterministicEnablingState, Marking> solution =
-                    analysis.compute(net, marking);
-
-            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            //new TransientSolutionViewer(rewardedSolution);
-            TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
-
-            double max = 0.0;
-            int i = 0;
-            int j = 0;
-            int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
-            for (int m = 0; m < s.getColumnStates().size(); m++) {
-                while (i < clusterSubjectsMet.size()) {
-                    j = 0;
-                    String[] meeting_subjects = new String[clusterSubjectsMet.size()];
-                    LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
-                    while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
-                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
-                        j++;
-                        i++;
-                    }
-                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
-                    for (int k = 0; k < j; k++) {
-                        double tmp = subjects_ss.get(meeting_subjects[k]).getData().get(delta).getYValue();
-                        if (tmp > max)
-                            max = tmp;
-                    }
-                    double step = s.getStep().doubleValue();
-                    int index = 0;
-                    for (int jj = delta; jj < samples; jj += step){
-                        float y = (float)(s.getSolution()[index][r][m] * max);
-                        float oldY = series.getData().get(jj).getYValue();
-                        series.getData().get(jj).setYValue(y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
-                        index++;
-                    }
-                }
-            }
-        }
-        return series;
+        var model = makeClusterModel(pastStartTime, subjects_solutions, clusterSubjectsMet, testArrayList, symptomsArrayList);
+        return adaptForApp(model);
     }
-    public HashMap<Integer, Double> makeClusterModel3(LocalDateTime pastStartTime, HashMap<String, HashMap<Integer, Double>> subjects_solutions, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
-                                                           ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+    public HashMap<Integer, Double> makeClusterModel(LocalDateTime pastStartTime, HashMap<String, HashMap<Integer, Double>> subjects_solutions, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
 
         for (int testIndex = 0; testIndex < testArrayList.size(); testIndex++) {
             String rawType = (String) testArrayList.get(testIndex).get("type");
@@ -731,7 +634,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return risk;
     }
 
-    public XYChart.Series makeChart2(ArrayList<HashMap<String, XYChart.Series<String,Float>>> pns, String fiscalCode) {
+    public XYChart.Series buildSolution(ArrayList<HashMap<String, XYChart.Series<String,Float>>> pns, String fiscalCode) {
         XYChart.Series<String, Float> output = new XYChart.Series<>();
         for(int singleStep = 0; singleStep < samples; singleStep+=step){
             float value = 0.0f;

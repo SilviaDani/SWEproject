@@ -14,7 +14,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.stage.Stage;
 import com.sweproject.gateway.ObservationGateway;
-import org.oristool.models.stpn.TransientSolution;
 
 import java.io.IOException;
 import java.net.URL;
@@ -72,14 +71,14 @@ public class ContagiousLevelPageController extends UIController implements Initi
                 System.out.println(member + " it:"+nIteration + " started");
                 if(nIteration==0){
                     try {
-                        var s = stpnAnalyzer_ext.makeModel2(envObs.get(member), testObs.get(member), sympObs.get(member));
-                        pits.put(member, stpnAnalyzer_ext.makeChart2(s, envObs.get(member),start_time_analysis));
+                        var s = stpnAnalyzer_ext.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member));
+                        pits.put(member, stpnAnalyzer_ext.adaptForApp(stpnAnalyzer_ext.computeAnalysis(s, envObs.get(member),start_time_analysis)));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }else{
                     try {
-                        pits.put(member, stpnAnalyzer_ext.makeClusterModel2(start_time_analysis, pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        pits.put(member, stpnAnalyzer_ext.makeClusterModelForApp(start_time_analysis, pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
                         //pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
                     } catch (Exception e) {
                         System.out.println("EXC");
@@ -90,7 +89,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             }
             pns.add(pits);
         }
-        XYChart.Series series = stpnAnalyzer_ext.makeChart2(pns, user.getFiscalCode().toUpperCase());
+        XYChart.Series series = stpnAnalyzer_ext.buildSolution(pns, user.getFiscalCode().toUpperCase());
         series.setName("Contagion level");
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
