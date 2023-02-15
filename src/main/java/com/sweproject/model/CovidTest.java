@@ -91,7 +91,7 @@ public class CovidTest extends Type {
             throw new Exception("Covid test type not implemented");
         }
         double delta = ChronoUnit.HOURS.between(tWhereTestStartsWorking, testDate)/24.f;
-        System.out.println(delta + " delta");
+        //System.out.println(delta + " delta");
         double testEvidence = 1;
         if(delta>0){
             // senza falsi positivi e negativi

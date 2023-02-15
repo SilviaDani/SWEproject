@@ -232,7 +232,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 for (int j = delta; j < size; j += step){
                     double y = s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level");
                     double oldY = output.get(j);
-                    output.replace(j,  y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                    output.replace(j,  (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
                     i++;
                 }
             }
@@ -544,7 +544,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     for (int jj = delta; jj < samples; jj += step){
                         double y = s.getSolution()[index][r][m] * maxRisk;
                         double oldY = output.get(jj);
-                        output.put(jj, y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                        output.put(jj, (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
                         index++;
                     }
                 }
