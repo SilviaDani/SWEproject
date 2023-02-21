@@ -137,8 +137,8 @@ public class Simulator extends UIController {
     int nContact = 6;
     int max_nEnvironment = 3;
     int min_nEnvironment = 2;
-    int max_nSymptoms = 4;
-    int min_nSymptoms = 4;
+    int max_nSymptoms = 0;
+    int min_nSymptoms = 0;
     int max_nCovTests = 2;
     int min_nCovTests = 2;
     File execTimes;
@@ -288,8 +288,7 @@ public class Simulator extends UIController {
         }
         plt.show();
     }
-    void plot2(HashMap<String, TreeMap<LocalDateTime, Double>> tt, ArrayList<HashMap<String, HashMap<Integer, Double>>> ss) throws PythonExecutionException, IOException {
-        int startingIndex = considerEnvironment?0:1;
+    void plot2(HashMap<String, TreeMap<LocalDateTime, Double>> tt, HashMap<String, HashMap<Integer, Double>> ss) throws PythonExecutionException, IOException {
         String[] codes = new String[tt.size()];
         int index = 0;
         for(Object o : tt.keySet()){
@@ -313,14 +312,8 @@ public class Simulator extends UIController {
             tYSampled1 = Arrays.stream(tYSampledArray1).toList();
             List<Double> yPN1 = new ArrayList<>();
             Double[] yPNarray1 = new Double[samples];
-            IntStream.range(0, samples).parallel().forEach(i -> {
-                double value1 = 0.0;
-                for (int k = startingIndex; k < ss.size(); k++) {
-                    value1 += (1-value1) * ss.get(k).get(finalCodes[finalJ]).get(i);
-                    //value1 +=  ss.get(k).get(finalCodes[finalJ]).get(i);
-                }
-                //value1=ss.get(ss.size()-1).get(finalCodes[finalJ]).getSolution()[i][r][0];
-                yPNarray1[i] = value1;
+            IntStream.range(0, samples).parallel().forEach(i->{
+                yPNarray1[i] = ss.get(codes[finalJ]).get(i);
             });
             yPN1 = Arrays.stream(yPNarray1).toList();
             hPN.put(codes[j], yPN1);
@@ -341,8 +334,11 @@ public class Simulator extends UIController {
                 double rmse = 0;
                 int indexPN = 0;
                 for(LocalDateTime ldt : tt.get(subject).keySet()){
-                    rmse += Math.pow((tt.get(subject).get(ldt) - hPN.get(subject).get(indexPN)), 2);
+                    if(hPN.get(subject).get(indexPN) != null) { //hack
+                        rmse += Math.pow((tt.get(subject).get(ldt) - hPN.get(subject).get(indexPN)), 2);
+                    }
                     indexPN++;
+
                 }
                 rmse = Math.sqrt(rmse/tt.get(subject).keySet().size());
                 outputStrings_RMSE.add(new String[]{subject, String.valueOf(rmse)});
@@ -783,7 +779,22 @@ public class Simulator extends UIController {
                 timer.reset();
                 timer.start();
             }
-            plot2(meanTrees, pns);
+            //building solution
+            HashMap<String, HashMap<Integer, Double>> solutions = new HashMap<>();
+            int startingIndex = considerEnvironment?0:1;
+            for(String member : subjects_String){
+                HashMap<Integer, Double> sol_tmp = new HashMap<>();
+            IntStream.range(0, samples).parallel().forEach(i -> {
+                        double value = 0.0;
+                        for (int iteration = startingIndex; iteration < pns.size(); iteration++) {
+                            value += (1-value) * pns.get(iteration).get(member).get(i);
+                        }
+                        sol_tmp.put(i, value);
+                    });
+                solutions.put(member, sol_tmp);
+            }
+            plot2(meanTrees, solutions);
+            printWhoShouldBeTested(meanTrees, solutions);
         }catch(Exception e){
            e.printStackTrace();
         } finally {
@@ -1182,5 +1193,44 @@ public class Simulator extends UIController {
                 binarizedStates.put((LocalDateTime) indices[i], 0);
         });
         return binarizedStates;
+    }
+
+    private void printWhoShouldBeTested(HashMap<String, TreeMap<LocalDateTime, Double>> tt, HashMap<String, HashMap<Integer, Double>> ss){
+        try {
+            if (tt.keySet().size() != ss.keySet().size()){
+                throw new RuntimeException("Different cluster size between simulated solution and analytical one");
+            }else{
+                double maxSim = 0.0, maxAn = 0.0;
+                String personMaxSim = null, personMaxAn = null;
+                //finding the "last key" for simulated solution
+                LocalDateTime nearestLdt = LocalDateTime.of(1980, 1, 1,0,0);
+                for(LocalDateTime ldt : tt.get(tt.keySet().toArray()[0]).keySet()){
+                    if (ldt.isAfter(nearestLdt))
+                        nearestLdt = ldt;
+                }
+                int maxIndex = 0;
+                for(Integer i : ss.get(ss.keySet().toArray()[0]).keySet()){
+                    if(i > maxIndex){
+                        maxIndex = i;
+                    }
+                }
+                for(String member : tt.keySet()){
+                    double tmp_sim = tt.get(member).get(nearestLdt);
+                    if(tmp_sim > maxSim){
+                        maxSim = tmp_sim;
+                        personMaxSim = member;
+                    }
+                    double tmp_an = ss.get(member).get(maxIndex);
+                    if(tmp_an > maxAn){
+                        maxAn = tmp_an;
+                        personMaxAn = member;
+                    }
+                }
+                System.out.println("According to the simulation, " + personMaxAn + " should be tested.\nAccording to the numerical analysis, " + personMaxSim + " should be tested.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        System.out.println();
     }
 }
