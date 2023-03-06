@@ -128,15 +128,15 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 5000;
+    final int maxReps = 50000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 6;
-    int max_nEnvironment = 3;
-    int min_nEnvironment = 2;
+    int nContact = 0;
+    int max_nEnvironment = 6;
+    int min_nEnvironment = 4;
     int max_nSymptoms = 0;
     int min_nSymptoms = 0;
     int max_nCovTests = 2;
@@ -532,6 +532,7 @@ public class Simulator extends UIController {
             if(DEBUG) {
                 timer.start();
             }
+            System.out.println("Size: "+(events.size() + tests.size() + symptoms.size()));
         for(int rep = 0; rep<maxReps; rep++){
                 events = new ArrayList<>(eventsCopy);
                 tests = new ArrayList<>(testCopy);
@@ -741,11 +742,14 @@ public class Simulator extends UIController {
             HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
             HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
             HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
+            int size = 0;
             for(String member : subjects_String){
                 envObs.put(member, observationGateway.getEnvironmentObservations(member));
                 testObs.put(member, observationGateway.getTestObservations(member, t0));
                 sympObs.put(member, observationGateway.getRelevantSymptomsObservations(member, t0));
+                size+=envObs.get(member).size() + testObs.get(member).size()+sympObs.get(member).size() + clusterSubjectsMet.get(member).size();
             }
+            System.out.println("Size: "+size);
             System.out.println("---");
             if(DEBUG){
                 timer.stop();
@@ -784,13 +788,13 @@ public class Simulator extends UIController {
             int startingIndex = considerEnvironment?0:1;
             for(String member : subjects_String){
                 HashMap<Integer, Double> sol_tmp = new HashMap<>();
-            IntStream.range(0, samples).parallel().forEach(i -> {
+            for(int i = 0; i < samples; i+=steps){
                         double value = 0.0;
                         for (int iteration = startingIndex; iteration < pns.size(); iteration++) {
                             value += (1-value) * pns.get(iteration).get(member).get(i);
                         }
                         sol_tmp.put(i, value);
-                    });
+                    }
                 solutions.put(member, sol_tmp);
             }
             plot2(meanTrees, solutions);
