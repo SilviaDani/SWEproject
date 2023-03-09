@@ -128,7 +128,7 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 50000;
+    final int maxReps = 50;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
@@ -150,6 +150,13 @@ public class Simulator extends UIController {
     ArrayList<String[]> outputStrings_confInt;
     ArrayList<String[]> outputStrings_RMSE;
     Stopwatch timer;
+    Random r;
+
+    WeibullDistribution wCont = new WeibullDistribution(3.5, (double)14);
+    WeibullDistribution wSymp = new WeibullDistribution(2, 11);
+    ExponentialDistribution eNotSymp = new ExponentialDistribution(25);
+    ExponentialDistribution eSymp = new ExponentialDistribution(10);
+    long seed = 111;
 
 
 
@@ -168,6 +175,12 @@ public class Simulator extends UIController {
             outputStrings_confInt.add(new String[]{"Persona", "Timestamp", "Limite inferiore", "Limite superiore"});
             outputStrings_RMSE.add(new String[]{"Persona", "Radice dell'errore quadratico medio"});
         }
+        r = new Random();
+        r.setSeed(seed);
+        wCont.reseedRandomGenerator(seed);
+        wSymp.reseedRandomGenerator(seed);
+        eNotSymp.reseedRandomGenerator(seed);
+        eSymp.reseedRandomGenerator(seed);
     }
 
     void plot(HashMap<String, TreeMap<LocalDateTime, Double>> tt) throws PythonExecutionException, IOException {
@@ -377,7 +390,6 @@ public class Simulator extends UIController {
         if(DEBUG){
             timer.start();
             }
-        Random r = new Random();
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
         //creazione dei soggetti
         ArrayList<Subject> subjects = new ArrayList<>();
@@ -812,7 +824,6 @@ public class Simulator extends UIController {
             if(DEBUG){
                 timer.start();
             }
-            Random r = new Random();
             LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
             //creazione dei soggetti
             ArrayList<Subject> subjects = new ArrayList<>();
@@ -1066,7 +1077,7 @@ public class Simulator extends UIController {
     private ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent){
         ArrayList<LocalDateTime> dates = new ArrayList<>();
         for (int i=0; i<(nEvent*2); i++){
-            Random r = new Random();
+            //Random r = new Random();
             int hours = r.nextInt(143-0)+1;
             LocalDateTime date = t0.plusHours(hours);
             dates.add(date);
@@ -1076,7 +1087,7 @@ public class Simulator extends UIController {
     }
 
     private String[] generateRiskLevels(int nEvent){
-        Random r = new Random();
+       // Random r = new Random();
         String[] risk_levels = new String[nEvent];
         for (int i=0; i<nEvent; i++){
             String string_risk_level = "";
@@ -1093,7 +1104,7 @@ public class Simulator extends UIController {
     }
 
     private Boolean[] generateMasks(int nEvent){
-        Random r = new Random();
+       // Random r = new Random();
         Boolean[] masks = new Boolean[nEvent];
         for (int i=0; i<nEvent; i++) {
             int number = r.nextInt();
@@ -1103,8 +1114,7 @@ public class Simulator extends UIController {
     }
 
     private LocalDateTime getSampleCC(LocalDateTime date, int min, int max) {
-       WeibullDistribution w = new WeibullDistribution(3.5, (double)14);
-        double offset = w.sample() + min;
+        double offset = wCont.sample() + min;
         if(offset>max)
             offset = max;/*
         NormalDistribution n = new NormalDistribution(24, 3.5);
@@ -1117,28 +1127,21 @@ public class Simulator extends UIController {
     }
 
     private LocalDateTime getSampleCH(LocalDateTime date) {
-        Random r = new Random();
+      //  Random r = new Random();
         ExponentialDistribution e = new ExponentialDistribution(25); //1/25 = 0.04
         int randomHours = (int) Math.floor(e.sample());
         return date.plusHours(randomHours);
     }
 
     private LocalDateTime getSampleCH(LocalDateTime date, Subject subject) {
-        Random r = new Random();
-        int mean;
+       // Random r = new Random();
         int randomHours;
         if(subject.isSymptomatic()) {
-            mean = 10; //1/10 = 0.1
-            WeibullDistribution w = new WeibullDistribution(2, 11);
-
-            ExponentialDistribution e = new ExponentialDistribution(mean);
             //System.out.println("now is " + date + " lower key :" + subject.getTimestamps().lowerKey(date));
             double alreadyElapsedTime = ChronoUnit.MINUTES.between(subject.getTimestamps().lowerKey(date), date)/60.0;
-            randomHours = (int)Math.floor(w.sample() + 24 - alreadyElapsedTime + e.sample());
+            randomHours = (int)Math.floor(wSymp.sample() + 24 - alreadyElapsedTime + eSymp.sample());
         }else{
-            mean = 25;//1/25 = 0.04
-            ExponentialDistribution e = new ExponentialDistribution(mean);
-            randomHours = (int) Math.floor(e.sample());
+            randomHours = (int) Math.floor(eNotSymp.sample());
         }
         return date.plusHours(randomHours);
     }
@@ -1204,7 +1207,7 @@ public class Simulator extends UIController {
             if (tt.keySet().size() != ss.keySet().size()){
                 throw new RuntimeException("Different cluster size between simulated solution and analytical one");
             }else{
-                double maxSim = 0.0, maxAn = 0.0;
+                double maxSim = -1.0, maxAn = -1.0;
                 String personMaxSim = null, personMaxAn = null;
                 //finding the "last key" for simulated solution
                 LocalDateTime nearestLdt = LocalDateTime.of(1980, 1, 1,0,0);
