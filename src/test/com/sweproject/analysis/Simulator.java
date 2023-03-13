@@ -128,19 +128,19 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 50;
+    final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
     int nContact = 0;
-    int max_nEnvironment = 6;
+    int max_nEnvironment = 5;
     int min_nEnvironment = 4;
     int max_nSymptoms = 0;
     int min_nSymptoms = 0;
-    int max_nCovTests = 2;
-    int min_nCovTests = 2;
+    int max_nCovTests = 0;
+    int min_nCovTests = 0;
     File execTimes;
     File confInt;
     File RMSE;
@@ -595,7 +595,7 @@ public class Simulator extends UIController {
                             cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
                             cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                           //fixme System.out.println(cumulativeRiskLevel + " prima");
+                           //fixme System.out.println(cumulativeRiskLevel + " prima env");
                             if (subject.hasCovidLikeSymptoms()){
                                 cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                             }
@@ -603,7 +603,7 @@ public class Simulator extends UIController {
                                 cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                             }
-                           //fixme System.out.println(cumulativeRiskLevel + " dopo");
+                            //fixme System.out.println(cumulativeRiskLevel + " dopo env");
                             risk_level = (float) cumulativeRiskLevel;
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -626,7 +626,7 @@ public class Simulator extends UIController {
                             int sympCount = 0, testCount = 0;
                             for(Subject subject : ss){ //update risk level
                                 if(subject.getCurrentState()==0){
-                                    if (tests.size() > 0) {
+                                    /*if (tests.size() > 0) {
                                         for (int test = 0; test < tests.size(); test++) {
                                             if(tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
                                                 LocalDateTime test_time = tests.get(test).getStartDate();
@@ -653,24 +653,25 @@ public class Simulator extends UIController {
                                                 }
                                             }
                                         }
-                                    }
+                                    }*/
                                 }
                             }
+
                             double cumulativeRiskLevel3 = risk_level / (sympCount + testCount + 1);
                             double [] cumulativeRiskLevel2;
                             cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                            risk_level = (float) (cumulativeRiskLevel1 * cumulativeRiskLevel3);
+                            //risk_level = (float) (cumulativeRiskLevel1 * cumulativeRiskLevel3);
                             for(Subject subject : ss){
                                 double cumulativeRiskLevel = risk_level;
                                 //fixme System.out.println(cumulativeRiskLevel + " prima");
-                                if (subject.hasCovidLikeSymptoms()){
+                               /* if (subject.hasCovidLikeSymptoms()){
                                     cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                                 }
                                 else{
                                     cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                                     //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
-                                }
+                                }*/
                                 //fixme System.out.println(cumulativeRiskLevel + " dopo");
                                 if(d < cumulativeRiskLevel){
                                     LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -680,7 +681,8 @@ public class Simulator extends UIController {
                                 }
                             }
                         }
-                    }else if(event instanceof ChangeStateEvent){
+                    }
+                    else if(event instanceof ChangeStateEvent){
                         Subject subject = event.getSubject().get(0);
                         switch (subject.getCurrentState()) {
                             case 1 -> {

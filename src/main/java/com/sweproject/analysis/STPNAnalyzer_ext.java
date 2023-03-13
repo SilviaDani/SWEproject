@@ -550,6 +550,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 }
             }
 
+        }else{
+            System.out.println("Non ci sono contatti con altre persone interne al cluster");
         }
         return output;
     }

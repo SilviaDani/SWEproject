@@ -1,5 +1,6 @@
 package com.sweproject.model;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.WeibullDistribution;
 
 import java.time.LocalDateTime;
@@ -30,13 +31,15 @@ public class CovidTest extends Type {
         if(correctionValueForAntigen == 0 || correctionValueForMolecular == 0) {
             WeibullDistribution wMol = new WeibullDistribution(1.7, 8.0);
             WeibullDistribution wAnt = new WeibullDistribution(2.0, 4.0);
+            NormalDistribution n1 = new NormalDistribution(72.85, 0.45);
+            NormalDistribution n2 = new NormalDistribution(84.85, 0.45);
             double increment  = 0.1;
             double upperBound = 10;
             double x = 0;
             double maxMol = 0, maxAnt = 0;
             while(x<upperBound){
-                double densityMol = wMol.density(x);
-                double densityAnt = wAnt.density(x);
+                double densityMol = n1.density(x);
+                double densityAnt = n2.density(x);
                 if(densityMol > maxMol)
                     maxMol = densityMol;
                 if(densityAnt > maxAnt){
@@ -76,16 +79,21 @@ public class CovidTest extends Type {
 
     public double isInfected(LocalDateTime contactDate, LocalDateTime testDate) throws Exception {
         WeibullDistribution w;
+        NormalDistribution n;
         Random r = new Random();
         LocalDateTime tWhereTestStartsWorking;
         double correctionValue = 0;
         if(this.type == CovidTestType.MOLECULAR){
-            w = new WeibullDistribution(1.7, 8.0);
-            tWhereTestStartsWorking = LocalDateTime.from(contactDate).plusHours((long)(48 + r.nextFloat() * 48)); //in media dopo 5 giorni compaiono i sintomi, il test diventa rilevante dopo 2-4 giorni che è avvenuto il contagio
+            /*w = new WeibullDistribution(1.7, 8.0);
+            tWhereTestStartsWorking = LocalDateTime.from(contactDate).plusHours((long)(48 + r.nextFloat() * 48)); //in media dopo 5 giorni compaiono i sintomi, il test diventa rilevante dopo 2-4 giorni che è avvenuto il contagio*/
+            n = new NormalDistribution(72.85, 0.45);
+            tWhereTestStartsWorking = LocalDateTime.from((contactDate).plusHours((long)n.sample()));
             correctionValue = correctionValueForMolecular;
         }else if(this.type == CovidTestType.ANTIGEN){
-            w = new WeibullDistribution(2, 4);
-            tWhereTestStartsWorking = LocalDateTime.from(contactDate).plusHours((long)(60 + r.nextFloat() * 48)); //il test antigenico diventa rilevante poco dopo
+            /*w = new WeibullDistribution(2, 4);
+            tWhereTestStartsWorking = LocalDateTime.from(contactDate).plusHours((long)(60 + r.nextFloat() * 48)); //il test antigenico diventa rilevante poco dopo*/
+            n = new NormalDistribution(84.85, 0.45);
+            tWhereTestStartsWorking = LocalDateTime.from((contactDate).plusHours((long)n.sample()));
             correctionValue = correctionValueForAntigen;
         }else{
             throw new Exception("Covid test type not implemented");
@@ -95,10 +103,10 @@ public class CovidTest extends Type {
         double testEvidence = 1;
         if(delta>0){
             // senza falsi positivi e negativi
-            if(this.isPositive)
-                testEvidence = w.density(delta) * correctionValue * this.sensitivity;
+           if(this.isPositive)
+                testEvidence = n.density(delta) * correctionValue * this.sensitivity;
             else
-                testEvidence = 1 - w.density(delta) * correctionValue * this.specificity;
+                testEvidence = 1 - n.density(delta) * correctionValue * this.specificity;
         }
         return testEvidence;
     }
