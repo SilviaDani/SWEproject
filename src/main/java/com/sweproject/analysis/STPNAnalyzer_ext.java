@@ -446,7 +446,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         LocalDateTime endInterval = LocalDateTime.now();
         LocalDateTime initialTime = endInterval.minusDays(6);
         boolean showsSymptoms = false;
-
         for (int contact = 0; contact < clusterSubjectsMet.size(); contact++) {
             showsSymptoms = false;
             LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
@@ -522,6 +521,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             int j = 0; //n. person met during contact counter
             int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
             for (int m = 0; m < s.getColumnStates().size(); m++) {
+                int contactNumber = 0;
                 while(i < clusterSubjectsMet.size()) { //itera sugli eventi
                     j = 0;
                     String[] meeting_subjects = new String[clusterSubjectsMet.size()];
@@ -536,20 +536,23 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
                     for (int k = 0; k < j; k++) {
                         double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
-                        if (tmp > maxRisk)
+                        if (tmp > maxRisk) {
                             maxRisk = tmp;
+                            System.out.println("risk increased!");
+                        }
                     }
                     double step = s.getStep().doubleValue();
                     int index = 0;
                     for (int jj = delta; jj < samples; jj += step){
-                        double y = s.getSolution()[index][r][m] * maxRisk;
+                        double y = s.getSolution()[index][r][m] * maxRisk * (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
                         double oldY = output.get(jj);
                         output.put(jj, (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
                         index++;
                     }
+                    contactNumber=i;
                 }
             }
-
+        System.out.println("STPNAnalyzer_ext, 552");
         }else{
             System.out.println("Non ci sono contatti con altre persone interne al cluster");
         }

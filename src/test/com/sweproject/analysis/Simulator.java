@@ -135,10 +135,10 @@ public class Simulator extends UIController {
     String PYTHON_PATH;
     static final int np = 4;
     int nContact = 0;
-    int max_nEnvironment = 5;
-    int min_nEnvironment = 4;
-    int max_nSymptoms = 0;
-    int min_nSymptoms = 0;
+    int max_nEnvironment = 4;
+    int min_nEnvironment = 3;
+    int max_nSymptoms = 1;
+    int min_nSymptoms = 1;
     int max_nCovTests = 0;
     int min_nCovTests = 0;
     File execTimes;
@@ -536,7 +536,7 @@ public class Simulator extends UIController {
             HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
             for(Subject subject : subjects){
                 TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
-                for(int offset = 0; offset<144; offset++){
+                for(int offset = 0; offset<samples; offset++){
                     tmpTree.put(LocalDateTime.from(t0).plusHours(offset), 0.0);
                 }
                 meanTrees.put(subject.getName(), tmpTree);
@@ -595,7 +595,7 @@ public class Simulator extends UIController {
                             cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
                             cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                           //fixme System.out.println(cumulativeRiskLevel + " prima env");
+                           //fixme System.out.println(cumulativeRiskLevel + " prima");
                             if (subject.hasCovidLikeSymptoms()){
                                 cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                             }
@@ -603,7 +603,7 @@ public class Simulator extends UIController {
                                 cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                             }
-                            //fixme System.out.println(cumulativeRiskLevel + " dopo env");
+                           //fixme System.out.println(cumulativeRiskLevel + " dopo");
                             risk_level = (float) cumulativeRiskLevel;
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -656,7 +656,6 @@ public class Simulator extends UIController {
                                     }*/
                                 }
                             }
-
                             double cumulativeRiskLevel3 = risk_level / (sympCount + testCount + 1);
                             double [] cumulativeRiskLevel2;
                             cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
