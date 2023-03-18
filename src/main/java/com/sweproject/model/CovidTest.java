@@ -10,8 +10,8 @@ import java.util.Random;
 public class CovidTest extends Type {
     private CovidTestType type;
     private boolean isPositive = false;
-    private float sensitivity = 0f;
-    private float specificity = 0f;
+    private double sensitivity = 0;
+    private double specificity = 0;
     static double correctionValueForAntigen = 0;
     static double correctionValueForMolecular = 0;
 
@@ -19,12 +19,12 @@ public class CovidTest extends Type {
         this.type = type;
         Random r = new Random();
         if (type == CovidTestType.ANTIGEN) {
-            sensitivity = 0.70f + r.nextFloat()*(0.86f - 0.70f); //70-86 % dichiarato dal produttore, riferito ai test di fine 2020. I test di ultima generazione hanno risultati sovrapponibili a quelli dei test molecolari
-            specificity = 0.95f + r.nextFloat()*(0.97f-0.95f); //95-97% dichiarato dal produttore
+            sensitivity = 0.70 + r.nextFloat()*(0.86 - 0.70); //70-86 % dichiarato dal produttore, riferito ai test di fine 2020. I test di ultima generazione hanno risultati sovrapponibili a quelli dei test molecolari
+            specificity = 0.95 + r.nextFloat()*(0.97-0.95); //95-97% dichiarato dal produttore
         }
         else if (type == CovidTestType.MOLECULAR) {
-            sensitivity = 0.95f;
-            specificity = 0.98f;
+            sensitivity = 0.95;
+            specificity = 0.98;
         }
 
         //find correction values
@@ -34,8 +34,8 @@ public class CovidTest extends Type {
             NormalDistribution n1 = new NormalDistribution(72.85, 0.45);
             NormalDistribution n2 = new NormalDistribution(84.85, 0.45);
             double increment  = 0.1;
-            double upperBound = 10;
-            double x = 0;
+            double upperBound = 90;
+            double x = 60;
             double maxMol = 0, maxAnt = 0;
             while(x<upperBound){
                 double densityMol = n1.density(x);
@@ -57,7 +57,7 @@ public class CovidTest extends Type {
         this(type);
         this.isPositive = isPositive;
     }
-    public float getSensitivity(){
+    public double getSensitivity(){
         return sensitivity;
     }
     public boolean getPositivity(){

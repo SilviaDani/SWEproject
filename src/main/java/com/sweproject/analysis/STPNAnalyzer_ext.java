@@ -166,7 +166,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
                         if (contact_time.isBefore(test_time)){
                             CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
-                            System.out.println("Covid CCC" + covidTest.getName());
+                            System.out.println("Covid CCC " + covidTest.getName());
                             double testEvidence = covidTest.isInfected(contact_time, test_time);
                             System.out.println(testEvidence);
                             cumulativeRiskLevel+=testEvidence;
