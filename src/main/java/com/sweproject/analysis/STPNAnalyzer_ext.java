@@ -451,12 +451,14 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
             float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
             double cumulativeRiskLevel = risk_level;
+            int sympCount = 0, testCount = 0;
             if (symptomsArrayList.size() > 0) {
                 for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                     LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                     if (contact_time.isBefore(symptom_date)) {
                         Symptoms symptoms = new Symptoms();
                         cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
+                        sympCount++;
                         showsSymptoms = true;
                     }
                 }
@@ -469,13 +471,14 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         System.out.println("Covid CCC" + covidTest.getName());
                         double testEvidence = covidTest.isInfected(contact_time, test_time);
                         System.out.println(testEvidence);
+                        testCount++;
                         cumulativeRiskLevel += testEvidence;
                     }
                 }
             }
-            double cumulativeRiskLevel3 = (cumulativeRiskLevel) / (symptomsArrayList.size() + testArrayList.size() + 1);
+            double cumulativeRiskLevel3 = (cumulativeRiskLevel) / (sympCount + testCount + 1);
             double [] cumulativeRiskLevel2;
-            cumulativeRiskLevel2= updateRiskLevel(contact_time);
+            cumulativeRiskLevel2 = updateRiskLevel(contact_time);
             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
             cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
             System.out.println(cumulativeRiskLevel + " prima");
@@ -544,6 +547,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     double step = s.getStep().doubleValue();
                     int index = 0;
                     for (int jj = delta; jj < samples; jj += step){
+                        //FIXME y DECRESCE SEMPRE forse meglio (s.get... + maxrisk)/hop * risklevel se si cambia va cambiato ovunque
                         double y = s.getSolution()[index][r][m] * maxRisk * (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
                         double oldY = output.get(jj);
                         output.put(jj, (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
@@ -630,7 +634,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return cumulativeRiskLevel2; //FIXME il rischio è altissimo se una persona mostra i sintomi. Come likelihood che indica quale soggetto è più a rischio può andare bene però è un po'brutto quando si plotta il grafico.
+        return cumulativeRiskLevel2;
     }
 
     public float addTimeRelevance(float elapsedTime, float risk){
