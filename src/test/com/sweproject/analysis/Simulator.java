@@ -128,13 +128,14 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 10000;
+    final int maxReps = 5000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 5;
+    int min_nContact = 5;
+    int max_nContact = 7;
     int max_nEnvironment = 4;
     int min_nEnvironment = 3;
     int max_nSymptoms = 3;
@@ -410,11 +411,18 @@ public class Simulator extends UIController {
             }
         }
 
+        //creazione degli eventi di contatto
+        int[] remainingContacts = new int[np];
+        int remainingContactsCounter = 0;
+        for(int p = 0; p < np; p++){
+            remainingContacts[p] = r.nextInt(max_nContact - min_nContact) + min_nContact;
+            remainingContactsCounter += remainingContacts[p];
+        }
         String[] nc_riskLevels;
         Boolean[] nc_masks;
-        LocalDateTime[] nc_startDates = new LocalDateTime[nContact];
-        LocalDateTime[] nc_endDates = new LocalDateTime[nContact];
-        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nContact));
+        LocalDateTime[] nc_startDates = new LocalDateTime[(int) (max_nContact * Math.floor(np/2.0))];
+        LocalDateTime[] nc_endDates = new LocalDateTime[(int) (max_nContact * Math.floor(np/2.0))];
+        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, (int) (max_nContact * Math.floor(np/2.0))));
         int start = 0;
         int end = 0;
         for (int date = 0; date < dates.size(); date++) {
@@ -426,23 +434,36 @@ public class Simulator extends UIController {
                 end++;
             }
         }
-        nc_riskLevels = generateRiskLevels(nContact);
-        nc_masks = generateMasks(nContact);
+        nc_riskLevels = generateRiskLevels((int) (max_nContact * Math.floor(np/2.0)));
+        nc_masks = generateMasks((int) (max_nContact * Math.floor(np/2.0)));
 
-        for(int c = 0; c < nContact; c++){
+        int c = 0; //c for contact
+        while(remainingContactsCounter > 0){
             ArrayList<String> s_String = new ArrayList<>();
-            ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
             ArrayList<Subject> partecipatingSubjects = new ArrayList<>();
-            Collections.shuffle(subjects_copy);
-            int upperBound = subjects_copy.size() > 2 ? r.nextInt(subjects_copy.size() - 2) + 2 : 2;
-            for(int i = 0; i<upperBound; i++) {
-                s_String.add(subjects_copy.get(i).getName());
-                partecipatingSubjects.add(subjects_copy.get(i));
+            ArrayList<Integer> availableSubjectsIndices = new ArrayList<>();
+            for(int p = 0; p < np; p++){
+                if(remainingContacts[p] > 0){
+                    availableSubjectsIndices.add(p);
+                }
+            }
+            if(availableSubjectsIndices.size() == 1){
+                remainingContactsCounter = 0;
+                continue;
+            }
+            //get how many people meet in this contact
+            int numberOfPeopleInContact = r.nextInt(availableSubjectsIndices.size()>2? availableSubjectsIndices.size() - 2 : 1) + 2;//xxx controllare se è giusto, non lo so
+            Collections.shuffle(availableSubjectsIndices);
+            for(int i = 0; i<numberOfPeopleInContact; i++){
+                s_String.add(subjects.get(availableSubjectsIndices.get(i)).getName());
+                partecipatingSubjects.add(subjects.get(availableSubjectsIndices.get(i)));
+                remainingContacts[availableSubjectsIndices.get(i)]--;
+                remainingContactsCounter--;
             }
             Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
-
             events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
             observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
+            c++;
         }
         Collections.sort(events);
         if(DEBUG){
