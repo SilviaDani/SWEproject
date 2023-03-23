@@ -134,8 +134,8 @@ public class Simulator extends UIController {
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int min_nContact = 5;
-    int max_nContact = 7;
+    int min_nContact = 2;
+    int max_nContact = 3;
     int max_nEnvironment = 4;
     int min_nEnvironment = 3;
     int max_nSymptoms = 3;
@@ -299,6 +299,11 @@ public class Simulator extends UIController {
             for(int rep = 0; rep<maxReps; rep++){
                runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees);
             }
+            int i = 0;
+            for(Event e : events){
+                System.out.println(i + " " + e.getType() + " " + e.getStartDate());
+                i++;
+            }
 
             if(DEBUG){
                 timer.stop();
@@ -418,11 +423,13 @@ public class Simulator extends UIController {
             remainingContacts[p] = r.nextInt(max_nContact - min_nContact) + min_nContact;
             remainingContactsCounter += remainingContacts[p];
         }
-        String[] nc_riskLevels;
+        /*
+       String[] nc_riskLevels;
         Boolean[] nc_masks;
-        LocalDateTime[] nc_startDates = new LocalDateTime[(int) (max_nContact * Math.floor(np/2.0))];
-        LocalDateTime[] nc_endDates = new LocalDateTime[(int) (max_nContact * Math.floor(np/2.0))];
-        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, (int) (max_nContact * Math.floor(np/2.0))));
+        int nMaxContacts = (int) (max_nContact * Math.floor(np/2.0));
+        LocalDateTime[] nc_startDates = new LocalDateTime[nMaxContacts];
+        LocalDateTime[] nc_endDates = new LocalDateTime[nMaxContacts];
+        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nMaxContacts));
         int start = 0;
         int end = 0;
         for (int date = 0; date < dates.size(); date++) {
@@ -434,8 +441,8 @@ public class Simulator extends UIController {
                 end++;
             }
         }
-        nc_riskLevels = generateRiskLevels((int) (max_nContact * Math.floor(np/2.0)));
-        nc_masks = generateMasks((int) (max_nContact * Math.floor(np/2.0)));
+        nc_riskLevels = generateRiskLevels(nMaxContacts);
+        nc_masks = generateMasks(nMaxContacts);
 
         int c = 0; //c for contact
         while(remainingContactsCounter > 0){
@@ -464,8 +471,43 @@ public class Simulator extends UIController {
             events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
             observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
             c++;
+        }*/
+        String[] nc_riskLevels;
+        Boolean[] nc_masks;
+        int nContact = 5;
+        LocalDateTime[] nc_startDates = new LocalDateTime[nContact];
+        LocalDateTime[] nc_endDates = new LocalDateTime[nContact];
+        ArrayList<LocalDateTime> dates = new ArrayList<>(generateDates(t0, nContact));
+        int start = 0;
+        int end = 0;
+        for (int date = 0; date < dates.size(); date++) {
+            if (date % 2 == 0) {
+                nc_startDates[start] = dates.get(date);
+                start++;
+            } else {
+                nc_endDates[end] = dates.get(date);
+                end++;
+            }
+        }
+        nc_riskLevels = generateRiskLevels(nContact);
+        nc_masks = generateMasks(nContact);
+        for(int c = 0; c < nContact; c++){
+            ArrayList<String> s_String = new ArrayList<>();
+            ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
+            ArrayList<Subject> partecipatingSubjects = new ArrayList<>();
+            Collections.shuffle(subjects_copy);
+            int upperBound = subjects_copy.size() > 2 ? r.nextInt(subjects_copy.size() - 2) + 2 : 2;
+            for(int i = 0; i<upperBound; i++) {
+                s_String.add(subjects_copy.get(i).getName());
+                partecipatingSubjects.add(subjects_copy.get(i));
+            }
+            Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
+
+            events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
+            observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
         }
         Collections.sort(events);
+
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per creare le osservazioni e caricarle sul database", String.valueOf(timer)});
