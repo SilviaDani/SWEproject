@@ -128,19 +128,19 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
     int nContact = 20; //this number should be high (?)
-    int max_nEnvironment = 4;
-    int min_nEnvironment = 3;
-    int max_nSymptoms = 3;
-    int min_nSymptoms = 2;
+    int max_nEnvironment = 6;
+    int min_nEnvironment = 5;
+    int max_nSymptoms = 6;
+    int min_nSymptoms = 6;
     int max_nCovTests = 3;
-    int min_nCovTests = 2;
+    int min_nCovTests = 3;
     File execTimes;
     File confInt;
     File RMSE;
@@ -539,9 +539,9 @@ public class Simulator extends UIController {
                     if (symptoms.size() > 0) {
                         for (int symptom = 0; symptom < symptoms.size(); symptom++) {
                             if (symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
-                                subject.setShowsCovidLikeSymptoms(true);
                                 LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                 if (contact_time.isBefore(symptom_time)) {
+                                    subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
                                     Symptoms covidSymptom = new Symptoms();
                                     double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
                                     risk_level += sympEvidence;
@@ -558,6 +558,7 @@ public class Simulator extends UIController {
                     cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
                     if (subject.hasCovidLikeSymptoms()){
                         cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                        subject.setShowsCovidLikeSymptoms(false); //fixme hack non sarebbe più opportuno inserire l'evento "guarigione"???
                     }
                     else{
                         cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
