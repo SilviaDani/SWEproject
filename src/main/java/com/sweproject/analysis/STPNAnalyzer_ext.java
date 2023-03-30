@@ -6,6 +6,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.sweproject.model.CovidTest;
 import com.sweproject.model.CovidTestType;
+import com.sweproject.model.Subject;
 import com.sweproject.model.Symptoms;
 import javafx.scene.chart.XYChart;
 import org.oristool.models.stpn.TransientSolution;
@@ -420,7 +421,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
 */
 
     public XYChart.Series makeClusterModelForApp(LocalDateTime pastStartTime, HashMap<String, XYChart.Series<String,Float>> subjects_ss, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
-                                                 ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception{
+                                                 ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList, String nameOfPersonAskingForAnalysis) throws Exception{
         HashMap<String, HashMap<Integer, Double>> subjects_solutions = new HashMap<>();
         for(String s : subjects_ss.keySet()){
             HashMap<Integer, Double> sol = new HashMap<>();
@@ -430,11 +431,11 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             }
             subjects_solutions.put(s, sol);
         }
-        var model = makeClusterModel(pastStartTime, subjects_solutions, clusterSubjectsMet, testArrayList, symptomsArrayList);
+        var model = makeClusterModel(pastStartTime, subjects_solutions, clusterSubjectsMet, testArrayList, symptomsArrayList, nameOfPersonAskingForAnalysis);
         return adaptForApp(model);
     }
     public HashMap<Integer, Double> makeClusterModel(LocalDateTime pastStartTime, HashMap<String, HashMap<Integer, Double>> subjects_solutions, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
-                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
+                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList, String nameOfPersonAskingForAnalysis) throws Exception {
 
         for (int testIndex = 0; testIndex < testArrayList.size(); testIndex++) {
             String rawType = (String) testArrayList.get(testIndex).get("type");
@@ -442,12 +443,19 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR") ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
-
         LocalDateTime endInterval = LocalDateTime.now();
         LocalDateTime initialTime = endInterval.minusDays(6);
         boolean showsSymptoms = false;
+        HashMap<String, Boolean> symptomaticSubjects = new HashMap<>();
+        for(String subject : subjects_solutions.keySet()){
+            symptomaticSubjects.put(subject, false);
+        }
+        double factorDueToSymptoms = 1.0;
         for (int contact = 0; contact < clusterSubjectsMet.size(); contact++) {
-            showsSymptoms = false;
+            for(String subject : subjects_solutions.keySet()){
+                symptomaticSubjects.replace(subject, false);
+            }
+            clusterSubjectsMet.get(contact).put("symptomaticSubjects", new HashMap<>(symptomaticSubjects));
             LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
             float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
             double cumulativeRiskLevel = risk_level;
@@ -459,7 +467,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         Symptoms symptoms = new Symptoms();
                         cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
                         sympCount++;
-                        showsSymptoms = true;
+                        symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("fiscalCode"), true);
                     }
                 }
             }
@@ -481,15 +489,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             cumulativeRiskLevel2 = updateRiskLevel(contact_time);
             double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
             cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-            System.out.println(cumulativeRiskLevel + " prima");
-            if (showsSymptoms){
-                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-            }
-            else{
-                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
-            }
-            System.out.println(cumulativeRiskLevel + " dopo");
+            //System.out.println(cumulativeRiskLevel + " prima");
+            clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
+            factorDueToSymptoms = cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1];
+            //System.out.println(cumulativeRiskLevel + " dopo");
             clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
         }
 
@@ -549,6 +552,12 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     for (int jj = delta; jj < samples; jj += step){
                         //FIXME y DECRESCE SEMPRE forse meglio (s.get... + maxrisk)/hop * risklevel se si cambia va cambiato ovunque
                         double y = s.getSolution()[index][r][m] * maxRisk * (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
+                        if(((HashMap<String, Boolean>)clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)){
+                            y /= factorDueToSymptoms;
+                        }else{
+                            y /= (1 - factorDueToSymptoms);
+                            //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                        }
                         double oldY = output.get(jj);
                         output.put(jj, (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
                         index++;

@@ -78,7 +78,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
                     }
                 }else{
                     try {
-                        pits.put(member, stpnAnalyzer_ext.makeClusterModelForApp(start_time_analysis, pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        pits.put(member, stpnAnalyzer_ext.makeClusterModelForApp(start_time_analysis, pns.get(nIteration-1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member));
                         //pits.put(member, stpnAnalyzer_ext.makeClusterModel(pns.get(nIteration-1), clusterSubjectsMet.get(member)));
                     } catch (Exception e) {
                         System.out.println("EXC");

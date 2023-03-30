@@ -128,17 +128,17 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 10000;
+    final int maxReps = 1000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 20; //this number should be high (?)
-    int max_nEnvironment = 6;
-    int min_nEnvironment = 5;
-    int max_nSymptoms = 6;
-    int min_nSymptoms = 6;
+    int nContact = 40; //this number should be high (?)
+    int max_nEnvironment = 4;
+    int min_nEnvironment = 3;
+    int max_nSymptoms = 1;
+    int min_nSymptoms = 1;
     int max_nCovTests = 3;
     int min_nCovTests = 3;
     File execTimes;
@@ -156,7 +156,7 @@ public class Simulator extends UIController {
     WeibullDistribution wSymp = new WeibullDistribution(2, 11);
     ExponentialDistribution eNotSymp = new ExponentialDistribution(25);
     ExponentialDistribution eSymp = new ExponentialDistribution(10);
-    long seed = 111;
+    long seed = 112;
 
 
 
@@ -519,6 +519,7 @@ public class Simulator extends UIController {
             LocalDateTime contact_time = event.getStartDate();
             if(event.getType() instanceof Environment){
                 Subject subject = event.getSubject().get(0);
+                subject.setShowsCovidLikeSymptoms(false);
                 if(subject.getCurrentState() == 0){
                     float d = r.nextFloat();
                     float risk_level = ((Environment) event.getType()).getRiskLevel();
@@ -558,7 +559,6 @@ public class Simulator extends UIController {
                     cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
                     if (subject.hasCovidLikeSymptoms()){
                         cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                        subject.setShowsCovidLikeSymptoms(false); //fixme hack non sarebbe più opportuno inserire l'evento "guarigione"???
                     }
                     else{
                         cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
@@ -597,6 +597,7 @@ public class Simulator extends UIController {
                         double cumulativeRiskLevel = risk_level;
                         int sympCount = 0, testCount = 0;
                         for(Subject subject : ss){ //update risk level
+                            subject.setShowsCovidLikeSymptoms(false);
                             if(subject.getCurrentState()==0){
                                 boolean showsSymptoms = false;
                                 if (tests.size() > 0) {
@@ -615,9 +616,9 @@ public class Simulator extends UIController {
                                 if (symptoms.size() > 0) {
                                     for (int symptom = 0; symptom < symptoms.size(); symptom++) {
                                         if(symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
-                                            subject.setShowsCovidLikeSymptoms(true);
                                             LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                                             if (contact_time.isBefore(symptom_time)) {
+                                                subject.setShowsCovidLikeSymptoms(true);
                                                 Symptoms covidSymptom = new Symptoms();
                                                 cumulativeRiskLevel += covidSymptom.updateEvidence(contact_time, symptom_time);
                                                 sympCount++;
@@ -717,7 +718,7 @@ public class Simulator extends UIController {
                     }
                 }else {
                     try {
-                        pits.put(member, stpnAnalyzer.makeClusterModel(t0, pns.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member)));
+                        pits.put(member, stpnAnalyzer.makeClusterModel(t0, pns.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member));
                     } catch (Exception e){
                         e.printStackTrace();
                     }
