@@ -194,6 +194,7 @@ public class Simulator extends UIController {
         Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(PYTHON_PATH));
         String[] finalCodes = codes;
         HashMap<String, List<Double>> hPN = new HashMap<>();
+        double max = 0;
         for(int j = 0; j<codes.length; j++) {
             List<Double> tYSampled1;
             Double[] tYSampledArray1 = new Double[samples];
@@ -217,10 +218,12 @@ public class Simulator extends UIController {
                 style = "dashed";
             plt.plot().add(x, tYSampled1).label("Sim "+codes[j]).linestyle(style);
             plt.plot().add(x, yPN1).label("PN "+codes[j]).linestyle(style);
+            System.out.println(Collections.max(yPN1) + " " + Collections.max(tYSampled1) + " " + Math.max(Collections.max(yPN1), Collections.max(tYSampled1)));
+            max = Math.max(max, Math.max(Collections.max(yPN1), Collections.max(tYSampled1)));
             plt.legend();
         }
-        plt.xlim(Collections.min(x) * 1.1, Collections.max(x) * 1.1);
-        plt.ylim(-0.1,1.1);
+        plt.xlim(Collections.min(x) * 1.05, Collections.max(x) * 1.05);
+        plt.ylim(-0.05, max * 1.1);
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
