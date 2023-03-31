@@ -35,10 +35,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class STPNAnalyzerTest {
     private static ObservationGateway observationDAO;
     private STPNAnalyzer stpnAnalyzer;
+    int samples = 144;
 
     STPNAnalyzerTest(){
         observationDAO = new ObservationGateway();
-        stpnAnalyzer = new STPNAnalyzer(144, 1);
+        stpnAnalyzer = new STPNAnalyzer(samples, 1);
     }
     @Test
     void contactWithEnvironment() throws Exception {
@@ -60,7 +61,7 @@ class STPNAnalyzerTest {
             observationDAO.insertObservation(subjects, tt[i], startDates[i], endDates[i]);
         }
         //creo il modello e lo analizzo
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(subjects.get(0));
+        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(subjects.get(0), samples);
         TransientSolution solution = stpnAnalyzer.makeModel(subjects.get(0), arrayList);
         //confronto punto punto il modello con una rete creata a parte (passandogli i pesi giusti)
         PetriNet pn = new PetriNet();

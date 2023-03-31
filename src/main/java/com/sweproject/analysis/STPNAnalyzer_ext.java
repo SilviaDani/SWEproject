@@ -141,8 +141,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
-        LocalDateTime endInterval = LocalDateTime.now();
-        LocalDateTime now = endInterval.minusDays(6);
         boolean showsSymptoms = false;
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
@@ -443,8 +441,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR") ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
-        LocalDateTime endInterval = LocalDateTime.now();
-        LocalDateTime initialTime = endInterval.minusDays(6);
         boolean showsSymptoms = false;
         HashMap<String, Boolean> symptomaticSubjects = new HashMap<>();
         for(String subject : subjects_solutions.keySet()){

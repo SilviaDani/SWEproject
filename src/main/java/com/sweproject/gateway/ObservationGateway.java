@@ -120,10 +120,10 @@ public class ObservationGateway extends Gateway {
         return arrayList;
     }
 
-    public ArrayList<HashMap<String, Object>> getEnvironmentObservations(String FC){
+    public ArrayList<HashMap<String, Object>> getEnvironmentObservations(String FC, int samples){
         LocalDateTime right_now = LocalDateTime.now();
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime start_time_analysis = now.minusDays(6);
+        LocalDateTime start_time_analysis = now.minusHours(samples);
         ResultSet rs = null;
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
@@ -138,10 +138,10 @@ public class ObservationGateway extends Gateway {
         return arrayList;
     }
 
-    public ArrayList<HashMap<String, Object>> getContactObservations(String FC, ArrayList<String> subjects){
+    public ArrayList<HashMap<String, Object>> getContactObservations(String FC, ArrayList<String> subjects, int samples){
         LocalDateTime right_now = LocalDateTime.now();
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime start_time_analysis = now.minusDays(6);
+        LocalDateTime start_time_analysis = now.minusHours(samples);
         ResultSet rs = null;
         ArrayList<HashMap<String, Object>> arrayList = null;
         String subjectList = "";

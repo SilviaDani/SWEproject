@@ -126,21 +126,21 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 144;
+    int samples = 288;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 40; //this number should be high (?)
+    int nContact = 0; //this number should be high (?)
     int max_nEnvironment = 4;
     int min_nEnvironment = 3;
-    int max_nSymptoms = 1;
-    int min_nSymptoms = 1;
-    int max_nCovTests = 3;
-    int min_nCovTests = 3;
+    int max_nSymptoms = 0;
+    int min_nSymptoms = 0;
+    int max_nCovTests = 0;
+    int min_nCovTests = 0;
     File execTimes;
     File confInt;
     File RMSE;
@@ -184,6 +184,7 @@ public class Simulator extends UIController {
     }
 
     void plot(HashMap<String, TreeMap<LocalDateTime, Double>> tt, HashMap<String, HashMap<Integer, Double>> ss) throws PythonExecutionException, IOException {
+        boolean alternativePlot = false;
         String[] codes = new String[tt.size()];
         int index = 0;
         for(Object o : tt.keySet()){
@@ -201,7 +202,10 @@ public class Simulator extends UIController {
             int finalJ = j;
             IntStream.range(0, samples).parallel().forEach(i -> {
                 if (i < tt.get(finalCodes[finalJ]).keySet().size()) {
-                    tYSampledArray1[i] = tt.get(finalCodes[finalJ]).get((LocalDateTime) tt.get(finalCodes[finalJ]).keySet().toArray()[i]);
+                    if(alternativePlot)
+                        tYSampledArray1[samples - i - 1] = tt.get(finalCodes[finalJ]).get((LocalDateTime) tt.get(finalCodes[finalJ]).keySet().toArray()[i]);
+                    else
+                        tYSampledArray1[i] = tt.get(finalCodes[finalJ]).get((LocalDateTime) tt.get(finalCodes[finalJ]).keySet().toArray()[i]);
                 }
             });
 
@@ -209,7 +213,10 @@ public class Simulator extends UIController {
             List<Double> yPN1;
             Double[] yPNarray1 = new Double[samples];
             IntStream.range(0, samples).parallel().forEach(i->{
-                yPNarray1[i] = ss.get(codes[finalJ]).get(i);
+                if(alternativePlot)
+                    yPNarray1[samples - i - 1] = ss.get(codes[finalJ]).get(i);
+                else
+                    yPNarray1[i] = ss.get(codes[finalJ]).get(i);
             });
             yPN1 = Arrays.stream(yPNarray1).toList();
             hPN.put(codes[j], yPN1);
@@ -223,7 +230,12 @@ public class Simulator extends UIController {
             plt.legend();
         }
         plt.xlim(Collections.min(x) * 1.05, Collections.max(x) * 1.05);
-        plt.ylim(-0.05, max * 1.1);
+        plt.ylim(- max * 0.1, max * 1.1);
+        if(alternativePlot)
+            plt.xlabel("Ore fa");
+        else
+            plt.xlabel("Ore");
+        plt.ylabel("Rischio");
         if(DEBUG){
             timer.stop();
             outputStrings_execTimes.add(new String[]{"Tempo per eseguire il plot dei dati", String.valueOf(timer)});
@@ -273,7 +285,7 @@ public class Simulator extends UIController {
     void simulate(){
         try{
             //inizio generazione eventi
-            LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusDays(6);
+            LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
             ArrayList<Event> events = new ArrayList<>();
             ArrayList<Event> tests = new ArrayList<>();
             ArrayList<Event> symptoms = new ArrayList<>();
@@ -694,13 +706,13 @@ public class Simulator extends UIController {
             for(int i = 0; i<subjects.size(); i++){
                 ArrayList<String> otherMembers = new ArrayList<>(subjects_String);
                 otherMembers.remove(i);
-                clusterSubjectsMet.put(subjects_String.get(i), observationGateway.getContactObservations(subjects_String.get(i), otherMembers));
+                clusterSubjectsMet.put(subjects_String.get(i), observationGateway.getContactObservations(subjects_String.get(i), otherMembers, samples));
             }
         }
         int size = 0;
 
         for(String member : subjects_String){
-            envObs.put(member, observationGateway.getEnvironmentObservations(member));
+            envObs.put(member, observationGateway.getEnvironmentObservations(member, samples));
             testObs.put(member, observationGateway.getTestObservations(member, t0));
             sympObs.put(member, observationGateway.getRelevantSymptomsObservations(member, t0));
             size+=envObs.get(member).size() + testObs.get(member).size()+sympObs.get(member).size() + clusterSubjectsMet.get(member).size();
@@ -754,7 +766,7 @@ public class Simulator extends UIController {
         ArrayList<LocalDateTime> dates = new ArrayList<>();
         for (int i=0; i<(nEvent*2); i++){
             //Random r = new Random();
-            int hours = r.nextInt(143-0)+1;
+            int hours = r.nextInt(samples-1)+1;
             LocalDateTime date = t0.plusHours(hours);
             dates.add(date);
         }
@@ -767,7 +779,7 @@ public class Simulator extends UIController {
         String[] risk_levels = new String[nEvent];
         for (int i=0; i<nEvent; i++){
             String string_risk_level = "";
-            int risk_number = r.nextInt(3 - 1) + 1;
+            int risk_number = r.nextInt(3) + 1;
             if (risk_number == 1)
                 string_risk_level = "High";
             else if (risk_number == 2)
@@ -821,7 +833,7 @@ public class Simulator extends UIController {
         //trovo 1 e metto tutti 1, poi trovo 2 e metto tutti 2, poi trovo 3 e metto tutti 3 fine.
        /* for(Map.Entry<LocalDateTime, Integer> entry : treeMap.entrySet())
             System.out.println(entry.getKey() + " " + entry.getValue());*/
-        LocalDateTime tLimit = LocalDateTime.from(t).plusDays(6);
+        LocalDateTime tLimit = LocalDateTime.from(t).plusHours(samples);
         TreeMap<LocalDateTime, Integer> state = new TreeMap<>();
         int currentState = 0;
         while(t.isBefore(tLimit) && treeMap.size() > 0){

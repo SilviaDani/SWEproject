@@ -28,9 +28,10 @@ public class ContagiousLevelPageController extends UIController implements Initi
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
     private ObservationGateway observationGateway;
+    private int samples = 144;
 
     public ContagiousLevelPageController(){
-        stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
+        stpnAnalyzer_ext = new STPNAnalyzer_ext(samples, 1);
         observationGateway = new ObservationGateway();
     }
     @Override
@@ -43,7 +44,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
             for(int i = 0; i<clusterMembers.size(); i++){
             ArrayList<String> otherMembers = new ArrayList<>(clusterMembers);
             otherMembers.remove(i);
-            clusterSubjectsMet.put(clusterMembers.get(i), observationGateway.getContactObservations(clusterMembers.get(i), otherMembers));
+            clusterSubjectsMet.put(clusterMembers.get(i), observationGateway.getContactObservations(clusterMembers.get(i), otherMembers, samples));
             }
         }
 
@@ -61,7 +62,7 @@ public class ContagiousLevelPageController extends UIController implements Initi
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime start_time_analysis = now.minusDays(6);
         for(String member : clusterMembers){
-            envObs.put(member, observationGateway.getEnvironmentObservations(member));
+            envObs.put(member, observationGateway.getEnvironmentObservations(member, samples));
             testObs.put(member, observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis));
             sympObs.put(member, observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis));
         }

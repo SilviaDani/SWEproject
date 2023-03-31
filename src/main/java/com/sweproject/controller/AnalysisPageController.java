@@ -29,10 +29,11 @@ public class AnalysisPageController extends UIController implements Initializabl
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
     ObservationGateway observationGateway;
+    int samples = 144;
 
     public AnalysisPageController(){
-        stpnAnalyzer = new STPNAnalyzer(144,1);
-        stpnAnalyzer_ext = new STPNAnalyzer_ext(144, 1);
+        stpnAnalyzer = new STPNAnalyzer(samples,1);
+        stpnAnalyzer_ext = new STPNAnalyzer_ext(samples, 1);
         observationGateway = new ObservationGateway();
     }
     @Override
@@ -43,7 +44,7 @@ public class AnalysisPageController extends UIController implements Initializabl
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime start_time_analysis = now.minusDays(6);
         try {
-            environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode());
+            environmentArrayList = observationGateway.getEnvironmentObservations(user.getFiscalCode(), samples);
             ArrayList<HashMap<String, Object>> testArrayList = observationGateway.getTestObservations(user.getFiscalCode(), start_time_analysis);
             ArrayList<HashMap<String, Object>> symptomsArrayList = observationGateway.getRelevantSymptomsObservations(user.getFiscalCode(), start_time_analysis);
             analysis = stpnAnalyzer_ext.makeModel(environmentArrayList, testArrayList, symptomsArrayList);
