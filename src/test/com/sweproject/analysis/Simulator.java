@@ -126,20 +126,20 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 288;
+    int samples = 144;
     int steps = 1;
-    final int maxReps = 10000;
+    final int maxReps = 1000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 0; //this number should be high (?)
+    int nContact = 20; //this number should be high (?)
     int max_nEnvironment = 4;
     int min_nEnvironment = 3;
-    int max_nSymptoms = 0;
+    int max_nSymptoms = 3;
     int min_nSymptoms = 0;
-    int max_nCovTests = 0;
+    int max_nCovTests = 3;
     int min_nCovTests = 0;
     File execTimes;
     File confInt;
@@ -538,6 +538,8 @@ public class Simulator extends UIController {
                 if(subject.getCurrentState() == 0){
                     float d = r.nextFloat();
                     float risk_level = ((Environment) event.getType()).getRiskLevel();
+                    float symp_risk_level = 0;
+                    float test_risk_level = 0;
                     int sympCount = 0, testCount = 0;
                     if (tests.size() > 0) {
                         for (int test = 0; test < tests.size(); test++) {
@@ -546,7 +548,7 @@ public class Simulator extends UIController {
                                 if (contact_time.isBefore(test_time)) {
                                     CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
                                     double testEvidence = covidTest.isInfected(contact_time, test_time);
-                                    risk_level += testEvidence;
+                                    test_risk_level += testEvidence;
                                     testCount++;
                                 }
                             }
@@ -560,14 +562,26 @@ public class Simulator extends UIController {
                                     subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
                                     Symptoms covidSymptom = new Symptoms();
                                     double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
-                                    risk_level += sympEvidence;
+                                    symp_risk_level += sympEvidence;
                                     sympCount++;
                                 }
                             }
                         }
                     }
                     double cumulativeRiskLevel = risk_level;
-                    double cumulativeRiskLevel3 = cumulativeRiskLevel / (sympCount + testCount + 1);
+                    double cumulativeRiskLevel3 = 0;
+                    if (testCount != 0 && sympCount != 0){
+                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
+                        cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
+                    }
+                    else if (testCount !=0 && sympCount == 0){
+                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
+                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                    }
+                    else if (testCount ==0 && sympCount != 0){
+                        cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
+                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                    }
                     double [] cumulativeRiskLevel2;
                     cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                     double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
@@ -609,6 +623,8 @@ public class Simulator extends UIController {
                     if (toUpdate){
                         float d = r.nextFloat();
                         float risk_level = ((Contact) event.getType()).getRiskLevel();
+                        float symp_risk_level = 0;
+                        float test_risk_level = 0;
                         double cumulativeRiskLevel = risk_level;
                         int sympCount = 0, testCount = 0;
                         for(Subject subject : ss){ //update risk level
@@ -622,7 +638,7 @@ public class Simulator extends UIController {
                                             if (contact_time.isBefore(test_time)) {
                                                 CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
                                                 double testEvidence = covidTest.isInfected(contact_time, test_time);
-                                                cumulativeRiskLevel += testEvidence;
+                                                test_risk_level += testEvidence;
                                                 testCount++;
                                             }
                                         }
@@ -635,14 +651,26 @@ public class Simulator extends UIController {
                                             if (contact_time.isBefore(symptom_time)) {
                                                 subject.setShowsCovidLikeSymptoms(true);
                                                 Symptoms covidSymptom = new Symptoms();
-                                                cumulativeRiskLevel += covidSymptom.updateEvidence(contact_time, symptom_time);
+                                                symp_risk_level += covidSymptom.updateEvidence(contact_time, symptom_time);
                                                 sympCount++;
                                                 showsSymptoms = true;
                                             }
                                         }
                                     }
                                 }
-                                double cumulativeRiskLevel3 = risk_level / (sympCount + testCount + 1);
+                                double cumulativeRiskLevel3 = 0;
+                                if (testCount != 0 && sympCount != 0){
+                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
+                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
+                                }
+                                else if (testCount !=0 && sympCount == 0){
+                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
+                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                                }
+                                else if (testCount ==0 && sympCount != 0){
+                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
+                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                                }
                                 double [] cumulativeRiskLevel2;
                                 cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
                                 double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
