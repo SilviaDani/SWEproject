@@ -128,7 +128,7 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 144;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
@@ -313,7 +313,7 @@ public class Simulator extends UIController {
             /*for(int rep = 0; rep<maxReps; rep++){
                runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees);
             }*/
-            IntStream.range(0, maxReps).parallel().forEach(i->{
+            IntStream.range(0, maxReps).parallel().forEach((i)->{
                 try {
                     ArrayList<Subject> subjects_local = (ArrayList<Subject>) subjects.clone();
                     ArrayList<Event> events_local = (ArrayList<Event>) events.clone();
@@ -321,8 +321,10 @@ public class Simulator extends UIController {
                     ArrayList<Event> symptoms_local = (ArrayList<Event>) symptoms.clone();
                     LocalDateTime t0_local = t0;
                     runMainCycle(subjects_local, events_local, tests_local, symptoms_local, t0_local, i, meanTrees);
+                    System.out.println(i);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.err.println(i);
                 }
             });
 
@@ -723,13 +725,13 @@ public class Simulator extends UIController {
                 }
             }
         }
-        //filling
-        HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
-        for(Subject subject : subjects) {
-            timestampsAtIthIteration.put(subject.getName() ,convert(fill(subject.getTimestamps(), t0)));
-        }
 
-        synchronized(this) {
+        //filling
+        synchronized (this) {
+            HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
+            for (Subject subject : subjects) {
+                timestampsAtIthIteration.put(subject.getName(), convert(fill(subject.getTimestamps(), t0)));
+            }
             for (Subject subject : subjects) {
                 for (LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()) {
                     double newValue = (meanTrees.get(subject.getName()).get(ldt) * (rep) + timestampsAtIthIteration.get(subject.getName()).get(ldt)) / (rep + 1);
@@ -962,6 +964,18 @@ public class Simulator extends UIController {
                 ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
             }
         }
+    }
+    @Test
+    void test(){
+        ArrayList<String> list = new ArrayList<>();
+        list.add("Ciao");
+        list.add("XXx");
+        list.parallelStream().forEach((o) -> {
+            System.out.println(o);
+        });
+        IntStream.range(0,100).parallel().forEach((i)->{
+            System.out.println(i);
+        });
     }
 }
 /*
