@@ -32,7 +32,9 @@ public class Environment extends Type{
     public float getRiskLevel(){
         return riskLevel;
     }
-
+    public void changeRiskLevel(float newLevel){
+        riskLevel = newLevel;
+    }
     @Override
     public String getName() {
         return "Environment";

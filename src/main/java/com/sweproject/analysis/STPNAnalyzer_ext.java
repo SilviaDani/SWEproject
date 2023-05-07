@@ -174,7 +174,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         }
                     }
                 }
-                double cumulativeRiskLevel3 = 0;
+                double cumulativeRiskLevel3 = cumulativeRiskLevel;
                 if (testArrayList.size() > 0 && symptomsArrayList.size() > 0){
                     cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/symptomsArrayList.size() + test_risk_level/testArrayList.size() * 1.5;
                     cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
@@ -496,7 +496,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                 }
             }
-            double cumulativeRiskLevel3 = 0;
+            double cumulativeRiskLevel3 = cumulativeRiskLevel;
             if (testArrayList.size() > 0 && symptomsArrayList.size() > 0){
                 cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/symptomsArrayList.size() + test_risk_level/testArrayList.size() * 1.5;
                 cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
