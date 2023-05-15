@@ -112,6 +112,13 @@ class Event implements Comparator<Event>, Comparable<Event>{
     public ArrayList<Subject> getSubject() {
         return subject;
     }
+    public void updateRiskLevel(float newLevel){
+        if(type instanceof Environment){
+            ((Environment)type).changeRiskLevel(newLevel);
+        }else if(type instanceof Contact) {
+            ((Contact)type).changeRiskLevel(newLevel);
+        }
+    }
 
     @Override
     public int compareTo(Event o) {
@@ -126,20 +133,20 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 144;
+    int samples = 244;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     private STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
     int nContact = 20; //this number should be high (?)
-    int max_nEnvironment = 4;
-    int min_nEnvironment = 3;
-    int max_nSymptoms = 3;
+    int max_nEnvironment = 5;
+    int min_nEnvironment = 1;
+    int max_nSymptoms = 5;
     int min_nSymptoms = 0;
-    int max_nCovTests = 3;
+    int max_nCovTests = 5;
     int min_nCovTests = 0;
     File execTimes;
     File confInt;
@@ -309,10 +316,35 @@ public class Simulator extends UIController {
                 //System.out.println("Size: "+(events.size() + tests.size() + symptoms.size()));
             }
 
+            //upadate env obs
+            for(int i = 0; i<events.size(); i++) {
+                if (events.get(i).getType() instanceof Environment) {
+                    Subject subject = events.get(i).getSubject().get(0);
+                    subject.setShowsCovidLikeSymptoms(false);
+                    events.get(i).updateRiskLevel(updateEnvObservation(events.get(i), events.get(i).getStartDate(), tests, symptoms, subject));
+                }else if (events.get(i).getType() instanceof Contact){
+                    ArrayList<Subject> ss = events.get(i).getSubject();
+                    events.get(i).updateRiskLevel(updateContObservation(events.get(i), events.get(i).getStartDate(), tests, symptoms, ss));
+                }
+            }
             //Simulazione vera e propria
             for(int rep = 0; rep<maxReps; rep++){
                runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees);
-            }
+            }/*
+            IntStream.range(0, maxReps).parallel().forEach((i)->{
+                try {
+                    ArrayList<Subject> subjects_local = (ArrayList<Subject>) subjects.clone();
+                    ArrayList<Event> events_local = (ArrayList<Event>) events.clone();
+                    ArrayList<Event> tests_local = (ArrayList<Event>)tests.clone();
+                    ArrayList<Event> symptoms_local = (ArrayList<Event>) symptoms.clone();
+                    LocalDateTime t0_local = t0;
+                    runMainCycle(subjects_local, events_local, tests_local, symptoms_local, t0_local, i, meanTrees);
+                    System.out.println(i);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.err.println(i);
+                }
+            });*/
 
             if(DEBUG){
                 timer.stop();
@@ -521,6 +553,126 @@ public class Simulator extends UIController {
         }
     }
 
+    private float updateEnvObservation( Event event, LocalDateTime contact_time, ArrayList<Event> tests,ArrayList<Event> symptoms, Subject subject) throws Exception {
+        float risk_level = ((Environment) event.getType()).getRiskLevel();
+        float symp_risk_level = 0;
+        float test_risk_level = 0;
+        int sympCount = 0, testCount = 0;
+        if (tests.size() > 0) {
+            for (int test = 0; test < tests.size(); test++) {
+                if (tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
+                    LocalDateTime test_time = tests.get(test).getStartDate();
+                    if (contact_time.isBefore(test_time)) {
+                        CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
+                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                        test_risk_level += testEvidence;
+                        testCount++;
+                    }
+                }
+            }
+        }
+        if (symptoms.size() > 0) {
+            for (int symptom = 0; symptom < symptoms.size(); symptom++) {
+                if (symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
+                    LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
+                    if (contact_time.isBefore(symptom_time)) {
+                        subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
+                        Symptoms covidSymptom = new Symptoms();
+                        double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
+                        symp_risk_level += sympEvidence;
+                        sympCount++;
+                    }
+                }
+            }
+        }
+        double cumulativeRiskLevel = risk_level;
+        double cumulativeRiskLevel3 = cumulativeRiskLevel;
+        if (testCount != 0 && sympCount != 0){
+            cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
+            cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
+        }
+        else if (testCount !=0 && sympCount == 0){
+            cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
+            cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+        }
+        else if (testCount ==0 && sympCount != 0){
+            cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
+            cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+        }
+        double [] cumulativeRiskLevel2;
+        cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
+        double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+        cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+        if (subject.hasCovidLikeSymptoms()){
+            cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+        }
+        else{
+            cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+            //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+        }
+        return (float) cumulativeRiskLevel;
+    }
+    private float updateContObservation( Event event, LocalDateTime contact_time, ArrayList<Event> tests,ArrayList<Event> symptoms, ArrayList<Subject> ss) throws Exception {
+        float risk_level = ((Contact) event.getType()).getRiskLevel();
+        float symp_risk_level = 0;
+        float test_risk_level = 0;
+        double cumulativeRiskLevel = risk_level;
+        int sympCount = 0, testCount = 0;
+        for (Subject subject : ss) { //update risk level
+            subject.setShowsCovidLikeSymptoms(false);
+                boolean showsSymptoms = false;
+                if (tests.size() > 0) {
+                    for (int test = 0; test < tests.size(); test++) {
+                        if (tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
+                            LocalDateTime test_time = tests.get(test).getStartDate();
+                            if (contact_time.isBefore(test_time)) {
+                                CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
+                                double testEvidence = covidTest.isInfected(contact_time, test_time);
+                                test_risk_level += testEvidence;
+                                testCount++;
+                            }
+                        }
+                    }
+                }
+                if (symptoms.size() > 0) {
+                    for (int symptom = 0; symptom < symptoms.size(); symptom++) {
+                        if (symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
+                            LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
+                            if (contact_time.isBefore(symptom_time)) {
+                                subject.setShowsCovidLikeSymptoms(true);
+                                Symptoms covidSymptom = new Symptoms();
+                                symp_risk_level += covidSymptom.updateEvidence(contact_time, symptom_time);
+                                sympCount++;
+                                showsSymptoms = true;
+                            }
+                        }
+                    }
+                }
+                double cumulativeRiskLevel3 = cumulativeRiskLevel;
+                if (testCount != 0 && sympCount != 0) {
+                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level / sympCount + test_risk_level / testCount * 1.5;
+                    cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
+                } else if (testCount != 0 && sympCount == 0) {
+                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
+                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                } else if (testCount == 0 && sympCount != 0) {
+                    cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
+                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+                }
+                double[] cumulativeRiskLevel2;
+                cumulativeRiskLevel2 = stpnAnalyzer.updateRiskLevel(contact_time);
+                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
+                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
+                System.out.println(cumulativeRiskLevel + " prima");
+                if (showsSymptoms) {
+                    cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                } else {
+                    cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                    //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+            }
+        }
+        return (float)cumulativeRiskLevel;
+    }
     //main cycle of the simulation
     private void runMainCycle(ArrayList<Subject> subjects,ArrayList<Event> eventsBackup, ArrayList<Event> testsBackup, ArrayList<Event>  symptomsBackup, LocalDateTime t0, int rep, HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees) throws Exception {
         ArrayList<Event> events = new ArrayList<>(eventsBackup);
@@ -537,63 +689,8 @@ public class Simulator extends UIController {
                 subject.setShowsCovidLikeSymptoms(false);
                 if(subject.getCurrentState() == 0){
                     float d = r.nextFloat();
-                    float risk_level = ((Environment) event.getType()).getRiskLevel();
-                    float symp_risk_level = 0;
-                    float test_risk_level = 0;
-                    int sympCount = 0, testCount = 0;
-                    if (tests.size() > 0) {
-                        for (int test = 0; test < tests.size(); test++) {
-                            if (tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
-                                LocalDateTime test_time = tests.get(test).getStartDate();
-                                if (contact_time.isBefore(test_time)) {
-                                    CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
-                                    double testEvidence = covidTest.isInfected(contact_time, test_time);
-                                    test_risk_level += testEvidence;
-                                    testCount++;
-                                }
-                            }
-                        }
-                    }
-                    if (symptoms.size() > 0) {
-                        for (int symptom = 0; symptom < symptoms.size(); symptom++) {
-                            if (symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
-                                LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
-                                if (contact_time.isBefore(symptom_time)) {
-                                    subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
-                                    Symptoms covidSymptom = new Symptoms();
-                                    double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
-                                    symp_risk_level += sympEvidence;
-                                    sympCount++;
-                                }
-                            }
-                        }
-                    }
-                    double cumulativeRiskLevel = risk_level;
-                    double cumulativeRiskLevel3 = 0;
-                    if (testCount != 0 && sympCount != 0){
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
-                    }
-                    else if (testCount !=0 && sympCount == 0){
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                    }
-                    else if (testCount ==0 && sympCount != 0){
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                    }
-                    double [] cumulativeRiskLevel2;
-                    cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
-                    double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                    cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                    if (subject.hasCovidLikeSymptoms()){
-                        cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                    }
-                    else{
-                        cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                        //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
-                    }
-                    risk_level = (float) cumulativeRiskLevel;
+                    float risk_level = ((Environment)event.getType()).getRiskLevel();
+                    //fixme
                     if(d < risk_level){
                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                         subject.changeState(event.getStartDate());
@@ -622,72 +719,14 @@ public class Simulator extends UIController {
                     }
                     if (toUpdate){
                         float d = r.nextFloat();
-                        float risk_level = ((Contact) event.getType()).getRiskLevel();
-                        float symp_risk_level = 0;
-                        float test_risk_level = 0;
-                        double cumulativeRiskLevel = risk_level;
-                        int sympCount = 0, testCount = 0;
-                        for(Subject subject : ss){ //update risk level
-                            subject.setShowsCovidLikeSymptoms(false);
-                            if(subject.getCurrentState()==0){
-                                boolean showsSymptoms = false;
-                                if (tests.size() > 0) {
-                                    for (int test = 0; test < tests.size(); test++) {
-                                        if(tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
-                                            LocalDateTime test_time = tests.get(test).getStartDate();
-                                            if (contact_time.isBefore(test_time)) {
-                                                CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
-                                                double testEvidence = covidTest.isInfected(contact_time, test_time);
-                                                test_risk_level += testEvidence;
-                                                testCount++;
-                                            }
-                                        }
-                                    }
-                                }
-                                if (symptoms.size() > 0) {
-                                    for (int symptom = 0; symptom < symptoms.size(); symptom++) {
-                                        if(symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
-                                            LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
-                                            if (contact_time.isBefore(symptom_time)) {
-                                                subject.setShowsCovidLikeSymptoms(true);
-                                                Symptoms covidSymptom = new Symptoms();
-                                                symp_risk_level += covidSymptom.updateEvidence(contact_time, symptom_time);
-                                                sympCount++;
-                                                showsSymptoms = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                double cumulativeRiskLevel3 = 0;
-                                if (testCount != 0 && sympCount != 0){
-                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
-                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
-                                }
-                                else if (testCount !=0 && sympCount == 0){
-                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
-                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                                }
-                                else if (testCount ==0 && sympCount != 0){
-                                    cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
-                                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                                }
-                                double [] cumulativeRiskLevel2;
-                                cumulativeRiskLevel2= stpnAnalyzer.updateRiskLevel(contact_time);
-                                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                                System.out.println(cumulativeRiskLevel + " prima");
-                                if (showsSymptoms){
-                                    cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                                }
-                                else{
-                                    cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                                    //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
-                                }
-                                if(d < cumulativeRiskLevel * d){
-                                    LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
-                                    subject.changeState(event.getStartDate());
-                                    //rescheduling dell'evento "subject" diventa contagioso
-                                    events.add(new ChangeStateEvent(ldt, new ArrayList<>(Collections.singletonList(subject))));
+                        for(Subject subject : ss){
+                            if(subject.getCurrentState() == 0){
+                            float cumulativeRiskLevel = ((Contact) event.getType()).getRiskLevel();
+                            if(d < cumulativeRiskLevel * d){
+                                LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
+                                subject.changeState(event.getStartDate());
+                                //rescheduling dell'evento "subject" diventa contagioso
+                                events.add(new ChangeStateEvent(ldt, new ArrayList<>(Collections.singletonList(subject))));
                                 }
                             }
                         }
@@ -711,17 +750,19 @@ public class Simulator extends UIController {
                 }
             }
         }
+
         //filling
-        HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
-        for(Subject subject : subjects) {
-            timestampsAtIthIteration.put(subject.getName() ,convert(fill(subject.getTimestamps(), t0)));
-        }
-        for(Subject subject : subjects){
-            for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
-                double newValue = (meanTrees.get(subject.getName()).get(ldt) * (rep) + timestampsAtIthIteration.get(subject.getName()).get(ldt))/(rep+1);
-                meanTrees.get(subject.getName()).replace(ldt, newValue);
+
+            HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
+            for (Subject subject : subjects) {
+                timestampsAtIthIteration.put(subject.getName(), convert(fill(subject.getTimestamps(), t0)));
             }
-        }
+            for (Subject subject : subjects) {
+                for (LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()) {
+                    double newValue = (meanTrees.get(subject.getName()).get(ldt) * (rep) + timestampsAtIthIteration.get(subject.getName()).get(ldt)) / (rep + 1);
+                    meanTrees.get(subject.getName()).replace(ldt, newValue);
+                }
+            }
     }
 
     //retrieve observations from db
@@ -947,6 +988,18 @@ public class Simulator extends UIController {
                 ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
             }
         }
+    }
+    @Test
+    void test(){
+        ArrayList<String> list = new ArrayList<>();
+        list.add("Ciao");
+        list.add("XXx");
+        list.parallelStream().forEach((o) -> {
+            System.out.println(o);
+        });
+        IntStream.range(0,100).parallel().forEach((i)->{
+            System.out.println(i);
+        });
     }
 }
 /*
