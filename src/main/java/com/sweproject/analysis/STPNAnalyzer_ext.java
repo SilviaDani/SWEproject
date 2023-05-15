@@ -27,8 +27,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
+    TransientSolution<R,S> rewardedSolution;
     public STPNAnalyzer_ext(int samples, int step) {
         super(samples, step);
+        PetriNet net = new PetriNet();
+        Marking marking = new Marking();
+        //Generating Nodes
+        Place Contagio = net.addPlace("Contagio");
+        buildContagionEvolutionSection(net, marking, Contagio);
+        marking.setTokens(Contagio, 1);
+
+
+        // 144 -> 6 giorni
+        RegTransient analysis = RegTransient.builder()
+                .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                .timeStep(new BigDecimal(step)).build();
+
+        //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
+        var rewardRates = TransientSolution.rewardRates("Contagioso");
+
+        TransientSolution<DeterministicEnablingState, Marking> solution =
+                analysis.compute(net, marking);
+
+        rewardedSolution = (TransientSolution<R, S>) TransientSolution.computeRewards(false, solution, rewardRates);
     }
 
     /*public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
@@ -141,7 +162,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
-        boolean showsSymptoms = false;
+        boolean showsSymptoms;
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
                 showsSymptoms = false;
@@ -150,6 +171,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 float symp_risk_level = 0;
                 float test_risk_level = 0;
                 double cumulativeRiskLevel = risk_level;
+                int sympCount = 0; //indica quanti sintomi sono rilevanti
+                int testCount = 0;
                 if (symptomsArrayList.size() > 0){
                     for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
                         LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
@@ -159,6 +182,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             symp_risk_level += sympEvidence;
                             //System.out.println("Symp " + sympEvidence);
                             showsSymptoms = true;
+                            sympCount++;
                         }
                     }
                 }
@@ -171,19 +195,20 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             double testEvidence = covidTest.isInfected(contact_time, test_time);
                             //System.out.println(testEvidence);
                             test_risk_level += testEvidence;
+                            testCount++;
                         }
                     }
                 }
                 double cumulativeRiskLevel3 = cumulativeRiskLevel;
-                if (testArrayList.size() > 0 && symptomsArrayList.size() > 0){
-                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/symptomsArrayList.size() + test_risk_level/testArrayList.size() * 1.5;
+                if (testCount > 0 && sympCount > 0){
+                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level/sympCount + test_risk_level/testCount * 1.5;
                     cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
                 }
-                else if (testArrayList.size() > 0 && symptomsArrayList.size() == 0){
+                else if (testCount > 0 && sympCount == 0){
                     cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
                     cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
                 }
-                else if (testArrayList.size() == 0 && symptomsArrayList.size() > 0){
+                else if (testCount == 0 && sympCount > 0){
                     cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
                     cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
                 }
@@ -199,30 +224,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                     //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                 }
-                System.out.println(cumulativeRiskLevel + " dopo");
                 environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+                System.out.println(environmentArrayList.get(contact).get("risk_level") + " dopo");
             }
-            PetriNet net = new PetriNet();
-            Marking marking = new Marking();
-            //Generating Nodes
-            Place Contagio = net.addPlace("Contagio");
-            buildContagionEvolutionSection(net, marking, Contagio);
-            marking.setTokens(Contagio, 1);
-
-
-            // 144 -> 6 giorni
-            RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                    .timeStep(new BigDecimal(step)).build();
-
-            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-            var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-            TransientSolution<DeterministicEnablingState, Marking> solution =
-                    analysis.compute(net, marking);
-
-            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            return (TransientSolution<R, S>) rewardedSolution;
+            return rewardedSolution;
         }else{
             System.out.println("The subject has no 'Environment' observations of the last 6 days");
             return super.makeFakeNet();
@@ -526,25 +531,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             output.put(i, 0.0);
         }
         if (clusterSubjectsMet.size() > 0) {
-            PetriNet net = new PetriNet();
-            //creating the central node
-            Marking marking = new Marking();
-            Place Contagio = net.addPlace("Contagio");
-            buildContagionEvolutionSection(net, marking, Contagio);
-            marking.setTokens(Contagio, 1);
-
-            RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                    .timeStep(new BigDecimal(step)).build();
-
-            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-            var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-            TransientSolution<DeterministicEnablingState, Marking> solution =
-                    analysis.compute(net, marking);
-
-            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            //new TransientSolutionViewer(rewardedSolution);
             TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
 
             int i = 0; //index of contact
