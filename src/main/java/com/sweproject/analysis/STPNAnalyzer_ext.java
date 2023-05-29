@@ -28,6 +28,7 @@ import java.util.HashMap;
 
 public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     TransientSolution<R,S> rewardedSolution;
+    TransientSolution<R,S> symptomSolution;
     public STPNAnalyzer_ext(int samples, int step) {
         super(samples, step);
         PetriNet net = new PetriNet();
@@ -45,11 +46,12 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
 
         //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
         var rewardRates = TransientSolution.rewardRates("Contagioso");
-
+        var symptomRates = TransientSolution.rewardRates("Sintomatico");
         TransientSolution<DeterministicEnablingState, Marking> solution =
                 analysis.compute(net, marking);
 
         rewardedSolution = (TransientSolution<R, S>) TransientSolution.computeRewards(false, solution, rewardRates);
+        symptomSolution = (TransientSolution<R, S>) TransientSolution.computeRewards(false, solution, symptomRates);
     }
 
     /*public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
@@ -178,7 +180,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                         if (contact_time.isBefore(symptom_date)){
                             Symptoms symptoms = new Symptoms();
-                            double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date);
+                            double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
                             symp_risk_level += sympEvidence;
                             //System.out.println("Symp " + sympEvidence);
                             showsSymptoms = true;
@@ -482,7 +484,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                     if (contact_time.isBefore(symptom_date)) {
                         Symptoms symptoms = new Symptoms();
-                        symp_risk_level += symptoms.updateEvidence(contact_time, symptom_date);
+                        symp_risk_level += symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
                         sympCount++;
                         symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("fiscalCode"), true);
                     }
@@ -513,6 +515,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             else if (testArrayList.size() == 0 && symptomsArrayList.size() > 0){
                 cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
                 cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
+            }
+            else {
+                cumulativeRiskLevel3 = cumulativeRiskLevel;
             }
             double [] cumulativeRiskLevel2;
             cumulativeRiskLevel2 = updateRiskLevel(contact_time);

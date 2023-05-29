@@ -138,7 +138,7 @@ public class Simulator extends UIController {
     final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
-    private STPNAnalyzer_ext stpnAnalyzer;
+    public STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
     int nContact = 20; //this number should be high (?)
@@ -578,7 +578,7 @@ public class Simulator extends UIController {
                     if (contact_time.isBefore(symptom_time)) {
                         subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
                         Symptoms covidSymptom = new Symptoms();
-                        double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time);
+                        double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time, stpnAnalyzer.symptomSolution);
                         symp_risk_level += sympEvidence;
                         sympCount++;
                     }
@@ -641,7 +641,7 @@ public class Simulator extends UIController {
                             if (contact_time.isBefore(symptom_time)) {
                                 subject.setShowsCovidLikeSymptoms(true);
                                 Symptoms covidSymptom = new Symptoms();
-                                symp_risk_level += covidSymptom.updateEvidence(contact_time, symptom_time);
+                                symp_risk_level += covidSymptom.updateEvidence(contact_time, symptom_time, stpnAnalyzer.symptomSolution);
                                 sympCount++;
                                 showsSymptoms = true;
                             }
