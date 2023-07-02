@@ -226,8 +226,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                     //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                 }
+                /*
                 environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
                 System.out.println(environmentArrayList.get(contact).get("risk_level") + " dopo");
+                */
             }
             return rewardedSolution;
         }else{
@@ -238,6 +240,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
 
     public HashMap<Integer, Double> computeAnalysis(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
         HashMap<Integer, Double> output = new HashMap<>();
+        double notInfectedYet = 1;
         int size = s.getSamplesNumber();
         for (int i = 0; i < size; i++){
             output.put(i, 0.0);
@@ -250,12 +253,14 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
                 int i = 0;
                 for (int j = delta; j < size; j += step){
-                    double y = s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level");
+                    float risk = (float)eventsArrayList.get(event).get("risk_level");
+                    double y = s.getSolution()[i][r][m] * risk;
                     double oldY = output.get(j);
-                    output.replace(j,  (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
+                    output.replace(j, notInfectedYet * y + oldY);
+                    notInfectedYet *= (1 - risk);
                     i++;
                 }
-            }
+   }
         }
         return output;
     }
@@ -283,7 +288,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 for (int j = delta; j < size; j += step){
                     double y = s.getSolution()[i][r][m] * (float)eventsArrayList.get(event).get("risk_level");
                     double oldY = output.get(j);
-                    output.replace(j,  y + oldY); //TODO anziché y + oldY non è meglio (1-oldY) * y + oldY?
+                    output.replace(j,  y + oldY);
                     i++;
                 }
             }
@@ -564,9 +569,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                     double step = s.getStep().doubleValue();
                     int index = 0;
+                    double notInfectedYet = 1;
                     for (int jj = delta; jj < samples; jj += step){
-                        //FIXME y DECRESCE SEMPRE forse meglio (s.get... + maxrisk)/hop * risklevel se si cambia va cambiato ovunque
-                        double y = s.getSolution()[index][r][m] * maxRisk * (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
+                        float risk = (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
+                        double y = s.getSolution()[index][r][m] * maxRisk * risk;
                         if(((HashMap<String, Boolean>)clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)){
                             y /= factorDueToSymptoms;
                         }else{
@@ -574,7 +580,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                         }
                         double oldY = output.get(jj);
-                        output.put(jj, (1-oldY)*y + oldY); //XXX anziché y + oldY non è meglio (1-oldY) * y + oldY? probabilità di non essersi già contagiato * prob. di contagiarsi con il contatto i + prob. di essersi contagiato prima
+                        output.put(jj, notInfectedYet * y + oldY);
+                        notInfectedYet *= (1 - risk);
                         index++;
                     }
                     contactNumber=i;
