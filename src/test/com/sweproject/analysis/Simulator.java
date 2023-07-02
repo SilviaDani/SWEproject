@@ -767,7 +767,7 @@ public class Simulator extends UIController {
     }
 
     //retrieve observations from db
-    private void retrieveObservations(ArrayList<Subject> subjects, ArrayList<String> subjects_String, HashMap<String,ArrayList<HashMap<String, Object>>> clusterSubjectsMet, int max_iterations, HashMap<String, ArrayList<HashMap<String, Object>>> envObs, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime t0){
+    void retrieveObservations(ArrayList<Subject> subjects, ArrayList<String> subjects_String, HashMap<String,ArrayList<HashMap<String, Object>>> clusterSubjectsMet, int max_iterations, HashMap<String, ArrayList<HashMap<String, Object>>> envObs, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime t0){
         for(Subject subject : subjects){
             subjects_String.add(subject.getName());
         }
@@ -814,7 +814,10 @@ public class Simulator extends UIController {
     }
 
     //build numerical solution
-    private HashMap<String, HashMap<Integer, Double>> buildSolution(ArrayList<HashMap<String, HashMap<Integer, Double>>> pns, ArrayList<String> subjects_String){
+    HashMap<String, HashMap<Integer, Double>> buildSolution(ArrayList<HashMap<String, HashMap<Integer, Double>>> pns, ArrayList<String> subjects_String){
+        return buildSolution(pns, subjects_String, samples, steps);
+    }
+    HashMap<String, HashMap<Integer, Double>> buildSolution(ArrayList<HashMap<String, HashMap<Integer, Double>>> pns, ArrayList<String> subjects_String, int samples, int steps){
         HashMap<String, HashMap<Integer, Double>> solutions = new HashMap<>();
         int startingIndex = considerEnvironment?0:1;
         for(String member : subjects_String){
@@ -832,7 +835,10 @@ public class Simulator extends UIController {
     }
 
     //Utility functions
-    private ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent){
+    ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent){
+        return generateDates(t0, nEvent, samples);
+    }
+    ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent, int samples){
         ArrayList<LocalDateTime> dates = new ArrayList<>();
         for (int i=0; i<(nEvent*2); i++){
             //Random r = new Random();
@@ -844,7 +850,7 @@ public class Simulator extends UIController {
         return dates;
     }
 
-    private String[] generateRiskLevels(int nEvent){
+    String[] generateRiskLevels(int nEvent){
        // Random r = new Random();
         String[] risk_levels = new String[nEvent];
         for (int i=0; i<nEvent; i++){
@@ -861,7 +867,7 @@ public class Simulator extends UIController {
         return risk_levels;
     }
 
-    private Boolean[] generateMasks(int nEvent){
+    Boolean[] generateMasks(int nEvent){
        // Random r = new Random();
         Boolean[] masks = new Boolean[nEvent];
         for (int i=0; i<nEvent; i++) {

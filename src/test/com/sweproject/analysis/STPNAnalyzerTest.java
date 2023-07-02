@@ -2,6 +2,7 @@ package com.sweproject.analysis;
 
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.gateway.ObservationGatewayTest;
+import com.sweproject.model.Contact;
 import com.sweproject.model.Environment;
 import com.sweproject.model.Type;
 import org.junit.jupiter.api.AfterAll;
@@ -26,20 +27,21 @@ import org.oristool.petrinet.Transition;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class STPNAnalyzerTest {
-    private static ObservationGateway observationDAO;
+    private static ObservationGateway observationGateway;
     private STPNAnalyzer stpnAnalyzer;
+    private STPNAnalyzer_ext stpnAnalyzer_ext;
     int samples = 144;
+    static int np = 2;
 
     STPNAnalyzerTest(){
-        observationDAO = new ObservationGateway();
+        observationGateway = new ObservationGateway();
         stpnAnalyzer = new STPNAnalyzer(samples, 1);
+        stpnAnalyzer_ext = new STPNAnalyzer_ext(samples, 1);
     }
     @Test
     void contactWithEnvironment() throws Exception {
@@ -58,10 +60,10 @@ class STPNAnalyzerTest {
         for(int i = 0; i<6; i++) {
             tt[i] = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
             risks[i] = BigDecimal.valueOf(((Environment) tt[i]).getRiskLevel()).setScale(6, BigDecimal.ROUND_HALF_UP).floatValue();
-            observationDAO.insertObservation(subjects, tt[i], startDates[i], endDates[i]);
+            observationGateway.insertObservation(subjects, tt[i], startDates[i], endDates[i]);
         }
         //creo il modello e lo analizzo
-        ArrayList<HashMap<String, Object>> arrayList = observationDAO.getEnvironmentObservations(subjects.get(0), samples);
+        ArrayList<HashMap<String, Object>> arrayList = observationGateway.getEnvironmentObservations(subjects.get(0), samples);
         TransientSolution solution = stpnAnalyzer.makeModel(subjects.get(0), arrayList);
         //confronto punto punto il modello con una rete creata a parte (passandogli i pesi giusti)
         PetriNet pn = new PetriNet();
@@ -575,11 +577,159 @@ class STPNAnalyzerTest {
         uneffective.addFeature(new Priority(0));
     }
 
+    @Test
+    void checkBetweenTheTwoMethods(){
+        Simulator sim = new Simulator();
+        Random r = new Random();
+        r.setSeed(42);
+        int nContact = 1;
+        int max_nEnvironment = 5;
+        int min_nEnvironment = 1;
+        LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
+        ArrayList<Subject> subjects = new ArrayList<>();
+
+        //creazione dei soggetti
+        for(int p = 0; p < np; p++){
+            subjects.add(new Subject("P" + p));
+        }
+        //creazione degli eventi ambientali
+        for(int p = 0; p < np; p++){
+            int nEnvironment = r.nextInt(max_nEnvironment - min_nEnvironment) + min_nEnvironment;
+            LocalDateTime[] startDates = new LocalDateTime[nEnvironment];
+            LocalDateTime[] endDates = new LocalDateTime[nEnvironment];
+            ArrayList<LocalDateTime> dates = new ArrayList<>(sim.generateDates(t0, nEnvironment, samples));
+
+            int start = 0;
+            int end = 0;
+            for (int date = 0; date < dates.size(); date++) {
+                if (date % 2 == 0) {
+                    startDates[start] = dates.get(date);
+                    start++;
+                } else {
+                    endDates[end] = dates.get(date);
+                    end++;
+                }
+            }
+
+            String[] riskLevels = sim.generateRiskLevels(nEnvironment);
+            Boolean[] masks = sim.generateMasks(nEnvironment);
+
+            for(int i = 0; i < nEnvironment; i++){
+                ArrayList<Subject> s = new ArrayList<Subject>(Collections.singletonList(subjects.get(p)));
+                ArrayList<String> s_String = new ArrayList<>();
+                for(Subject sub : s){
+                    s_String.add(sub.getName());
+                }
+                Type t = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
+                observationGateway.insertObservation(s_String, t, startDates[i], endDates[i]);
+            }
+        }
+
+        String[] nc_riskLevels;
+        Boolean[] nc_masks;
+        LocalDateTime[] nc_startDates = new LocalDateTime[nContact];
+        LocalDateTime[] nc_endDates = new LocalDateTime[nContact];
+        ArrayList<LocalDateTime> dates = new ArrayList<>(sim.generateDates(t0, nContact, samples));
+        int start = 0;
+        int end = 0;
+        for (int date = 0; date < dates.size(); date++) {
+            if (date % 2 == 0) {
+                nc_startDates[start] = dates.get(date);
+                start++;
+            } else {
+                nc_endDates[end] = dates.get(date);
+                end++;
+            }
+        }
+        nc_riskLevels = sim.generateRiskLevels(nContact);
+        nc_masks = sim.generateMasks(nContact);
+
+        for(int c = 0; c < nContact; c++){
+            ArrayList<String> s_String = new ArrayList<>();
+            ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
+            ArrayList<Subject> partecipatingSubjects = new ArrayList<>();
+            Collections.shuffle(subjects_copy);
+            int upperBound = subjects_copy.size() > 2 ? r.nextInt(subjects_copy.size() - 2) + 2 : 2;
+            for(int i = 0; i<upperBound; i++) {
+                s_String.add(subjects_copy.get(i).getName());
+                partecipatingSubjects.add(subjects_copy.get(i));
+            }
+            Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
+            observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
+        }
+
+        final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+        HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
+        ArrayList<String> subjects_String = new ArrayList<>();
+
+        HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+        HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
+        HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
+        sim.retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+
+        for(String s : clusterSubjectsMet.keySet()) {
+            assertEquals(0, testObs.get(s).size());
+            assertEquals(0, sympObs.get(s).size());
+            assertTrue(0 <= envObs.get(s).size());
+            assertTrue(0 <= clusterSubjectsMet.get(s).size());
+        }
+        ArrayList<HashMap<String, HashMap<Integer, Double>>> pns_ext = new ArrayList<>();
+
+        ArrayList<HashMap<String, HashMap<Integer, Double>>> pns_or = new ArrayList<>();
+        HashMap<String, TransientSolution> subject_ss = new HashMap<>();
+        for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
+            HashMap<String, HashMap<Integer, Double>> pits = new HashMap<>();//p^it_s
+            TransientSolution sol = null;
+            HashMap<String, HashMap<Integer, Double>> hm = new HashMap<>();
+            HashMap<String, TransientSolution> new_subject_ss = new HashMap<>();
+            for(String member : subjects_String){
+                if(nIteration==0){
+                    try {//fixme
+                        TransientSolution s = stpnAnalyzer_ext.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member));
+                        pits.put(member, stpnAnalyzer_ext.computeAnalysis(s, envObs.get(member), t0));
+                        sol = stpnAnalyzer.makeModel(member, envObs.get(member));
+                        new_subject_ss.put(member, sol);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    try {
+                        pits.put(member, stpnAnalyzer_ext.makeClusterModel(t0, pns_ext.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member));
+                        sol = stpnAnalyzer.makeClusterModel(subject_ss, clusterSubjectsMet.get(member));
+                        new_subject_ss.put(member, sol);
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+                HashMap<Integer, Double> values = new HashMap<>();
+                for(int i = 0; i < samples; i++){
+                    values.put(i, sol.getSolution()[i][0][0]);
+                }
+                hm.put(member, values);
+            }
+
+            pns_or.add(hm);
+            pns_ext.add(pits);
+            subject_ss = new_subject_ss;
+        }
+        HashMap<String, HashMap<Integer, Double>> solutions = sim.buildSolution(pns_ext, subjects_String, samples, 1);
+        HashMap<String, HashMap<Integer, Double>> solutions_or = sim.buildSolution(pns_or, subjects_String, samples, 1);
+        for(String s : subjects_String){
+            for(int i : solutions.get(s).keySet()){
+                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-4); //todo aumentare la precisione
+                System.out.println(solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
+            }
+        }
+
+    }
+
     @AfterAll
     static void clean(){
-        ArrayList<HashMap<String, Object>> obs = observationDAO.getObservations("p1");
-        for(int i = 0; i<obs.size();i++){
-            ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
+        for(int p=0; p<np; p++) {
+            ArrayList<HashMap<String, Object>> obs = observationGateway.getObservations("P"+p);
+            for (int i = 0; i < obs.size(); i++) {
+                ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
+            }
         }
     }
 
