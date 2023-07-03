@@ -82,7 +82,7 @@ public class STPNAnalyzer<R,S> {
             }
             // 144 -> 6 giorni
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.0000001"))
                     .timeStep(new BigDecimal(step)).build();
 
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
@@ -112,7 +112,7 @@ public class STPNAnalyzer<R,S> {
     }
 
     public float getChancesOfHavingContagiousPersonInCluster(ArrayList<TransientSolution> ss, LocalDateTime meeting_time, int step, float riskLevel){
-        int delta = (int) ((ChronoUnit.MINUTES.between(now.truncatedTo(ChronoUnit.MINUTES).minusDays(6), meeting_time) / 60)/step);
+        int delta = (int) ((ChronoUnit.MINUTES.between(now.truncatedTo(ChronoUnit.MINUTES).minusDays(6), meeting_time) / 60.f)/step);
         //System.out.println(delta);
         int r = ss.get(0).getRegenerations().indexOf(ss.get(0).getInitialRegeneration());
         float max = (float) ss.get(0).getSolution()[delta][r][0];
@@ -241,7 +241,7 @@ public class STPNAnalyzer<R,S> {
                 subjectsMet_ss.add(subjects_ss.get(meeting_subjects[k]));
             }
             float effectiveness = getChancesOfHavingContagiousPersonInCluster(subjectsMet_ss, meeting_time1, step, (float) clusterSubjectsMet.get(j-1).get("risk_level"));
-            float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1)/60.f;
+            float delta = (float)ChronoUnit.MINUTES.between(now.minusDays(6),meeting_time1) / 60.f;
             t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
             e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(effectiveness), net)));
             u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1-effectiveness), net)));
@@ -252,7 +252,8 @@ public class STPNAnalyzer<R,S> {
             net.addPrecondition(p2, u0);
             //making intermediate modules
             int p = 0; //index for transitions
-            for (int l = i; l < clusterSubjectsMet.size(); l++) {
+            int l = i;
+            while(l < clusterSubjectsMet.size()) {
                 j = 0;
                 for (int n = 0; n < meeting_subjects.length; n++) {
                     meeting_subjects[n] = null;
@@ -288,7 +289,7 @@ public class STPNAnalyzer<R,S> {
                 meeting_time1 = meeting_time2;
             }
             RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.0000001"))
                     .timeStep(new BigDecimal(step)).build();
 
             //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)

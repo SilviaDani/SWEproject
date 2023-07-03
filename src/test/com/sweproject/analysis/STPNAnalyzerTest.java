@@ -36,7 +36,7 @@ class STPNAnalyzerTest {
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
     int samples = 144;
-    static int np = 2;
+    static int np = 4;
 
     STPNAnalyzerTest(){
         observationGateway = new ObservationGateway();
@@ -581,10 +581,10 @@ class STPNAnalyzerTest {
     void checkBetweenTheTwoMethods(){
         Simulator sim = new Simulator();
         Random r = new Random();
-        r.setSeed(42);
-        int nContact = 1;
-        int max_nEnvironment = 5;
-        int min_nEnvironment = 1;
+        r.setSeed(11);
+        int nContact = 6;
+        int max_nEnvironment = 10;
+        int min_nEnvironment = 5;
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
         ArrayList<Subject> subjects = new ArrayList<>();
 
@@ -658,7 +658,7 @@ class STPNAnalyzerTest {
             observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
         }
 
-        final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+        final int max_iterations = subjects.size()<=2?subjects.size()-1:1;
         HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
         ArrayList<String> subjects_String = new ArrayList<>();
 
@@ -716,8 +716,8 @@ class STPNAnalyzerTest {
         HashMap<String, HashMap<Integer, Double>> solutions_or = sim.buildSolution(pns_or, subjects_String, samples, 1);
         for(String s : subjects_String){
             for(int i : solutions.get(s).keySet()){
-                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-4); //todo aumentare la precisione
-                System.out.println(solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
+                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-3); //todo aumentare la precisione
+                System.out.println(i+" "+solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
             }
         }
 

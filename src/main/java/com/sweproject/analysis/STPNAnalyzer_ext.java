@@ -41,7 +41,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
 
         // 144 -> 6 giorni
         RegTransient analysis = RegTransient.builder()
-                .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
+                .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.0000001"))
                 .timeStep(new BigDecimal(step)).build();
 
         //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
@@ -550,6 +550,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
             for (int m = 0; m < s.getColumnStates().size(); m++) {
                 int contactNumber = 0;
+                double notInfectedYet = 1;
                 while(i < clusterSubjectsMet.size()) { //itera sugli eventi
                     j = 0;
                     String[] meeting_subjects = new String[clusterSubjectsMet.size()];
@@ -571,9 +572,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                     double step = s.getStep().doubleValue();
                     int index = 0;
-                    double notInfectedYet = 1;
+
                     float risk = (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
-                    for (int jj = delta; jj < size; jj += step){
+                    for (int jj = delta; jj < size; jj += (int)step){
                         double y = s.getSolution()[index][r][m] * maxRisk * risk;
                         if(factorDueToSymptoms != null) {
                             if (((HashMap<String, Boolean>) clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)) {
