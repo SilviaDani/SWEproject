@@ -36,7 +36,7 @@ class STPNAnalyzerTest {
     private STPNAnalyzer stpnAnalyzer;
     private STPNAnalyzer_ext stpnAnalyzer_ext;
     int samples = 144;
-    static int np = 4;
+    static int np = 6;
 
     STPNAnalyzerTest(){
         observationGateway = new ObservationGateway();
@@ -582,9 +582,9 @@ class STPNAnalyzerTest {
         Simulator sim = new Simulator();
         Random r = new Random();
         r.setSeed(11);
-        int nContact = 6;
-        int max_nEnvironment = 10;
-        int min_nEnvironment = 5;
+        int nContact = 25;
+        int max_nEnvironment = 30;
+        int min_nEnvironment = 20;
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
         ArrayList<Subject> subjects = new ArrayList<>();
 
@@ -716,7 +716,7 @@ class STPNAnalyzerTest {
         HashMap<String, HashMap<Integer, Double>> solutions_or = sim.buildSolution(pns_or, subjects_String, samples, 1);
         for(String s : subjects_String){
             for(int i : solutions.get(s).keySet()){
-                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-3); //todo aumentare la precisione
+                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-6); //todo aumentare la precisione
                 System.out.println(i+" "+solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
             }
         }

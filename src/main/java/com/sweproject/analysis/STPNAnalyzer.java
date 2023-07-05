@@ -260,7 +260,7 @@ public class STPNAnalyzer<R,S> {
                 }
                 LocalDateTime meeting_time2 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(l).get("start_date"));
                 while (l < clusterSubjectsMet.size() && ((LocalDateTime) clusterSubjectsMet.get(l).get("start_date")).equals(meeting_time2)) {
-                    meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                    meeting_subjects[j] = clusterSubjectsMet.get(l).get("fiscalCode").toString();
                     j++;
                     l++;
                 }
