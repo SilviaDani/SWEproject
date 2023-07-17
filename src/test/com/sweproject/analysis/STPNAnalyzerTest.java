@@ -1,5 +1,11 @@
 package com.sweproject.analysis;
 
+import com.github.sh0nk.matplotlib4j.NumpyUtils;
+import com.github.sh0nk.matplotlib4j.Plot;
+import com.github.sh0nk.matplotlib4j.PythonConfig;
+import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+import com.google.common.base.Stopwatch;
+import com.opencsv.CSVWriter;
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.gateway.ObservationGatewayTest;
 import com.sweproject.model.Contact;
@@ -24,11 +30,15 @@ import org.oristool.petrinet.PetriNet;
 import org.oristool.petrinet.Place;
 import org.oristool.petrinet.Transition;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.IntStream;
 
+import static com.sweproject.main.Main.DEBUG;
 import static org.junit.jupiter.api.Assertions.*;
 
 class STPNAnalyzerTest {
@@ -37,11 +47,13 @@ class STPNAnalyzerTest {
     private STPNAnalyzer_ext stpnAnalyzer_ext;
     int samples = 144;
     static int np = 6;
+    Simulator sim = new Simulator();
 
     STPNAnalyzerTest(){
         observationGateway = new ObservationGateway();
         stpnAnalyzer = new STPNAnalyzer(samples, 1);
         stpnAnalyzer_ext = new STPNAnalyzer_ext(samples, 1);
+
     }
     @Test
     void contactWithEnvironment() throws Exception {
@@ -578,8 +590,8 @@ class STPNAnalyzerTest {
     }
 
     @Test
-    void checkBetweenTheTwoMethods(){
-        Simulator sim = new Simulator();
+    void checkBetweenTheTwoMethods() throws PythonExecutionException, IOException {
+
         Random r = new Random();
         r.setSeed(11);
         int nContact = 25;
@@ -675,6 +687,12 @@ class STPNAnalyzerTest {
         }
         ArrayList<HashMap<String, HashMap<Integer, Double>>> pns_ext = new ArrayList<>();
 
+        Stopwatch timerExt = Stopwatch.createUnstarted();
+        Stopwatch timerOr = Stopwatch.createUnstarted();
+
+        timerExt.start();
+        timerOr.start();
+
         ArrayList<HashMap<String, HashMap<Integer, Double>>> pns_or = new ArrayList<>();
         HashMap<String, TransientSolution> subject_ss = new HashMap<>();
         for(int nIteration = 0; nIteration<= max_iterations; nIteration++){
@@ -685,43 +703,117 @@ class STPNAnalyzerTest {
             for(String member : subjects_String){
                 if(nIteration==0){
                     try {//fixme
+                        timerOr.stop();
                         TransientSolution s = stpnAnalyzer_ext.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member));
                         pits.put(member, stpnAnalyzer_ext.computeAnalysis(s, envObs.get(member), t0));
+                        timerExt.stop();
+                        timerOr.start();
                         sol = stpnAnalyzer.makeModel(member, envObs.get(member));
                         new_subject_ss.put(member, sol);
+                        timerExt.start();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }else {
                     try {
+                        timerOr.stop();
                         pits.put(member, stpnAnalyzer_ext.makeClusterModel(t0, pns_ext.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member));
+                        timerExt.stop();
+                        timerOr.start();
                         sol = stpnAnalyzer.makeClusterModel(subject_ss, clusterSubjectsMet.get(member));
                         new_subject_ss.put(member, sol);
+                        timerExt.start();
                     } catch (Exception e){
                         e.printStackTrace();
                     }
                 }
+                timerExt.stop();
                 HashMap<Integer, Double> values = new HashMap<>();
                 for(int i = 0; i < samples; i++){
                     values.put(i, sol.getSolution()[i][0][0]);
                 }
                 hm.put(member, values);
+                timerExt.start();
             }
-
-            pns_or.add(hm);
-            pns_ext.add(pits);
+            timerExt.stop();
             subject_ss = new_subject_ss;
+            pns_or.add(hm);
+            timerOr.stop();
+            timerExt.start();
+            pns_ext.add(pits);
+            timerOr.start();
         }
+        timerOr.stop();
         HashMap<String, HashMap<Integer, Double>> solutions = sim.buildSolution(pns_ext, subjects_String, samples, 1);
+        timerExt.stop();
+        timerOr.start();
         HashMap<String, HashMap<Integer, Double>> solutions_or = sim.buildSolution(pns_or, subjects_String, samples, 1);
+        timerOr.stop();
+        System.out.println("T or: "+timerOr.elapsed().toNanos()/10e9+" ns\nTime ext: "+timerExt.elapsed().toNanos()/10e9+" ns");
         for(String s : subjects_String){
             for(int i : solutions.get(s).keySet()){
-                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-6); //todo aumentare la precisione
-                System.out.println(i+" "+solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
+                assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-6);
+                //System.out.println(i+" "+solutions_or.get(s).get(i) + " N:" + solutions.get(s).get(i));
             }
         }
+        plot(solutions_or, solutions);
+
+
 
     }
+
+
+    void plot(HashMap<String, HashMap<Integer, Double>> tt, HashMap<String, HashMap<Integer, Double>> ss) throws PythonExecutionException, IOException {
+        boolean alternativePlot = false;
+        String[] codes = new String[tt.size()];
+        int index = 0;
+        for(Object o : tt.keySet()){
+            codes[index] = (String) o;
+            index++;
+        }
+        List<Double> x = NumpyUtils.linspace(0, samples, samples);
+        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig(sim.PYTHON_PATH));
+        String[] finalCodes = codes;
+        HashMap<String, List<Double>> hPN = new HashMap<>();
+        double max = 0;
+        for(int j = 0; j<codes.length; j++) {
+            int finalJ = j;
+            List<Double> yPN;
+            Double[] yPNarray = new Double[samples];
+            List<Double> yPN1;
+            Double[] yPNarray1 = new Double[samples];
+            IntStream.range(0, samples).parallel().forEach(i->{
+                if(alternativePlot) {
+                    yPNarray[samples - i - 1] = tt.get(codes[finalJ]).get(i);
+                    yPNarray1[samples - i - 1] = ss.get(codes[finalJ]).get(i);
+                }
+                else {
+                    yPNarray[i] = ss.get(codes[finalJ]).get(i);
+                    yPNarray1[i] = ss.get(codes[finalJ]).get(i);
+                }
+            });
+            yPN = Arrays.stream(yPNarray).toList();
+            yPN1 = Arrays.stream(yPNarray1).toList();
+            hPN.put(codes[j], yPN1);
+            String style = "solid";
+            if(j>=5)
+                style = "dashed";
+            plt.plot().add(x, yPN).label("Old Net "+codes[j]).linestyle(style);
+            plt.plot().add(x, yPN1).label("New Net "+codes[j]).linestyle(style);
+            System.out.println(Collections.max(yPN1) + " " + Collections.max(yPN) + " " + Math.max(Collections.max(yPN1), Collections.max(yPN)));
+            max = Math.max(max, Math.max(Collections.max(yPN1), Collections.max(yPN)));
+            plt.legend();
+        }
+        plt.xlim(Collections.min(x) * 1.05, Collections.max(x) * 1.05);
+        plt.ylim(- max * 0.1, max * 1.1);
+        if(alternativePlot)
+            plt.xlabel("Ore fa");
+        else
+            plt.xlabel("Ore");
+        plt.ylabel("Rischio");
+        plt.show();
+    }
+
 
     @AfterAll
     static void clean(){
