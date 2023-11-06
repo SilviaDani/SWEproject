@@ -12,6 +12,7 @@ public class CovidTest extends Type {
     private boolean isPositive = false;
     private double sensitivity = 0;
     private double specificity = 0;
+    private double precision = 0;
     static double correctionValueForAntigen = 0;
     static double correctionValueForMolecular = 0;
 
@@ -21,10 +22,12 @@ public class CovidTest extends Type {
         if (type == CovidTestType.ANTIGEN) {
             sensitivity = 0.70 + r.nextFloat()*(0.86 - 0.70); //70-86 % dichiarato dal produttore, riferito ai test di fine 2020. I test di ultima generazione hanno risultati sovrapponibili a quelli dei test molecolari
             specificity = 0.95 + r.nextFloat()*(0.97-0.95); //95-97% dichiarato dal produttore
+            precision = 0.70 + r.nextFloat()*(0.86 - 0.70);
         }
         else if (type == CovidTestType.MOLECULAR) {
             sensitivity = 0.95;
             specificity = 0.98;
+            precision = 0.95;
         }
 
         //find correction values
@@ -104,9 +107,9 @@ public class CovidTest extends Type {
         if(delta>0){
             // senza falsi positivi e negativi
            if(this.isPositive)
-                testEvidence = n.density(delta) * correctionValue * this.sensitivity;
+                testEvidence = n.density(delta) * correctionValue * this.precision;
             else
-                testEvidence = 1 - n.density(delta) * correctionValue * this.specificity;
+                testEvidence = 1 - n.density(delta) * correctionValue * this.precision;
         }
         return testEvidence;
     }

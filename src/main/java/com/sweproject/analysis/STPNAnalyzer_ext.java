@@ -172,21 +172,17 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
                 float symp_risk_level = 0;
                 float test_risk_level = 0;
-                double cumulativeRiskLevel = risk_level;
                 if(testArrayList.size() > 0 || symptomsArrayList.size() > 0) {
                     System.out.println("dentro");
-                    int sympCount = 0; //indica quanti sintomi sono rilevanti
-                    int testCount = 0;
                     if (symptomsArrayList.size() > 0) {
                         for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                             LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                             if (contact_time.isBefore(symptom_date)) {
                                 Symptoms symptoms = new Symptoms();
                                 double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
-                                symp_risk_level += sympEvidence;
+                                symp_risk_level += Math.log(sympEvidence);
                                 //System.out.println("Symp " + sympEvidence);
                                 showsSymptoms = true;
-                                sympCount++;
                             }
                         }
                     }
@@ -198,28 +194,16 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                                 //System.out.println("Covid CCC " + covidTest.getName());
                                 double testEvidence = covidTest.isInfected(contact_time, test_time);
                                 //System.out.println(testEvidence);
-                                test_risk_level += testEvidence;
-                                testCount++;
+                                test_risk_level += Math.log(testEvidence);
                             }
                         }
                     }
-                    double cumulativeRiskLevel3 = cumulativeRiskLevel;
-                    if (testCount > 0 && sympCount > 0) {
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level / sympCount + test_risk_level / testCount * 1.5;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
-                    } else if (testCount > 0 && sympCount == 0) {
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                    } else if (testCount == 0 && sympCount > 0) {
-                        cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
-                        cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                    }
+                    // il calcolo è fatto dando la stessa importanza al rischio attribuito, e alle varie osservazioni
+                    double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(risk_level);
                     double[] cumulativeRiskLevel2;
                     cumulativeRiskLevel2 = updateRiskLevel(contact_time);
-                    double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                    cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                    System.out.println(cumulativeRiskLevel + " prima");
-                    if (showsSymptoms) {
+                    //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
+                    if (showsSymptoms) { //VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI?
                         cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                     } else {
                         cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
@@ -483,15 +467,12 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
             float symp_risk_level = 0;
             float test_risk_level = 0;
-            double cumulativeRiskLevel = risk_level;
-            int sympCount = 0, testCount = 0;
             if (symptomsArrayList.size() > 0) {
                 for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                     LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
                     if (contact_time.isBefore(symptom_date)) {
                         Symptoms symptoms = new Symptoms();
-                        symp_risk_level += symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
-                        sympCount++;
+                        symp_risk_level += Math.log(symptoms.updateEvidence(contact_time, symptom_date, symptomSolution));
                         symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("fiscalCode"), true);
                     }
                 }
@@ -504,37 +485,24 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         System.out.println("Covid CCC" + covidTest.getName());
                         double testEvidence = covidTest.isInfected(contact_time, test_time);
                         System.out.println(testEvidence);
-                        testCount++;
-                        test_risk_level += testEvidence;
+                        test_risk_level += Math.log(testEvidence);
                     }
                 }
             }
-            if (symptomsArrayList.size() > 0 || testArrayList.size() > 0) {
-                double cumulativeRiskLevel3 = cumulativeRiskLevel;
-                if (testArrayList.size() > 0 && symptomsArrayList.size() > 0) {
-                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + symp_risk_level / symptomsArrayList.size() + test_risk_level / testArrayList.size() * 1.5;
-                    cumulativeRiskLevel3 = cumulativeRiskLevel / 3;
-                } else if (testArrayList.size() > 0 && symptomsArrayList.size() == 0) {
-                    cumulativeRiskLevel = cumulativeRiskLevel * 0.5 + test_risk_level * 1.5;
-                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                } else if (testArrayList.size() == 0 && symptomsArrayList.size() > 0) {
-                    cumulativeRiskLevel = cumulativeRiskLevel * 0.8 + symp_risk_level * 1.2;
-                    cumulativeRiskLevel3 = cumulativeRiskLevel / 2;
-                } else {
-                    cumulativeRiskLevel3 = cumulativeRiskLevel;
-                }
-                double[] cumulativeRiskLevel2;
-                cumulativeRiskLevel2 = updateRiskLevel(contact_time);
-                double cumulativeRiskLevel1 = cumulativeRiskLevel2[0];
-                cumulativeRiskLevel = cumulativeRiskLevel1 * cumulativeRiskLevel3;
-                //System.out.println(cumulativeRiskLevel + " prima");
-                clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
-                factorDueToSymptoms = cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1];
-                //System.out.println(cumulativeRiskLevel + " dopo");
-                clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
-            }else{
-                factorDueToSymptoms = null;
+            double cumulativeRiskLevel = symp_risk_level + test_risk_level + Math.log(risk_level);
+            double[] cumulativeRiskLevel2;
+            cumulativeRiskLevel2 = updateRiskLevel(contact_time);
+            //System.out.println(cumulativeRiskLevel + " prima");
+            clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
+            if (symptomsArrayList.size() > 0) {
+                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+            } else {
+                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
+            //System.out.println(cumulativeRiskLevel + " dopo");
+            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+
         }
 
         HashMap<Integer, Double> output = new HashMap<>();
@@ -671,12 +639,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             e.printStackTrace();
         }
         return cumulativeRiskLevel2;
-    }
-
-    public float addTimeRelevance(float elapsedTime, float risk){
-        //TODO forse va fatto qualcosa. Forse però. Forse va bene così
-       // risk = risk * 1/elapsedTime;
-        return risk;
     }
 
     public XYChart.Series buildSolution(ArrayList<HashMap<String, XYChart.Series<String,Float>>> pns, String fiscalCode) {
