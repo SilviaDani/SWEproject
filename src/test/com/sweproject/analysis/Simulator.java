@@ -4,7 +4,7 @@ import com.github.sh0nk.matplotlib4j.NumpyUtils;
 import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
-import com.opencsv.CSVWriter;
+import com.opencsv.*;
 import com.sweproject.controller.UIController;
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.gateway.ObservationGatewayTest;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.oristool.models.stpn.TransientSolution;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -109,6 +109,10 @@ class Event implements Comparator<Event>, Comparable<Event>{
     public Type getType() {
         return type;
     }
+
+    //public Type getTestType() { return testType; } //fixme
+    //public Type getPositive() { return positive; } //fixme
+
     public ArrayList<Subject> getSubject() {
         return subject;
     }
@@ -614,6 +618,126 @@ public class Simulator extends UIController {
         }
         return (float) cumulativeRiskLevel;
     }
+
+
+    public double[] updateRiskLevelSimulator(LocalDateTime contact_time) {
+        //leggere i dati dal file cvs
+        double[] cumulativeRiskLevel2 = new double[2];
+        CSVReader reader = null;
+        try{
+            //covid file
+            reader = new CSVReader(new FileReader("src/main/res/dati_sintomi_covid.CSV"));
+            String[] nextLine;
+            HashMap<LocalDateTime, Integer> covidSymp = new HashMap<>();
+            while((nextLine = reader.readNext()) != null){
+                for(String token : nextLine){
+                    String[] ext = token.split(";");
+                    if(ext[0].matches(".*(/2022|/12/2021)$")){
+                        String[] d_m_y = ext[0].split("/");
+                        covidSymp.put(LocalDateTime.of(Integer.parseInt(d_m_y[2]), Integer.parseInt(d_m_y[1]), Integer.parseInt(d_m_y[0]), 0, 0),Integer.parseInt(ext[1]));
+                    }
+                }
+            }
+            reader.close();
+
+            //flu file
+            nextLine = null;
+            Reader r = Files.newBufferedReader(Path.of("src/main/res/incidenza-delle-sindromi.csv")); //mi baso sulla stagione 2021-2022
+            CSVParser parser = new CSVParserBuilder()
+                    .withSeparator('\n')
+                    .withIgnoreQuotations(true)
+                    .build();
+            CSVReader csvreader = new CSVReaderBuilder(r)
+                    .withSkipLines(0)
+                    .withCSVParser(parser)
+                    .build();
+            HashMap<LocalDateTime, Integer> fluSymp = new HashMap<>();
+            while((nextLine = csvreader.readNext()) != null){
+                for(String token : nextLine) {
+                    String tk = token.replace(",", ".");
+                    String[] ext = tk.split(";");
+                    if (ext[0].matches("\\d+")) {
+                        double nCont = Double.parseDouble(ext[1]);
+                        nCont = nCont * 59110000/1000;
+                        for (int day = 0; day < 7; day++){
+                            fluSymp.put(LocalDateTime.of(2022,1,1,0,0).plusWeeks(Integer.parseInt(ext[0])-1).plusDays(day), (int) nCont); //alcuni dati si riferiscono alla fine del 2021 ma conviene trattarli come se fossero tutti del 2022 perché considero solo una stagione influenzale
+                        }
+                    }
+                }
+            }
+            //STA ROBA SOTTO SERVE A QUALCOSA?
+            fluSymp.put(LocalDateTime.of(2021,1,1,0,0).plusWeeks(40), fluSymp.get(LocalDateTime.of(2022,1,1,0,0).plusWeeks(40)));
+            fluSymp.put(LocalDateTime.of(2021,1,1,0,0).plusWeeks(41), fluSymp.get(LocalDateTime.of(2022,1,1,0,0).plusWeeks(41)));
+            csvreader.close();
+
+            double nSymp = 0;
+            double nCov = 0;
+            LocalDateTime cTime = contact_time;
+            cTime = cTime.withHour(0).withMinute(0);
+            if(contact_time.getYear() != 2022)
+                cTime = cTime.withYear(2022); //mi baso sui dati del 2022
+
+            //Considero che una persona abbia i sintomi per 2 settimane e quindi quando calcolo quante persone hanno i sintomi del covid considero tutti quelli che hanno iniziato a mostrare i sintomi nelle ultime 2 settimane
+            for(LocalDateTime ldt = cTime ; ldt.isAfter(cTime.minusWeeks(2)); ldt = ldt.minusDays(1)){
+                nCov += covidSymp.get(ldt);
+            }
+            if(cTime.isAfter(LocalDateTime.of(2022,1,1,0,0).plusWeeks(16))&&cTime.isBefore(LocalDateTime.of(2022, 1, 1,0,0).plusWeeks(42))){
+                //non ci sono i dati relativi a questo periodo
+            }else {
+                nSymp += fluSymp.get(cTime);
+            }
+            cumulativeRiskLevel2[0] = nCov / 59110000;
+            cumulativeRiskLevel2[1] = nSymp / 59110000;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return cumulativeRiskLevel2;
+    }
+
+    private double updateRiskLevel(double riskLevel, LocalDateTime contact_time, ArrayList<Event> testsArrayList,ArrayList<Event> symptomsArrayList) throws Exception {
+        double symp_risk_level = 0;
+        double test_risk_level = 0;
+        boolean symp = false;
+        boolean test_ = false;
+        if (symptomsArrayList.size() > 0) {
+            for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
+                LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
+                if (contact_time.isBefore(symptom_date)) {
+                    Symptoms symptoms = new Symptoms();
+                    double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution); //TODO CALCOLARE E SALVARE IL REWARD DI SINTOMATICO
+                    symp_risk_level += Math.log(sympEvidence);
+                    //System.out.println("Symp " + sympEvidence);
+                    symp = true;
+                }
+            }
+        }
+        if (testsArrayList.size() > 0) {
+            for (int test = 0; test < testsArrayList.size(); test++) {
+                LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
+                if (contact_time.isBefore(test_time)) {
+                    //TODO GETTESTTYPE E GETPOSITIVE NELLA CLASSE TYPE SONO ASTRATTE E PER ORA NON C`È SCRITTO NULLA
+                    CovidTest covidTest = new CovidTest(((CovidTestType) testsArrayList.get(test).getType().getTestType()), (boolean) testsArrayList.get(test).getType().getPositive());
+                    //System.out.println("Covid CCC " + covidTest.getName());
+                    double testEvidence = covidTest.isInfected(contact_time, test_time);
+                    //System.out.println(testEvidence);
+                    test_risk_level += Math.log(testEvidence);
+                    test_ = true;
+                }
+            }
+        }
+        double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(riskLevel);
+        double[] cumulativeRiskLevel2;
+        cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
+        //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
+        if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+            cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+        } else {
+            cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+            //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+        }
+        return cumulativeRiskLevel;
+    }
+
     private float updateContObservation( Event event, LocalDateTime contact_time, ArrayList<Event> tests,ArrayList<Event> symptoms, ArrayList<Subject> ss) throws Exception {
         float risk_level = ((Contact) event.getType()).getRiskLevel();
         float symp_risk_level = 0;
@@ -691,7 +815,8 @@ public class Simulator extends UIController {
                 subject.setShowsCovidLikeSymptoms(false);
                 if(subject.getCurrentState() == 0){
                     float d = r.nextFloat();
-                    float risk_level = ((Environment)event.getType()).getRiskLevel();
+                    double risk_level = ((Environment)event.getType()).getRiskLevel();
+                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms);
                     if(d < risk_level){
                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                         subject.changeState(event.getStartDate());
@@ -722,8 +847,9 @@ public class Simulator extends UIController {
                         float d = r.nextFloat();
                         for(Subject subject : ss){
                             if(subject.getCurrentState() == 0){
-                            float cumulativeRiskLevel = ((Contact) event.getType()).getRiskLevel();
-                            if(d < cumulativeRiskLevel){
+                            double risk_level = ((Contact) event.getType()).getRiskLevel();
+                            risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms);
+                            if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
                                 //rescheduling dell'evento "subject" diventa contagioso

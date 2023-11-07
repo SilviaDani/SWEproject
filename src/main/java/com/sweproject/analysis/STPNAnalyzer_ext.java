@@ -203,7 +203,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     double[] cumulativeRiskLevel2;
                     cumulativeRiskLevel2 = updateRiskLevel(contact_time);
                     //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
-                    if (showsSymptoms) { //VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI?
+                    if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
                         cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                     } else {
                         cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
@@ -494,7 +494,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             cumulativeRiskLevel2 = updateRiskLevel(contact_time);
             //System.out.println(cumulativeRiskLevel + " prima");
             clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
-            if (symptomsArrayList.size() > 0) {
+            if (symptomsArrayList.size() > 0) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
                 cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
             } else {
                 cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
