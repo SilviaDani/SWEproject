@@ -88,12 +88,16 @@ class Event implements Comparator<Event>, Comparable<Event>{
     protected LocalDateTime endDate;
     protected Type type;
     protected ArrayList<Subject> subject;
+    protected Boolean isPositive;
+    protected String testType;
 
-    public Event(LocalDateTime startDate, LocalDateTime endDate, Type type, ArrayList<Subject> subject) {
+    public Event(LocalDateTime startDate, LocalDateTime endDate, Type type, ArrayList<Subject> subject, Boolean isPositive, String testType) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.type = type;
         this.subject = subject;
+        this.isPositive = isPositive;
+        this.testType = testType;
     }
 
     @Override
@@ -109,9 +113,8 @@ class Event implements Comparator<Event>, Comparable<Event>{
     public Type getType() {
         return type;
     }
-
-    //public Type getTestType() { return testType; } //fixme
-    //public Type getPositive() { return positive; } //fixme
+    public String getTestType() { return testType; }
+    public Boolean getPositive() { return isPositive; }
 
     public ArrayList<Subject> getSubject() {
         return subject;
@@ -128,11 +131,12 @@ class Event implements Comparator<Event>, Comparable<Event>{
     public int compareTo(Event o) {
         return startDate.compareTo(o.startDate);
     }
+
 }
 class ChangeStateEvent extends Event{
 
     public ChangeStateEvent(LocalDateTime startDate, ArrayList<Subject> subject) {
-        super(startDate, null, null, subject);
+        super(startDate, null, null, subject, null, null);
     }
 }
 
@@ -457,7 +461,7 @@ public class Simulator extends UIController {
                     s_String.add(sub.getName());
                 }
                 Type t = new Environment(masks[i], riskLevels[i], startDates[i], endDates[i]);
-                events.add(new Event(startDates[i], endDates[i], t, s));
+                events.add(new Event(startDates[i], endDates[i], t, s, null, null));
 
                 observationGateway.insertObservation(s_String, t, startDates[i], endDates[i]);
             }
@@ -494,7 +498,7 @@ public class Simulator extends UIController {
             }
             Type t = new Contact(s_String, nc_masks[c], nc_riskLevels[c], nc_startDates[c], nc_endDates[c]);
 
-            events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects));
+            events.add(new Event(nc_startDates[c], nc_endDates[c], t, partecipatingSubjects, null, null));
             observationGateway.insertObservation(s_String, t, nc_startDates[c], nc_endDates[c]);
         }
         Collections.sort(events);
@@ -524,7 +528,7 @@ public class Simulator extends UIController {
             for(int nSymptom = 0; nSymptom < actual_nSymptoms; nSymptom++){
                 ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
                 Type t = new Symptoms();
-                symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom], t, s));
+                symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom], t, s, null, null));
                 ArrayList<String> s_String = new ArrayList<>();
                 for(Subject sub : s){
                     s_String.add(sub.getName());
@@ -548,8 +552,10 @@ public class Simulator extends UIController {
 
             for(int nCovTest = 0; nCovTest < actual_nCovTests; nCovTest++){
                 ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
-                Type t = new CovidTest(r.nextFloat()>0.5f?CovidTestType.MOLECULAR:CovidTestType.ANTIGEN, r.nextFloat()>0.5f);
-                tests.add(new Event(startDates[nCovTest], null, t, s));
+                float randomTest = r.nextFloat();
+                float randomPositive = r.nextFloat();
+                Type t = new CovidTest(randomTest>0.5f?CovidTestType.MOLECULAR:CovidTestType.ANTIGEN, randomPositive>0.5f);
+                tests.add(new Event(startDates[nCovTest], null, t, s, randomPositive>0.5f,randomTest>0.5f?"MOLECULAR":"ANTIGEN"));
                 ArrayList<String> s_String = new ArrayList<>();
                 for(Subject sub : s){
                     s_String.add(sub.getName());
@@ -569,7 +575,11 @@ public class Simulator extends UIController {
                 if (tests.get(test).getSubject().get(0).getName().equals(subject.getName())) {
                     LocalDateTime test_time = tests.get(test).getStartDate();
                     if (contact_time.isBefore(test_time)) {
-                        CovidTest covidTest = new CovidTest(((CovidTest) tests.get(test).getType()).getTestType(), ((CovidTest) tests.get(test).getType()).isPositive());
+                        CovidTestType covidTestType = CovidTestType.ANTIGEN;
+                        if (tests.get(test).getTestType().equals("MOLECULAR")){
+                            covidTestType = CovidTestType.MOLECULAR;
+                        }
+                        CovidTest covidTest = new CovidTest(covidTestType, (tests.get(test)).getPositive());
                         double testEvidence = covidTest.isInfected(contact_time, test_time);
                         test_risk_level += testEvidence;
                         testCount++;
@@ -582,7 +592,7 @@ public class Simulator extends UIController {
                 if (symptoms.get(symptom).getSubject().get(0).getName().equals(subject.getName())) {
                     LocalDateTime symptom_time = symptoms.get(symptom).getStartDate();
                     if (contact_time.isBefore(symptom_time)) {
-                        subject.setShowsCovidLikeSymptoms(true);//fixme va bene qui? va messo fuori da questo if?
+                        subject.setShowsCovidLikeSymptoms(true);
                         Symptoms covidSymptom = new Symptoms();
                         double sympEvidence = covidSymptom.updateEvidence(contact_time, symptom_time, stpnAnalyzer.symptomSolution);
                         symp_risk_level += sympEvidence;
@@ -704,7 +714,7 @@ public class Simulator extends UIController {
                 LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
                 if (contact_time.isBefore(symptom_date)) {
                     Symptoms symptoms = new Symptoms();
-                    double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution); //TODO CALCOLARE E SALVARE IL REWARD DI SINTOMATICO
+                    double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution);
                     symp_risk_level += Math.log(sympEvidence);
                     //System.out.println("Symp " + sympEvidence);
                     symp = true;
@@ -715,8 +725,11 @@ public class Simulator extends UIController {
             for (int test = 0; test < testsArrayList.size(); test++) {
                 LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
                 if (contact_time.isBefore(test_time)) {
-                    //TODO GETTESTTYPE E GETPOSITIVE NELLA CLASSE TYPE SONO ASTRATTE E PER ORA NON C`È SCRITTO NULLA
-                    CovidTest covidTest = new CovidTest(((CovidTestType) testsArrayList.get(test).getType().getTestType()), (boolean) testsArrayList.get(test).getType().getPositive());
+                    CovidTestType covidTestType = CovidTestType.ANTIGEN;
+                    if (testsArrayList.get(test).getTestType().equals("MOLECULAR")){
+                        covidTestType = CovidTestType.MOLECULAR;
+                    }
+                    CovidTest covidTest = new CovidTest(covidTestType, testsArrayList.get(test).getPositive());
                     //System.out.println("Covid CCC " + covidTest.getName());
                     double testEvidence = covidTest.isInfected(contact_time, test_time);
                     //System.out.println(testEvidence);

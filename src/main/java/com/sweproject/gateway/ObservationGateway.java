@@ -166,7 +166,6 @@ public class ObservationGateway extends Gateway {
     }
 
     public ArrayList<HashMap<String, Object>> getTestObservations(String FC, LocalDateTime start_time_analysis){
-        //TODO I TEST CHE VANNO CONSIDERATI SONO ANCHE QUELLI PRIMA DEL TEMPO DELL'ANALISI?
         ResultSet rs = null;
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {

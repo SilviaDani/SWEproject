@@ -702,7 +702,7 @@ class STPNAnalyzerTest {
             HashMap<String, TransientSolution> new_subject_ss = new HashMap<>();
             for(String member : subjects_String){
                 if(nIteration==0){
-                    try {//fixme
+                    try {
                         timerOr.stop();
                         TransientSolution s = stpnAnalyzer_ext.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member));
                         pits.put(member, stpnAnalyzer_ext.computeAnalysis(s, envObs.get(member), t0));
