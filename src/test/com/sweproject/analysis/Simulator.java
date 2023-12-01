@@ -6,6 +6,8 @@ import com.github.sh0nk.matplotlib4j.PythonConfig;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 import com.opencsv.*;
 import com.sweproject.controller.UIController;
+import com.sweproject.gateway.AccessGateway;
+import com.sweproject.gateway.AccessGatewayTest;
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.gateway.ObservationGatewayTest;
 import com.sweproject.model.*;
@@ -141,21 +143,21 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 244;
+    int samples = 168*2;
     int steps = 1;
-    final int maxReps = 10000;
+    final int maxReps = 1000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 4;
-    int nContact = 20; //this number should be high (?)
-    int max_nEnvironment = 5;
-    int min_nEnvironment = 1;
-    int max_nSymptoms = 5;
+    int nContact = 10; //this number should be high (?)
+    int max_nEnvironment = 7;
+    int min_nEnvironment = 5;
+    int max_nSymptoms = 0; //fixme
     int min_nSymptoms = 0;
-    int max_nCovTests = 5;
-    int min_nCovTests = 0;
+    int max_nCovTests = 5; //fixme
+    int min_nCovTests = 4;
     File execTimes;
     File confInt;
     File RMSE;
@@ -171,7 +173,7 @@ public class Simulator extends UIController {
     WeibullDistribution wSymp = new WeibullDistribution(2, 11);
     ExponentialDistribution eNotSymp = new ExponentialDistribution(25);
     ExponentialDistribution eSymp = new ExponentialDistribution(10);
-    long seed = 112;
+    long seed = 11;
 
 
 
@@ -340,21 +342,7 @@ public class Simulator extends UIController {
             //Simulazione vera e propria
             for(int rep = 0; rep<maxReps; rep++){
                runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees);
-            }/*
-            IntStream.range(0, maxReps).parallel().forEach((i)->{
-                try {
-                    ArrayList<Subject> subjects_local = (ArrayList<Subject>) subjects.clone();
-                    ArrayList<Event> events_local = (ArrayList<Event>) events.clone();
-                    ArrayList<Event> tests_local = (ArrayList<Event>)tests.clone();
-                    ArrayList<Event> symptoms_local = (ArrayList<Event>) symptoms.clone();
-                    LocalDateTime t0_local = t0;
-                    runMainCycle(subjects_local, events_local, tests_local, symptoms_local, t0_local, i, meanTrees);
-                    System.out.println(i);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println(i);
-                }
-            });*/
+            }
 
             if(DEBUG){
                 timer.stop();
@@ -428,9 +416,11 @@ public class Simulator extends UIController {
         if(DEBUG){
             timer.start();
         }
+        AccessGateway accessGateway = new AccessGateway();
         //creazione dei soggetti
         for(int p = 0; p < np; p++){
             subjects.add(new Subject("P" + p));
+            accessGateway.insertNewUser("P"+p, "P"+p, "P"+p, "P"+p, "P"+p);
         }
         //creazione degli eventi ambientali
         for(int p = 0; p < np; p++){
@@ -704,7 +694,7 @@ public class Simulator extends UIController {
         return cumulativeRiskLevel2;
     }
 
-    private double updateRiskLevel(double riskLevel, LocalDateTime contact_time, ArrayList<Event> testsArrayList,ArrayList<Event> symptomsArrayList) throws Exception {
+    private double updateRiskLevel(double riskLevel, LocalDateTime contact_time, ArrayList<Event> testsArrayList,ArrayList<Event> symptomsArrayList, Subject subject) throws Exception {
         double symp_risk_level = 0;
         double test_risk_level = 0;
         boolean symp = false;
@@ -712,42 +702,50 @@ public class Simulator extends UIController {
         if (symptomsArrayList.size() > 0) {
             for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                 LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
-                if (contact_time.isBefore(symptom_date)) {
-                    Symptoms symptoms = new Symptoms();
-                    double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution);
-                    symp_risk_level += Math.log(sympEvidence);
-                    //System.out.println("Symp " + sympEvidence);
-                    symp = true;
+                if (symptomsArrayList.get(symptom).getSubject().get(0).equals(subject)) {
+                    if (contact_time.isBefore(symptom_date)) {
+                        Symptoms symptoms = new Symptoms();
+                        double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution);
+                        symp_risk_level += Math.log(sympEvidence <= 0 ? 1 : sympEvidence); //XXX [CHECK IF IT'S CORRECT]
+                        //System.out.println("Symp " + sympEvidence);
+                        symp = true;
+                    }
                 }
             }
         }
         if (testsArrayList.size() > 0) {
             for (int test = 0; test < testsArrayList.size(); test++) {
                 LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
-                if (contact_time.isBefore(test_time)) {
-                    CovidTestType covidTestType = CovidTestType.ANTIGEN;
-                    if (testsArrayList.get(test).getTestType().equals("MOLECULAR")){
-                        covidTestType = CovidTestType.MOLECULAR;
+                if(testsArrayList.get(test).getSubject().get(0).equals(subject)) {
+                    if (contact_time.isBefore(test_time)) {
+                        CovidTestType covidTestType = CovidTestType.ANTIGEN;
+                        if (testsArrayList.get(test).getTestType().equals("MOLECULAR")) {
+                            covidTestType = CovidTestType.MOLECULAR;
+                        }
+                        CovidTest covidTest = new CovidTest(covidTestType, testsArrayList.get(test).getPositive());
+                        //System.out.println("Covid CCC " + covidTest.getName());
+                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                        //System.out.println(testEvidence);
+                        test_risk_level += Math.log(testEvidence);
+                        test_ = true;
                     }
-                    CovidTest covidTest = new CovidTest(covidTestType, testsArrayList.get(test).getPositive());
-                    //System.out.println("Covid CCC " + covidTest.getName());
-                    double testEvidence = covidTest.isInfected(contact_time, test_time);
-                    //System.out.println(testEvidence);
-                    test_risk_level += Math.log(testEvidence);
-                    test_ = true;
                 }
             }
         }
         double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(riskLevel);
         double[] cumulativeRiskLevel2;
         cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
+        //System.out.println(cumulativeRiskLevel + " - " + cumulativeRiskLevel2[0] + " " + cumulativeRiskLevel2[1]);
         //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
         if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
-            cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+            //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+            //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
         } else {
-            cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+            //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+             //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
             //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
         }
+        //System.out.println("CRL: "+cumulativeRiskLevel);
         return cumulativeRiskLevel;
     }
 
@@ -828,13 +826,16 @@ public class Simulator extends UIController {
                 subject.setShowsCovidLikeSymptoms(false);
                 if(subject.getCurrentState() == 0){
                     float d = r.nextFloat();
+                    d = (float) Math.log(d);
                     double risk_level = ((Environment)event.getType()).getRiskLevel();
-                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms);
+                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
+                    System.out.println("Sim " + contact_time + " risk_l:" + risk_level+"\n");
                     if(d < risk_level){
                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                         subject.changeState(event.getStartDate());
                         //rescheduling dell'evento "subject" diventa contagioso
                         events.add(new ChangeStateEvent(ldt, event.getSubject()));
+                        //System.out.println("ping");
                     }
                 }
             }
@@ -858,10 +859,11 @@ public class Simulator extends UIController {
                     }
                     if (toUpdate){
                         float d = r.nextFloat();
+                        d = (float) Math.log(d);
                         for(Subject subject : ss){
                             if(subject.getCurrentState() == 0){
                             double risk_level = ((Contact) event.getType()).getRiskLevel();
-                            risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms);
+                            risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
@@ -921,10 +923,21 @@ public class Simulator extends UIController {
         int size = 0;
 
         for(String member : subjects_String){
-            envObs.put(member, observationGateway.getEnvironmentObservations(member, samples));
-            testObs.put(member, observationGateway.getTestObservations(member, t0));
-            sympObs.put(member, observationGateway.getRelevantSymptomsObservations(member, t0));
-            size+=envObs.get(member).size() + testObs.get(member).size()+sympObs.get(member).size() + clusterSubjectsMet.get(member).size();
+            member = member.toUpperCase();
+            ArrayList env = observationGateway.getEnvironmentObservations(member, samples);
+            ArrayList tst = observationGateway.getTestObservations(member, t0);
+            ArrayList sym = observationGateway.getRelevantSymptomsObservations(member, t0);
+            int clusterSubjectsMet_size = clusterSubjectsMet.get(member) == null ? 0 : clusterSubjectsMet.get(member).size();
+            envObs.put(member, env == null ? new ArrayList<>() : env);
+            testObs.put(member, tst == null ? new ArrayList<>() : tst);
+            sympObs.put(member, sym == null ? new ArrayList<>() : sym);
+            System.out.println("--- XXX ---");
+            System.out.println(envObs.get(member).size());
+            System.out.println(testObs.get(member).size());
+            System.out.println(sympObs.get(member).size());
+            System.out.println(clusterSubjectsMet_size);
+            System.out.println("--- YYY ---");
+            size+=envObs.get(member).size() + testObs.get(member).size()+sympObs.get(member).size() + clusterSubjectsMet_size;
         }
     }
 
@@ -1118,7 +1131,7 @@ public class Simulator extends UIController {
                         personMaxAn = member;
                     }
                 }
-                System.out.println("According to the simulation, " + personMaxAn + " should be tested.\nAccording to the numerical analysis, " + personMaxSim + " should be tested.");
+                System.out.println("According to the simulation, " + personMaxSim + " should be tested.\nAccording to the numerical analysis, " + personMaxAn + " should be tested.");
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -1131,8 +1144,9 @@ public class Simulator extends UIController {
         for(int p=0; p<np; p++) {
             ArrayList<HashMap<String, Object>> obs = observationGateway.getObservations("P"+p);
             for (int i = 0; i < obs.size(); i++) {
-                ObservationGatewayTest.deleteObservation(obs.get(i).get("id").toString());
+                ObservationGatewayTest.deleteObservation(obs.get(i).get("ID").toString());
             }
+            AccessGatewayTest.deleteUser("P"+p);
         }
     }
     @Test

@@ -37,6 +37,9 @@ public class Symptoms extends Type{
     public double updateEvidence(LocalDateTime contactTime, LocalDateTime symptomsTime, TransientSolution s){
         int delta = (int) (ChronoUnit.MINUTES.between(contactTime, symptomsTime)/60.0 - hoursFromContact);
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+        if (delta < 0){
+            delta = 0;
+        }
         double y = s.getSolution()[delta][r][0];
         return y;
     }

@@ -35,11 +35,11 @@ public class LogInPageController extends UIController{
         String FC = fiscalCode.getText();
         ArrayList<HashMap<String, Object>> user = accessGateway.selectUser(FC);
         if(user.size() > 0){ //user.next() = true se non è vuoto, = false se è vuoto
-            String password = BCrypt.hashpw(passwordField.getText(), user.get(0).get("salt").toString());
-            String DBName = user.get(0).get("firstName").toString();
-            String DBPassword = user.get(0).get("psw").toString();
+            String password = BCrypt.hashpw(passwordField.getText(), user.get(0).get("SALT").toString());
+            String DBName = user.get(0).get("FIRSTNAME").toString();
+            String DBPassword = user.get(0).get("PASSWORD").toString();
             if(Objects.equals(DBPassword, password)) {
-                UIController.user = new Notifier(FC, DBName, user.get(0).get("surname").toString());
+                UIController.user = new Notifier(FC, DBName, user.get(0).get("SURNAME").toString());
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sweproject/FXML/userPage.fxml"));
                 Parent root = loader.load();
 

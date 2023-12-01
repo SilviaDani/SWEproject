@@ -21,6 +21,8 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -159,7 +161,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
    */
     public TransientSolution<R,S> makeModel(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
-            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
+            System.out.println("RAW TYPE " + rawType);
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
@@ -168,19 +171,22 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
                 showsSymptoms = false;
-                LocalDateTime contact_time = (LocalDateTime) environmentArrayList.get(contact).get("start_date");
-                float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
+                System.out.println("CONCTACT TIME" + environmentArrayList.get(contact).get("START_DATE"));
+                LocalDateTime contact_time = (((oracle.sql.TIMESTAMP)environmentArrayList.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
+                System.out.println("CONTACT TIME " + contact_time);
+                float risk_level = ((BigDecimal)environmentArrayList.get(contact).get("RISK_LEVEL")).floatValue();
+                environmentArrayList.get(contact).replace("RISK_LEVEL", (float) risk_level);
                 float symp_risk_level = 0;
                 float test_risk_level = 0;
                 if(testArrayList.size() > 0 || symptomsArrayList.size() > 0) {
                     System.out.println("dentro");
                     if (symptomsArrayList.size() > 0) {
                         for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
-                            LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                            LocalDateTime symptom_date = (((oracle.sql.TIMESTAMP)symptomsArrayList.get(symptom).get("START_DATE")).timestampValue()).toLocalDateTime();
                             if (contact_time.isBefore(symptom_date)) {
                                 Symptoms symptoms = new Symptoms();
                                 double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
-                                symp_risk_level += Math.log(sympEvidence);
+                                symp_risk_level += Math.log(sympEvidence <= 0 ? 1 : sympEvidence);
                                 //System.out.println("Symp " + sympEvidence);
                                 showsSymptoms = true;
                             }
@@ -188,7 +194,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                     if (testArrayList.size() > 0) {
                         for (int test = 0; test < testArrayList.size(); test++) {
-                            LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                            LocalDateTime test_time = (((oracle.sql.TIMESTAMP)testArrayList.get(test).get("START_DATE")).timestampValue()).toLocalDateTime();
                             if (contact_time.isBefore(test_time)) {
                                 CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
                                 //System.out.println("Covid CCC " + covidTest.getName());
@@ -204,14 +210,18 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     cumulativeRiskLevel2 = updateRiskLevel(contact_time);
                     //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
                     if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
-                        cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                        //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                        //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
                     } else {
-                        cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                        //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
+                        //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                         //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                     }
+                    var b = environmentArrayList.get(contact).replace("RISK_LEVEL", (float)Math.exp(cumulativeRiskLevel));
+                    //var b = environmentArrayList.get(contact).replace("RISK_LEVEL", risk_level, (float) cumulativeRiskLevel);
+                    System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
                 }
                 /*
-                environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
                 System.out.println(environmentArrayList.get(contact).get("risk_level") + " dopo");
                 */
             }
@@ -234,9 +244,15 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             System.out.println(m + " m");
             double step = s.getStep().doubleValue();
             for (int event = 0; event < eventsArrayList.size(); event++){
-                LocalDateTime eventTime = (LocalDateTime) eventsArrayList.get(event).get("start_date");
+                LocalDateTime eventTime = null;
+                try {
+                    eventTime = (((oracle.sql.TIMESTAMP) eventsArrayList.get(event).get("START_DATE")).timestampValue()).toLocalDateTime();
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
                 int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
-                float risk = (float)eventsArrayList.get(event).get("risk_level");
+                float risk = (float) eventsArrayList.get(event).get("RISK_LEVEL");
+                System.out.println("PN2 " + eventTime + " -> "+risk);
                 int i = 0;
                 for (int j = delta; j < size; j += step){
                     double y = s.getSolution()[i][r][m] * risk;
@@ -447,7 +463,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                                                      ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList, String nameOfPersonAskingForAnalysis) throws Exception {
 
         for (int testIndex = 0; testIndex < testArrayList.size(); testIndex++) {
-            String rawType = (String) testArrayList.get(testIndex).get("type");
+            String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR") ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
@@ -457,29 +473,37 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         for(String subject : subjects_solutions.keySet()){
             symptomaticSubjects.put(subject, false);
         }
-        Double factorDueToSymptoms = 1.0;
+        Double factorDueToSymptoms = null;
         for (int contact = 0; contact < clusterSubjectsMet.size(); contact++) {
             for (String subject : subjects_solutions.keySet()) {
                 symptomaticSubjects.replace(subject, false);
             }
             clusterSubjectsMet.get(contact).put("symptomaticSubjects", new HashMap<>(symptomaticSubjects));
-            LocalDateTime contact_time = (LocalDateTime) clusterSubjectsMet.get(contact).get("start_date");
-            float risk_level = (float) clusterSubjectsMet.get(contact).get("risk_level");
+            LocalDateTime contact_time = (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
+            var rl = clusterSubjectsMet.get(contact).get("RISK_LEVEL");
+            float risk_level = 0;
+            if (rl instanceof  BigDecimal){
+                risk_level = ((BigDecimal)clusterSubjectsMet.get(contact).get("RISK_LEVEL")).floatValue();
+            }else{
+                risk_level = (float) clusterSubjectsMet.get(contact).get("RISK_LEVEL");
+            }
+            clusterSubjectsMet.get(contact).replace("RISK_LEVEL", (float) risk_level);
             float symp_risk_level = 0;
             float test_risk_level = 0;
             if (symptomsArrayList.size() > 0) {
                 for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
-                    LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
+                    LocalDateTime symptom_date = (((oracle.sql.TIMESTAMP)symptomsArrayList.get(symptom).get("START_DATE")).timestampValue()).toLocalDateTime();
                     if (contact_time.isBefore(symptom_date)) {
                         Symptoms symptoms = new Symptoms();
-                        symp_risk_level += Math.log(symptoms.updateEvidence(contact_time, symptom_date, symptomSolution));
-                        symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("fiscalCode"), true);
+                        double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
+                        symp_risk_level += Math.log(sympEvidence<=0?1:sympEvidence); //XXX [CHECK IF IT'S CORRECT]
+                        symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("FISCALCODE"), true);
                     }
                 }
             }
             if (testArrayList.size() > 0) {
                 for (int test = 0; test < testArrayList.size(); test++) {
-                    LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
+                    LocalDateTime test_time = (((oracle.sql.TIMESTAMP)testArrayList.get(test).get("START_DATE")).timestampValue()).toLocalDateTime();
                     if (contact_time.isBefore(test_time)) {
                         CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
                         System.out.println("Covid CCC" + covidTest.getName());
@@ -495,13 +519,16 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             //System.out.println(cumulativeRiskLevel + " prima");
             clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
             if (symptomsArrayList.size() > 0) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
-                cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
             } else {
-                cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
             //System.out.println(cumulativeRiskLevel + " dopo");
-            clusterSubjectsMet.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
+            var b = clusterSubjectsMet.get(contact).replace("RISK_LEVEL", risk_level, (float) Math.exp(cumulativeRiskLevel));
+            System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
 
         }
 
@@ -522,9 +549,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 while(i < clusterSubjectsMet.size()) { //itera sugli eventi
                     j = 0;
                     String[] meeting_subjects = new String[clusterSubjectsMet.size()];
-                    LocalDateTime meeting_time1 = LocalDateTime.from((LocalDateTime) clusterSubjectsMet.get(i).get("start_date"));
-                    while (i < clusterSubjectsMet.size() && clusterSubjectsMet.get(i).get("start_date").equals(meeting_time1)) {
-                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("fiscalCode").toString();
+                    (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime();
+                    LocalDateTime meeting_time1 = LocalDateTime.from((((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime());
+                    while (i < clusterSubjectsMet.size() && (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime().equals(meeting_time1)) {
+                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("FISCALCODE").toString();
                         j++;
                         i++;
                     }
@@ -541,10 +569,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     double step = s.getStep().doubleValue();
                     int index = 0;
 
-                    float risk = (float)clusterSubjectsMet.get(contactNumber).get("risk_level");
+                    float risk = (float) clusterSubjectsMet.get(contactNumber).get("RISK_LEVEL");
                     for (int jj = delta; jj < size; jj += (int)step){
                         double y = s.getSolution()[index][r][m] * maxRisk * risk;
-                        if(factorDueToSymptoms != null) {
+                        if(factorDueToSymptoms != null) { //XXX remove?
                             if (((HashMap<String, Boolean>) clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)) {
                                 y /= factorDueToSymptoms;
                             } else {

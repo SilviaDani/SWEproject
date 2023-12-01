@@ -28,11 +28,11 @@ public class AccessGatewayTest {
             accessGateway.insertNewUser(fiscalCode, name, surname, password, salt);
             ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectUser(fiscalCode);
             assertNotEquals(0,arrayList.size());
-            assertEquals(fiscalCode, arrayList.get(0).get("fiscalCode"));
-            assertEquals(name, arrayList.get(0).get("firstName"));
-            assertEquals(surname, arrayList.get(0).get("surname"));
-            assertEquals(password, arrayList.get(0).get("psw"));
-            assertEquals(salt, arrayList.get(0).get("salt"));
+            assertEquals(fiscalCode, arrayList.get(0).get("FISCALCODE"));
+            assertEquals(name, arrayList.get(0).get("FIRSTNAME"));
+            assertEquals(surname, arrayList.get(0).get("SURNAME"));
+            assertEquals(password, arrayList.get(0).get("PASSWORD"));
+            assertEquals(salt, arrayList.get(0).get("SALT"));
             AccessGatewayTest.deleteUser(fiscalCode);
         }catch (Exception e){
             fail(e.getCause());
@@ -55,13 +55,15 @@ public class AccessGatewayTest {
             ArrayList<String> patients = new ArrayList<>();
             patients.add("RSSLRD00A01H501E");
             patients.add("FRRFNC66A01H501D");
+            accessGateway.insertNewUser(patients.get(0), "xx", "yy", "zz", "ww");
+            accessGateway.insertNewUser(patients.get(1), "xx", "yy", "zz", "ww");
             deleteDoctor(fiscalCode);
             insertDoctor(fiscalCode, patients);
             ArrayList<HashMap<String, Object>> arrayList = accessGateway.selectDoctor(fiscalCode);
             for(int i=0; i<2; i++) {
                 assertNotEquals(0, arrayList.size());
-                assertEquals(fiscalCode, arrayList.get(i).get("doctorFiscalCode"));
-                assertEquals(patients.get(patients.size() - 1 -i), arrayList.get(i).get("patientFiscalCode"));
+                assertEquals(fiscalCode, arrayList.get(i).get("doctorFiscalCode".toUpperCase()));
+                assertEquals(patients.get(i), arrayList.get(i).get("patientFiscalCode".toUpperCase()));
             }
             deleteDoctor(fiscalCode);
             AccessGatewayTest.deleteUser(fiscalCode);
@@ -74,7 +76,9 @@ public class AccessGatewayTest {
     }
 
     public static void deleteUser(String fiscalCode) {
-        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String url;
+        String user;
+        String password;
         Properties prop = new Properties();
         try{
             FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
@@ -82,15 +86,16 @@ public class AccessGatewayTest {
         }catch(IOException ex){
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
-        String user = prop.getProperty("db.user");
-        String password = prop.getProperty("db.password");
+        url = prop.getProperty("db.url");
+        System.out.println(url);
+        user = prop.getProperty("db.user");
+        password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
-            statement.execute("use `tracing-app`");
-            statement.execute("DELETE FROM `users` WHERE `fiscalCode` = '" + fiscalCode + "'");
+            statement.execute("DELETE FROM USERS WHERE FISCALCODE = '" + fiscalCode.toUpperCase() + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
         }finally {
@@ -112,8 +117,10 @@ public class AccessGatewayTest {
         }
     }
 
-    public static void insertDoctor(String fiscalCode, ArrayList<String> patients){
-        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+    public static void insertDoctor(String fiscalCode_, ArrayList<String> patients){
+        String url;
+        String user;
+        String password;
         Properties prop = new Properties();
         try{
             FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
@@ -121,18 +128,20 @@ public class AccessGatewayTest {
         }catch(IOException ex){
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
-        String user = prop.getProperty("db.user");
-        String password = prop.getProperty("db.password");
+        url = prop.getProperty("db.url");
+        System.out.println(url);
+        user = prop.getProperty("db.user");
+        password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
-            statement.execute("use `tracing-app`");
             Statement finalStatement = statement;
             patients.forEach((patient) -> {
                 try {
-                    finalStatement.execute("INSERT INTO `doctors` (`doctorFiscalCode`, `patientFiscalCode`) VALUES ('" + fiscalCode + "', '" + patient + "')");
+                    System.out.println(fiscalCode_.toUpperCase() + " " + patient.toUpperCase());
+                    finalStatement.execute("INSERT INTO DOCTORS (DOCTORFISCALCODE, PATIENTFISCALCODE) VALUES ('" + fiscalCode_.toUpperCase() + "', '" + patient.toUpperCase() + "')");
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                     fail(throwables.getMessage());
@@ -161,7 +170,9 @@ public class AccessGatewayTest {
     }
 
     public static void deleteDoctor(String fiscalCode){
-        String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
+        String url;
+        String user;
+        String password;
         Properties prop = new Properties();
         try{
             FileInputStream fis = new FileInputStream("src/main/res/database_login.config");
@@ -169,15 +180,16 @@ public class AccessGatewayTest {
         }catch(IOException ex){
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
-        String user = prop.getProperty("db.user");
-        String password = prop.getProperty("db.password");
+        url = prop.getProperty("db.url");
+        System.out.println(url);
+        user = prop.getProperty("db.user");
+        password = prop.getProperty("db.password");
         Connection connection = null;
         Statement statement = null;
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
-            statement.execute("use `tracing-app`");
-            statement.execute("DELETE FROM `doctors` WHERE `doctorFiscalCode` = '" + fiscalCode + "'");
+            statement.execute("DELETE FROM doctors WHERE doctorFiscalCode = '" + fiscalCode.toUpperCase() + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");
         }finally {

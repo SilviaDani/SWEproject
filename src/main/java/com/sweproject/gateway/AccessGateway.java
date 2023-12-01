@@ -12,7 +12,8 @@ public class AccessGateway extends Gateway {
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
             setConnection();
-            rs = statement.executeQuery("SELECT * FROM `users` where `fiscalCode` =" + "'" + fiscalCode + "'");
+            fiscalCode = fiscalCode.toUpperCase();
+            rs = statement.executeQuery("SELECT * FROM users where fiscalCode =" + "'" + fiscalCode + "'");
             arrayList = convertResultSet(rs);
         }catch(SQLException e){
             e.printStackTrace();
@@ -25,7 +26,8 @@ public class AccessGateway extends Gateway {
     public void insertNewUser(String fiscalCode, String firstName, String lastName, String password, String salt){
         try {
             setConnection();
-            statement.execute("INSERT INTO `users` (`fiscalCode`, `firstName`, `surname`, `psw`, `salt`) VALUES ('" + fiscalCode + "', '" + firstName + "', '" + lastName + "', '" + password + "', '" + salt + "')");
+            fiscalCode = fiscalCode.toUpperCase();
+            statement.execute("INSERT INTO users (fiscalCode, firstName, surname, password, salt) VALUES ('" + fiscalCode + "', '" + firstName + "', '" + lastName + "', '" + password + "', '" + salt + "')");
         }catch (SQLException e){
             e.printStackTrace();
         }finally {
@@ -38,7 +40,7 @@ public class AccessGateway extends Gateway {
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {
             setConnection();
-            rs = statement.executeQuery("SELECT * FROM `doctors` where `doctorFiscalCode` =" + "'" + fiscalCode + "'");
+            rs = statement.executeQuery("SELECT * FROM doctors where doctorFiscalCode =" + "'" + fiscalCode + "'");
             arrayList = convertResultSet(rs);
         }catch(SQLException e){
             e.printStackTrace();

@@ -1,0 +1,32 @@
+create table events(
+   id int,
+   is_relevant varchar(255),
+   type varchar(255),
+   start_date date,
+   end_date date,
+   risk_level float,
+   primary key (id)
+);
+
+create table users(
+fiscalCode varchar(255),
+firstName varchar(255),
+surname varchar(255),
+password varchar(255),
+salt varchar(255),
+primary key (fiscalCode)
+);
+
+create table doctors(
+doctorFiscalCode varchar(255),
+patientFiscalCode varchar(255),
+FOREIGN KEY (doctorFiscalCode) references USERS(FISCALCODE),
+FOREIGN KEY (patientFiscalCode) references USERS(FISCALCODE)
+);
+
+create table observations(
+fiscalCode varchar(255),
+id int,
+foreign key (fiscalCode) references USERS(FISCALCODE),
+foreign key (id) references EVENTS(id)
+);

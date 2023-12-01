@@ -22,5 +22,16 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="Oracle" uuid="5219d66b-5221-4ea0-8026-e147f1815b33">
+      <driver-ref>oracle.19</driver-ref>
+      <synchronize>true</synchronize>
+      <auto-commit>false</auto-commit>
+      <jdbc-driver>oracle.jdbc.OracleDriver</jdbc-driver>
+      <jdbc-url>jdbc:oracle:thin:@dbchita_high</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="TNSADMIN_DIR" value="E:/Documenti/Uni/ChITA/Wallet_DBCHITA" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
