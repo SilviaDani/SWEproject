@@ -133,7 +133,7 @@ public class ObservationGateway extends Gateway {
         LocalDateTime right_now = LocalDateTime.now();
         LocalDateTime now = right_now.truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime start_time_analysis = now.minusHours(samples);
-        System.out.println(start_time_analysis);
+        //System.out.println(start_time_analysis);
         ResultSet rs = null;
         ArrayList<HashMap<String, Object>> arrayList = null;
         try {

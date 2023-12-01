@@ -162,7 +162,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     public TransientSolution<R,S> makeModel(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
-            System.out.println("RAW TYPE " + rawType);
+            //.out.println("RAW TYPE " + rawType);
             String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
             testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
@@ -171,15 +171,15 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
                 showsSymptoms = false;
-                System.out.println("CONCTACT TIME" + environmentArrayList.get(contact).get("START_DATE"));
+                //System.out.println("CONCTACT TIME" + environmentArrayList.get(contact).get("START_DATE"));
                 LocalDateTime contact_time = (((oracle.sql.TIMESTAMP)environmentArrayList.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
-                System.out.println("CONTACT TIME " + contact_time);
+                //System.out.println("CONTACT TIME " + contact_time);
                 float risk_level = ((BigDecimal)environmentArrayList.get(contact).get("RISK_LEVEL")).floatValue();
                 environmentArrayList.get(contact).replace("RISK_LEVEL", (float) risk_level);
                 float symp_risk_level = 0;
                 float test_risk_level = 0;
                 if(testArrayList.size() > 0 || symptomsArrayList.size() > 0) {
-                    System.out.println("dentro");
+                    //System.out.println("dentro");
                     if (symptomsArrayList.size() > 0) {
                         for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                             LocalDateTime symptom_date = (((oracle.sql.TIMESTAMP)symptomsArrayList.get(symptom).get("START_DATE")).timestampValue()).toLocalDateTime();
@@ -520,10 +520,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
             if (symptomsArrayList.size() > 0) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
                 //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-                cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
+                //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
             } else {
                 //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
+                //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
             //System.out.println(cumulativeRiskLevel + " dopo");
@@ -556,14 +556,14 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                         j++;
                         i++;
                     }
-                    System.out.println("Print i " + i);
+                    //System.out.println("Print i " + i);
                     double maxRisk = 0.0;
                     int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
                     for (int k = 0; k < j; k++) {
                         double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
                         if (tmp > maxRisk) {
                             maxRisk = tmp;
-                            System.out.println("risk increased!");
+                      //      System.out.println("risk increased!");
                         }
                     }
                     double step = s.getStep().doubleValue();
@@ -588,7 +588,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     contactNumber=i;
                 }
             }
-        System.out.println("STPNAnalyzer_ext, 552");
+        //System.out.println("STPNAnalyzer_ext, 552");
         }else{
             System.out.println("Non ci sono contatti con altre persone interne al cluster");
         }

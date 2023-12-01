@@ -143,7 +143,7 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 168*2;
+    int samples = 168*3;
     int steps = 1;
     final int maxReps = 1000;
     boolean considerEnvironment = true;
@@ -154,8 +154,8 @@ public class Simulator extends UIController {
     int nContact = 10; //this number should be high (?)
     int max_nEnvironment = 7;
     int min_nEnvironment = 5;
-    int max_nSymptoms = 0; //fixme
-    int min_nSymptoms = 0;
+    int max_nSymptoms = 5; //fixme
+    int min_nSymptoms = 4;
     int max_nCovTests = 5; //fixme
     int min_nCovTests = 4;
     File execTimes;
@@ -829,7 +829,7 @@ public class Simulator extends UIController {
                     d = (float) Math.log(d);
                     double risk_level = ((Environment)event.getType()).getRiskLevel();
                     risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
-                    System.out.println("Sim " + contact_time + " risk_l:" + risk_level+"\n");
+                    System.out.println("Sim-e " + contact_time + " risk_l:" + risk_level+"\n");
                     if(d < risk_level){
                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                         subject.changeState(event.getStartDate());
@@ -864,6 +864,7 @@ public class Simulator extends UIController {
                             if(subject.getCurrentState() == 0){
                             double risk_level = ((Contact) event.getType()).getRiskLevel();
                             risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
+                            System.out.println("Sim-c " + contact_time + " risk_l:" + risk_level+"\n");
                             if(d < risk_level){
                                 LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                                 subject.changeState(event.getStartDate());
@@ -931,12 +932,12 @@ public class Simulator extends UIController {
             envObs.put(member, env == null ? new ArrayList<>() : env);
             testObs.put(member, tst == null ? new ArrayList<>() : tst);
             sympObs.put(member, sym == null ? new ArrayList<>() : sym);
-            System.out.println("--- XXX ---");
+            /*System.out.println("--- XXX ---");
             System.out.println(envObs.get(member).size());
             System.out.println(testObs.get(member).size());
             System.out.println(sympObs.get(member).size());
             System.out.println(clusterSubjectsMet_size);
-            System.out.println("--- YYY ---");
+            System.out.println("--- YYY ---");*/
             size+=envObs.get(member).size() + testObs.get(member).size()+sympObs.get(member).size() + clusterSubjectsMet_size;
         }
     }
