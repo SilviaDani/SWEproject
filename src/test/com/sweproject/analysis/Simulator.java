@@ -143,21 +143,21 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 168*3;
+    int samples = 168* 3;
     int steps = 1;
     final int maxReps = 1000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
-    static final int np = 4;
-    int nContact = 10; //this number should be high (?)
-    int max_nEnvironment = 7;
-    int min_nEnvironment = 5;
-    int max_nSymptoms = 5; //fixme
-    int min_nSymptoms = 4;
-    int max_nCovTests = 5; //fixme
-    int min_nCovTests = 4;
+    static final int np = 5;
+    int nContact = 20; //this number should be high (?)
+    int max_nEnvironment = 10;
+    int min_nEnvironment = 7;
+    int max_nSymptoms = 0; //fixme
+    int min_nSymptoms = 0;
+    int max_nCovTests = 2; //fixme
+    int min_nCovTests = 1;
     File execTimes;
     File confInt;
     File RMSE;
@@ -401,7 +401,11 @@ public class Simulator extends UIController {
 
             //building solution
             HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String);
-            printWhoShouldBeTested(meanTrees, solutions);
+            //printWhoShouldBeTested(meanTrees, solutions);
+            var mrr = Utils.MRR(meanTrees, solutions);
+            for(String s : mrr.keySet()){
+                System.out.println(s + " " + mrr.get(s));
+            }
             plot(meanTrees, solutions);
         }
         catch(Exception e){
@@ -739,10 +743,10 @@ public class Simulator extends UIController {
         //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
         if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
             //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-            //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]));
+            cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi
         } else {
             //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-             //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]));
+             cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi
             //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
         }
         //System.out.println("CRL: "+cumulativeRiskLevel);
@@ -829,7 +833,7 @@ public class Simulator extends UIController {
                     d = (float) Math.log(d);
                     double risk_level = ((Environment)event.getType()).getRiskLevel();
                     risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
-                    System.out.println("Sim-e " + contact_time + " risk_l:" + risk_level+"\n");
+                    //System.out.println("Sim-e " + contact_time + " risk_l:" + risk_level+"\n");
                     if(d < risk_level){
                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
                         subject.changeState(event.getStartDate());
