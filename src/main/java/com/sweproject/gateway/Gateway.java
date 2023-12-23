@@ -23,7 +23,7 @@ public class Gateway {
             //connection = DriverManager.getConnection(this.url, this.user, this.password);
             try {
                 connection = DriverManager.getConnection(url, user, password);
-                System.out.println("Connection established");
+                //System.out.println("Connection established");
             }catch (Exception e){
                 System.out.println("Error");
             }
@@ -42,7 +42,7 @@ public class Gateway {
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
         url = prop.getProperty("db.url");
-        System.out.println(url);
+        //System.out.println(url);
         user = prop.getProperty("db.user");
         password = prop.getProperty("db.password");
         setConnection();
@@ -86,7 +86,7 @@ public class Gateway {
                 HashMap<String, Object> hashMap = new HashMap<>();
                 for(int i = 1; i<=cols; i++){
                     hashMap.put(rsmd.getColumnName(i) ,rs.getObject(i));
-                    System.out.println(rsmd.getColumnName(i) + " " + rs.getObject(i));
+                   // System.out.println(rsmd.getColumnName(i) + " " + rs.getObject(i));
                 }
                 arrayList.add(hashMap);
             }

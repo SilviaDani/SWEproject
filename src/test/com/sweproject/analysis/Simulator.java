@@ -143,9 +143,9 @@ class ChangeStateEvent extends Event{
 }
 
 public class Simulator extends UIController {
-    int samples = 168* 3;
+    int samples = 168;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 100;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
@@ -402,9 +402,17 @@ public class Simulator extends UIController {
             //building solution
             HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String);
             //printWhoShouldBeTested(meanTrees, solutions);
-            var mrr = Utils.MRR(meanTrees, solutions);
-            for(String s : mrr.keySet()){
-                System.out.println(s + " " + mrr.get(s));
+            var rr = Utils.MRR(meanTrees, solutions);
+            double mrr = 0;
+            for(String s : rr.keySet()){
+                System.out.println(s + " " + rr.get(s));
+                mrr += rr.get(s);
+            }
+            mrr /= rr.size();
+            System.out.println("MRR  = " + mrr);
+            for(int i = 1; i<6; i++) {
+                double accuracy = Utils.topXaccuracy(meanTrees, solutions, i);
+                System.out.println("Top-" + i + " accuracy: " + accuracy);
             }
             plot(meanTrees, solutions);
         }
@@ -415,6 +423,92 @@ public class Simulator extends UIController {
         }
     }
 
+    @Test
+    void mrrAndAccuracyAtMultipleTimestamps(){ //TODO
+        final int hoursBetweenTimestamps = 24;
+        int currentNumberOfHours = hoursBetweenTimestamps;
+        try{
+            LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
+            ArrayList<Event> events = new ArrayList<>();
+            ArrayList<Event> tests = new ArrayList<>();
+            ArrayList<Event> symptoms = new ArrayList<>();
+            ArrayList<Subject> subjects = new ArrayList<>();
+
+            createObservations(subjects, events, tests, symptoms, t0);
+            //fine generazione eventi
+
+            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
+
+            for(Subject subject : subjects){
+                TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
+                for(int offset = 0; offset<samples; offset++){
+                    tmpTree.put(LocalDateTime.from(t0).plusHours(offset), 0.0);
+                }
+                meanTrees.put(subject.getName(), tmpTree);
+            }
+
+            //------------------------------------RETRIEVAL DATI DAL DATABASE---------------------------------------------------------
+            final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+            HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
+            ArrayList<String> subjects_String = new ArrayList<>();
+
+            HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
+
+            retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+            //------------------------------------ESPERIMENTO---------------------------------------------------------
+            while(currentNumberOfHours <= samples){
+                System.out.println("-----------"+ currentNumberOfHours + "-----------");
+                //------------------------------------INIZIO SIMULAZIONE---------------------------------------------------------
+                for(int rep = 0; rep<maxReps; rep++){
+                    runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees, currentNumberOfHours);
+                }
+
+                for(Subject subject : subjects){
+                    for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
+                        double theta = meanTrees.get(subject.getName()).get(ldt); // hat{theta} = mean(x).   mean(X) ~ N(theta, theta(1-theta)/n) per TLC
+                        double offset = (1.96 * Math.sqrt(theta * (1-theta)/maxReps));
+                        outputStrings_confInt.add(new String[]{subject.getName(), String.valueOf(ldt), String.valueOf((theta - offset)), String.valueOf((theta+offset))});
+                    }
+                }
+
+                //------------------------------------INIZIO PARTE NUMERICA---------------------------------------------------------
+                clusterSubjectsMet = new HashMap<>();
+                subjects_String = new ArrayList<>();
+                envObs = new HashMap<>();
+                testObs = new HashMap<>();
+                sympObs = new HashMap<>();
+                retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
+                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
+                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
+                //------------------------------------CALCOLO MRR---------------------------------------------------------
+                var rr = Utils.MRR(meanTrees, solutions);
+                double mrr = 0;
+                for(String s : rr.keySet()){
+                    System.out.println(s + " " + rr.get(s));
+                    mrr += rr.get(s);
+                }
+                mrr /= rr.size();
+                System.out.println("MRR  = " + mrr);
+                //------------------------------------CALCOLO TOP-X-ACCURACY---------------------------------------------------------
+                for(int i = 1; i<6; i++) {
+                    double accuracy = Utils.topXaccuracy(meanTrees, solutions, i);
+                    System.out.println("Top-" + i + " accuracy: " + accuracy);
+                }
+                currentNumberOfHours+=hoursBetweenTimestamps;
+            }
+            //plot(meanTrees, solutions);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        } finally {
+            clean();
+        }
+
+    }
     //create observations
     private void createObservations(ArrayList<Subject> subjects,ArrayList<Event> events, ArrayList<Event> tests, ArrayList<Event>  symptoms, LocalDateTime t0){
         if(DEBUG){
@@ -911,7 +1005,104 @@ public class Simulator extends UIController {
                 }
             }
     }
+    private void runMainCycle(ArrayList<Subject> subjects,ArrayList<Event> eventsBackup, ArrayList<Event> testsBackup, ArrayList<Event>  symptomsBackup, LocalDateTime t0, int rep, HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees, int timeLimitHours) throws Exception{
+        ArrayList<Event> events = new ArrayList<>(eventsBackup);
+        ArrayList<Event> tests = new ArrayList<>(testsBackup);
+        ArrayList<Event> symptoms = new ArrayList<>(symptomsBackup);
+        for(Subject subject : subjects)
+            subject.initializeSubject(t0);
+        while(events.size() > 0){
+            Collections.sort(events);
+            Event event = events.remove(0);
+            LocalDateTime contact_time = event.getStartDate();
+            if(contact_time.isAfter(t0.plusHours(timeLimitHours))){
+                break;
+            }else {
+                if (event.getType() instanceof Environment) {
+                    Subject subject = event.getSubject().get(0);
+                    subject.setShowsCovidLikeSymptoms(false);
+                    if (subject.getCurrentState() == 0) {
+                        float d = r.nextFloat();
+                        d = (float) Math.log(d);
+                        double risk_level = ((Environment) event.getType()).getRiskLevel();
+                        risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
+                        //System.out.println("Sim-e " + contact_time + " risk_l:" + risk_level+"\n");
+                        if (d < risk_level) {
+                            LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
+                            subject.changeState(event.getStartDate());
+                            //rescheduling dell'evento "subject" diventa contagioso
+                            events.add(new ChangeStateEvent(ldt, event.getSubject()));
+                            //System.out.println("ping");
+                        }
+                    }
+                } else if (event.getType() instanceof Contact) {
+                    ArrayList<Subject> contagiousSub = new ArrayList<>();
+                    ArrayList<Subject> ss = event.getSubject();
+                    boolean isThereAtLeastOneContagious = false;
+                    for (Subject subject : ss) {
+                        if (subject.getCurrentState() == 2) {
+                            isThereAtLeastOneContagious = true;
+                            contagiousSub.add(subject);
+                        }
+                    }
+                    if (isThereAtLeastOneContagious) {
+                        boolean toUpdate = true;
+                        for (Subject subject : ss) {
+                            for (Subject contSub : contagiousSub) {
+                                if (!subject.equals(contSub))
+                                    toUpdate = false;
+                            }
+                        }
+                        if (toUpdate) {
+                            float d = r.nextFloat();
+                            d = (float) Math.log(d);
+                            for (Subject subject : ss) {
+                                if (subject.getCurrentState() == 0) {
+                                    double risk_level = ((Contact) event.getType()).getRiskLevel();
+                                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject);
+                                    System.out.println("Sim-c " + contact_time + " risk_l:" + risk_level + "\n");
+                                    if (d < risk_level) {
+                                        LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
+                                        subject.changeState(event.getStartDate());
+                                        //rescheduling dell'evento "subject" diventa contagioso
+                                        events.add(new ChangeStateEvent(ldt, new ArrayList<>(Collections.singletonList(subject))));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if (event instanceof ChangeStateEvent) {
+                    Subject subject = event.getSubject().get(0);
+                    switch (subject.getCurrentState()) {
+                        case 1 -> {
+                            subject.changeState(event.getStartDate());
+                            //se il valore random è < 0.1 il soggetto è asintomatico
+                            boolean isSymptomatic = r.nextFloat() <= 0.9f;
+                            subject.setSymptomatic(isSymptomatic);
+                            //rescheduling dell'evento "subject" «guarisce»
+                            events.add(new ChangeStateEvent(getSampleCH(event.getStartDate(), subject), event.getSubject()));
+                        }
+                        case 2 -> subject.changeState(event.getStartDate());
+                        case 3 -> System.out.println("immune");
+                        default -> System.out.println("error");
+                    }
+                }
+            }
+        }
 
+        //filling
+
+        HashMap<String, TreeMap<LocalDateTime, Integer>> timestampsAtIthIteration = new HashMap<>();
+        for (Subject subject : subjects) {
+            timestampsAtIthIteration.put(subject.getName(), convert(fill(subject.getTimestamps(), t0)));
+        }
+        for (Subject subject : subjects) {
+            for (LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()) {
+                double newValue = (meanTrees.get(subject.getName()).get(ldt) * (rep) + timestampsAtIthIteration.get(subject.getName()).get(ldt)) / (rep + 1);
+                meanTrees.get(subject.getName()).replace(ldt, newValue);
+            }
+        }
+    }
     //retrieve observations from db
     void retrieveObservations(ArrayList<Subject> subjects, ArrayList<String> subjects_String, HashMap<String,ArrayList<HashMap<String, Object>>> clusterSubjectsMet, int max_iterations, HashMap<String, ArrayList<HashMap<String, Object>>> envObs, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime t0){
         for(Subject subject : subjects){

@@ -219,7 +219,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     }
                     var b = environmentArrayList.get(contact).replace("RISK_LEVEL", (float)Math.exp(cumulativeRiskLevel));
                     //var b = environmentArrayList.get(contact).replace("RISK_LEVEL", risk_level, (float) cumulativeRiskLevel);
-                    System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
+                   // System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
                 }
                 /*
                 System.out.println(environmentArrayList.get(contact).get("risk_level") + " dopo");
@@ -241,7 +241,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
         for(int m = 0; m < s.getColumnStates().size(); m++){
-            System.out.println(m + " m");
+            //System.out.println(m + " m");
             double step = s.getStep().doubleValue();
             for (int event = 0; event < eventsArrayList.size(); event++){
                 LocalDateTime eventTime = null;
@@ -252,7 +252,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 }
                 int delta = (int) ChronoUnit.HOURS.between(pastStartTime, eventTime);
                 float risk = (float) eventsArrayList.get(event).get("RISK_LEVEL");
-                System.out.println("PN2 " + eventTime + " -> "+risk);
+                //System.out.println("PN2 " + eventTime + " -> "+risk);
                 int i = 0;
                 for (int j = delta; j < size; j += step){
                     double y = s.getSolution()[i][r][m] * risk;
@@ -506,9 +506,9 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     LocalDateTime test_time = (((oracle.sql.TIMESTAMP)testArrayList.get(test).get("START_DATE")).timestampValue()).toLocalDateTime();
                     if (contact_time.isBefore(test_time)) {
                         CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
-                        System.out.println("Covid CCC" + covidTest.getName());
+                        //System.out.println("Covid CCC" + covidTest.getName());
                         double testEvidence = covidTest.isInfected(contact_time, test_time);
-                        System.out.println(testEvidence);
+                        //System.out.println(testEvidence);
                         test_risk_level += Math.log(testEvidence);
                     }
                 }
@@ -528,7 +528,7 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             }
             //System.out.println(cumulativeRiskLevel + " dopo");
             var b = clusterSubjectsMet.get(contact).replace("RISK_LEVEL", risk_level, (float) Math.exp(cumulativeRiskLevel));
-            System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
+            //System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
 
         }
 
@@ -551,41 +551,45 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     String[] meeting_subjects = new String[clusterSubjectsMet.size()];
                     (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime();
                     LocalDateTime meeting_time1 = LocalDateTime.from((((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime());
-                    while (i < clusterSubjectsMet.size() && (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime().equals(meeting_time1)) {
-                        meeting_subjects[j] = clusterSubjectsMet.get(i).get("FISCALCODE").toString();
-                        j++;
-                        i++;
-                    }
-                    //System.out.println("Print i " + i);
-                    double maxRisk = 0.0;
-                    int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
-                    for (int k = 0; k < j; k++) {
-                        double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
-                        if (tmp > maxRisk) {
-                            maxRisk = tmp;
-                      //      System.out.println("risk increased!");
+                    if (pastStartTime.plusHours(samples).isAfter(meeting_time1)) {
+                        break;
+                    } else {
+                        while (i < clusterSubjectsMet.size() && (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime().equals(meeting_time1)) {
+                            meeting_subjects[j] = clusterSubjectsMet.get(i).get("FISCALCODE").toString();
+                            j++;
+                            i++;
                         }
-                    }
-                    double step = s.getStep().doubleValue();
-                    int index = 0;
-
-                    float risk = (float) clusterSubjectsMet.get(contactNumber).get("RISK_LEVEL");
-                    for (int jj = delta; jj < size; jj += (int)step){
-                        double y = s.getSolution()[index][r][m] * maxRisk * risk;
-                        if(factorDueToSymptoms != null) { //XXX remove?
-                            if (((HashMap<String, Boolean>) clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)) {
-                                y /= factorDueToSymptoms;
-                            } else {
-                                y /= (1 - factorDueToSymptoms);
-                                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                        //System.out.println("Print i " + i);
+                        double maxRisk = 0.0;
+                        int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
+                        for (int k = 0; k < j; k++) {
+                            double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
+                            if (tmp > maxRisk) {
+                                maxRisk = tmp;
+                                //      System.out.println("risk increased!");
                             }
                         }
-                        double oldY = output.get(jj);
-                        output.replace(jj, notInfectedYet * y + oldY);
-                        index++;
+                        double step = s.getStep().doubleValue();
+                        int index = 0;
+
+                        float risk = (float) clusterSubjectsMet.get(contactNumber).get("RISK_LEVEL");
+                        for (int jj = delta; jj < size; jj += (int) step) {
+                            double y = s.getSolution()[index][r][m] * maxRisk * risk;
+                            if (factorDueToSymptoms != null) { //XXX remove?
+                                if (((HashMap<String, Boolean>) clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)) {
+                                    y /= factorDueToSymptoms;
+                                } else {
+                                    y /= (1 - factorDueToSymptoms);
+                                    //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                                }
+                            }
+                            double oldY = output.get(jj);
+                            output.replace(jj, notInfectedYet * y + oldY);
+                            index++;
+                        }
+                        notInfectedYet *= (1 - maxRisk * risk);
+                        contactNumber = i;
                     }
-                    notInfectedYet *= (1 - maxRisk * risk);
-                    contactNumber=i;
                 }
             }
         //System.out.println("STPNAnalyzer_ext, 552");
