@@ -298,6 +298,121 @@ public class Simulator extends UIController {
         plt.show();
     }
 
+    private void plotMRR(ArrayList<Double> mrr, int interval){
+        List<Double>xValues = new ArrayList<>();
+        for (int i=0; i<mrr.size();i++){
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        plt.plot()
+                .add(xValues, mrr)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("b")
+                .label("mrr");
+
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("MRR");
+        plt.title("MRR");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void plotTopXaccuracy(ArrayList<ArrayList<Double>> topXaccuracies, int interval){
+
+        List<Double>xValues = new ArrayList<>();
+        for (int i = 0; i< topXaccuracies.get(0).size(); i++){
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        for (int i = 0; i < topXaccuracies.size(); i++) {
+            plt.plot()
+                    .add(xValues, topXaccuracies.get(i))
+                    .linestyle("-")
+                    .linewidth(1.0)
+                    .label("Top-"+(i+1)+"-accuracy");
+        }
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("Accuracy");
+        plt.title("Top-X-accuracies");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void plotMRR_comparison(ArrayList<Double> mrrw, ArrayList<Double>mrrwo, int interval){
+        List<Double>xValues = new ArrayList<>();
+        for (int i=0; i<mrrw.size();i++){
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        plt.plot()
+                .add(xValues, mrrw)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("b")
+                .label("MRR with observations");
+
+        plt.plot()
+                .add(xValues, mrrwo)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("r")
+                .label("MRR without observations");
+
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("MRR");
+        plt.title("MRR");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void plotTopXaccuracy_comparison(ArrayList<ArrayList<Double>> topXaccuraciesw, ArrayList<ArrayList<Double>> topXaccuracieswo, int interval){
+
+        List<Double>xValues = new ArrayList<>();
+        for (int i = 0; i< topXaccuraciesw.get(0).size(); i++){
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        for (int i = 0; i < topXaccuraciesw.size(); i++) {
+            plt.plot()
+                    .add(xValues, topXaccuraciesw.get(i))
+                    .linestyle("-")
+                    .linewidth(1.0)
+                    .label("Top-"+(i+1)+"-accuracy with observations");
+
+            plt.plot()
+                    .add(xValues, topXaccuracieswo.get(i))
+                    .linestyle("--")
+                    .linewidth(1.0)
+                    .label("Top-"+(i+1)+"-accuracy with observations");
+        }
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("Accuracy");
+        plt.title("Top-X-accuracies");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     void simulate(){
         try{
@@ -427,6 +542,12 @@ public class Simulator extends UIController {
     void mrrAndAccuracyAtMultipleTimestamps(){ //TODO
         final int hoursBetweenTimestamps = 24;
         int currentNumberOfHours = hoursBetweenTimestamps;
+        ArrayList<Double> MRRs = new ArrayList<>();
+        ArrayList<ArrayList<Double>> topXaccuracies = new ArrayList<>();
+        int topXlimit = 5;
+        for (int i = 0; i < topXlimit; i++){
+            topXaccuracies.add(new ArrayList<Double>());
+        }
         try{
             LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
             ArrayList<Event> events = new ArrayList<>();
@@ -492,15 +613,20 @@ public class Simulator extends UIController {
                     mrr += rr.get(s);
                 }
                 mrr /= rr.size();
+                MRRs.add(mrr);
                 System.out.println("MRR  = " + mrr);
                 //------------------------------------CALCOLO TOP-X-ACCURACY---------------------------------------------------------
-                for(int i = 1; i<6; i++) {
-                    double accuracy = Utils.topXaccuracy(meanTrees, solutions, i);
-                    System.out.println("Top-" + i + " accuracy: " + accuracy);
+
+                for(int i = 0; i<topXlimit; i++) {
+                    double accuracy = Utils.topXaccuracy(meanTrees, solutions, i+1);
+                    topXaccuracies.get(i).add(accuracy);
+                    System.out.println("Top-" + (i+1) + " accuracy: " + accuracy);
                 }
                 currentNumberOfHours+=hoursBetweenTimestamps;
             }
             //plot(meanTrees, solutions);
+            plotMRR(MRRs, hoursBetweenTimestamps);
+            plotTopXaccuracy(topXaccuracies, hoursBetweenTimestamps);
         }
         catch(Exception e){
             e.printStackTrace();
@@ -508,6 +634,199 @@ public class Simulator extends UIController {
             clean();
         }
 
+    }
+
+
+    @Test
+    void analyzeMRRWithAndWithoutObservations(){
+        final int hoursBetweenTimestamps = 24;
+        int currentNumberOfHours = hoursBetweenTimestamps;
+        ArrayList<Double> MRRs_withObs = new ArrayList<>();
+        ArrayList<ArrayList<Double>> topXaccuracies_withObs  = new ArrayList<>();
+        ArrayList<Double> MRRs_withoutObs = new ArrayList<>();
+        ArrayList<ArrayList<Double>> topXaccuracies_withoutObs = new ArrayList<>();
+        int topXlimit = 5;
+        for (int i = 0; i < topXlimit; i++){
+            topXaccuracies_withObs.add(new ArrayList<Double>());
+            topXaccuracies_withoutObs.add(new ArrayList<Double>());
+        }
+        try{
+        //##########################################WITH OBSERVATIONS##########################################
+            LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
+            ArrayList<Event> events = new ArrayList<>();
+            ArrayList<Event> tests = new ArrayList<>();
+            ArrayList<Event> symptoms = new ArrayList<>();
+            ArrayList<Subject> subjects = new ArrayList<>();
+
+            createObservations(subjects, events, tests, symptoms, t0);
+            //fine generazione eventi
+
+            HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees = new HashMap<>();
+
+            for(Subject subject : subjects){
+                TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
+                for(int offset = 0; offset<samples; offset++){
+                    tmpTree.put(LocalDateTime.from(t0).plusHours(offset), 0.0);
+                }
+                meanTrees.put(subject.getName(), tmpTree);
+            }
+
+            //------------------------------------RETRIEVAL DATI DAL DATABASE---------------------------------------------------------
+            final int max_iterations = subjects.size()<=2?subjects.size()-1:2;
+            HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet = new HashMap<>();
+            ArrayList<String> subjects_String = new ArrayList<>();
+
+            HashMap<String, ArrayList<HashMap<String, Object>>> envObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
+            HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
+
+            retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+            //------------------------------------ESPERIMENTO---------------------------------------------------------
+            while(currentNumberOfHours <= samples){
+                System.out.println("-----------"+ currentNumberOfHours + "-----------");
+                //------------------------------------INIZIO SIMULAZIONE---------------------------------------------------------
+                for(int rep = 0; rep<maxReps; rep++){
+                    runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees, currentNumberOfHours);
+                }
+
+                for(Subject subject : subjects){
+                    for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
+                        double theta = meanTrees.get(subject.getName()).get(ldt); // hat{theta} = mean(x).   mean(X) ~ N(theta, theta(1-theta)/n) per TLC
+                        double offset = (1.96 * Math.sqrt(theta * (1-theta)/maxReps));
+                        outputStrings_confInt.add(new String[]{subject.getName(), String.valueOf(ldt), String.valueOf((theta - offset)), String.valueOf((theta+offset))});
+                    }
+                }
+
+                //------------------------------------INIZIO PARTE NUMERICA---------------------------------------------------------
+                clusterSubjectsMet = new HashMap<>();
+                subjects_String = new ArrayList<>();
+                envObs = new HashMap<>();
+                testObs = new HashMap<>();
+                sympObs = new HashMap<>();
+                retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
+                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
+                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
+                //------------------------------------CALCOLO MRR---------------------------------------------------------
+                var rr = Utils.MRR(meanTrees, solutions);
+                double mrr = 0;
+                for(String s : rr.keySet()){
+                    System.out.println(s + " " + rr.get(s));
+                    mrr += rr.get(s);
+                }
+                mrr /= rr.size();
+                MRRs_withObs.add(mrr);
+                System.out.println("MRR  = " + mrr);
+                //------------------------------------CALCOLO TOP-X-ACCURACY---------------------------------------------------------
+
+                for(int i = 0; i<topXlimit; i++) {
+                    double accuracy = Utils.topXaccuracy(meanTrees, solutions, i+1);
+                    topXaccuracies_withObs.get(i).add(accuracy);
+                    System.out.println("Top-" + (i+1) + " accuracy: " + accuracy);
+                }
+                currentNumberOfHours+=hoursBetweenTimestamps;
+            }
+            //plot(meanTrees, solutions);
+            System.out.println("Pipipupu");
+        //##########################################WITHOUT OBSERVATIONS##########################################
+            t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(samples);
+            //events = new ArrayList<>();
+            tests = new ArrayList<>();
+            symptoms = new ArrayList<>();
+            //subjects = new ArrayList<>();
+
+            //createObservations(subjects, events, tests, symptoms, t0);
+            //fine generazione eventi
+
+            meanTrees = new HashMap<>();
+
+            for(Subject subject : subjects){
+                TreeMap<LocalDateTime, Double> tmpTree = new TreeMap<>();
+                for(int offset = 0; offset<samples; offset++){
+                    tmpTree.put(LocalDateTime.from(t0).plusHours(offset), 0.0);
+                }
+                meanTrees.put(subject.getName(), tmpTree);
+            }
+
+            //------------------------------------RETRIEVAL DATI DAL DATABASE---------------------------------------------------------
+            clusterSubjectsMet = new HashMap<>();
+            subjects_String = new ArrayList<>();
+
+            envObs = new HashMap<>();
+            testObs = new HashMap<>();
+            sympObs = new HashMap<>();
+
+            retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+            testObs = new HashMap<>();
+            sympObs = new HashMap<>();
+            for(String member : subjects_String) {
+                member = member.toUpperCase();
+                testObs.put(member, new ArrayList<>());
+                sympObs.put(member,new ArrayList<>());
+            }
+            //------------------------------------ESPERIMENTO---------------------------------------------------------
+            currentNumberOfHours = hoursBetweenTimestamps;
+            while(currentNumberOfHours <= samples){
+                System.out.println("-----------"+ currentNumberOfHours + "-----------");
+                //------------------------------------INIZIO SIMULAZIONE---------------------------------------------------------
+                for(int rep = 0; rep<maxReps; rep++){
+                    runMainCycle(subjects, events, tests, symptoms, t0, rep, meanTrees, currentNumberOfHours);
+                }
+
+                for(Subject subject : subjects){
+                    for(LocalDateTime ldt : meanTrees.get(subject.getName()).keySet()){
+                        double theta = meanTrees.get(subject.getName()).get(ldt); // hat{theta} = mean(x).   mean(X) ~ N(theta, theta(1-theta)/n) per TLC
+                        double offset = (1.96 * Math.sqrt(theta * (1-theta)/maxReps));
+                        outputStrings_confInt.add(new String[]{subject.getName(), String.valueOf(ldt), String.valueOf((theta - offset)), String.valueOf((theta+offset))});
+                    }
+                }
+
+                //------------------------------------INIZIO PARTE NUMERICA---------------------------------------------------------
+                clusterSubjectsMet = new HashMap<>();
+                subjects_String = new ArrayList<>();
+                envObs = new HashMap<>();
+                testObs = new HashMap<>();
+                sympObs = new HashMap<>();
+                retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                testObs = new HashMap<>();
+                sympObs = new HashMap<>();
+                for(String member : subjects_String) {
+                    member = member.toUpperCase();
+                    testObs.put(member, new ArrayList<>());
+                    sympObs.put(member,new ArrayList<>());
+                }
+                ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
+                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
+                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
+                //------------------------------------CALCOLO MRR---------------------------------------------------------
+                var rr = Utils.MRR(meanTrees, solutions);
+                double mrr = 0;
+                for(String s : rr.keySet()){
+                    System.out.println(s + " " + rr.get(s));
+                    mrr += rr.get(s);
+                }
+                mrr /= rr.size();
+                MRRs_withoutObs.add(mrr);
+                System.out.println("MRR  = " + mrr);
+                //------------------------------------CALCOLO TOP-X-ACCURACY---------------------------------------------------------
+
+                for(int i = 0; i<topXlimit; i++) {
+                    double accuracy = Utils.topXaccuracy(meanTrees, solutions, i+1);
+                    topXaccuracies_withoutObs.get(i).add(accuracy);
+                    System.out.println("Top-" + (i+1) + " accuracy: " + accuracy);
+                }
+                currentNumberOfHours+=hoursBetweenTimestamps;
+            }
+            plotMRR_comparison(MRRs_withObs, MRRs_withoutObs, hoursBetweenTimestamps);
+            plotTopXaccuracy_comparison(topXaccuracies_withObs, topXaccuracies_withoutObs, hoursBetweenTimestamps);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        } finally {
+            clean();
+        }
     }
     //create observations
     private void createObservations(ArrayList<Subject> subjects,ArrayList<Event> events, ArrayList<Event> tests, ArrayList<Event>  symptoms, LocalDateTime t0){
@@ -832,15 +1151,15 @@ public class Simulator extends UIController {
         }
         double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(riskLevel);
         double[] cumulativeRiskLevel2;
-        cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
+        //cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time); //fixme
         //System.out.println(cumulativeRiskLevel + " - " + cumulativeRiskLevel2[0] + " " + cumulativeRiskLevel2[1]);
         //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
         if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
             //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
-            cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi
+            //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
         } else {
             //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-             cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi
+             //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
             //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
         }
         //System.out.println("CRL: "+cumulativeRiskLevel);
