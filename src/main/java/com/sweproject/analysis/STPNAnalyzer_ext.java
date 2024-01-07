@@ -31,6 +31,9 @@ import java.util.HashMap;
 public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
     TransientSolution<R,S> rewardedSolution;
     TransientSolution<R,S> symptomSolution;
+    double probObsSymptoms = 0;
+    double probObsPositiveTests = 0;
+    double probObsNegativeTests = 0;
     public STPNAnalyzer_ext(int samples, int step) {
         super(samples, step);
         PetriNet net = new PetriNet();
@@ -168,9 +171,13 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
         boolean showsSymptoms;
+        boolean isThereAPositiveTest;
+        boolean isThereANegativeTest;
         if (environmentArrayList.size() > 0){
             for (int contact = 0; contact < environmentArrayList.size(); contact++){
                 showsSymptoms = false;
+                isThereAPositiveTest = false;
+                isThereANegativeTest = false;
                 //System.out.println("CONCTACT TIME" + environmentArrayList.get(contact).get("START_DATE"));
                 LocalDateTime contact_time = (((oracle.sql.TIMESTAMP)environmentArrayList.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
                 //System.out.println("CONTACT TIME " + contact_time);
@@ -198,6 +205,10 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                             if (contact_time.isBefore(test_time)) {
                                 CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
                                 //System.out.println("Covid CCC " + covidTest.getName());
+                                if(covidTest.isPositive())
+                                    isThereAPositiveTest = true;
+                                else
+                                    isThereANegativeTest = true;
                                 double testEvidence = covidTest.isInfected(contact_time, test_time);
                                 //System.out.println(testEvidence);
                                 test_risk_level += Math.log(testEvidence);
@@ -209,14 +220,28 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     double[] cumulativeRiskLevel2;
                     //cumulativeRiskLevel2 = updateRiskLevel(contact_time); //fixme
                     //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
+                    double probObs = 0;
                     if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+                        probObs += this.probObsSymptoms;
                         //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                         //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
                     } else {
+                        probObs += (1-this.probObsSymptoms);
                         //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
                         //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
                         //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
                     }
+                    if(isThereAPositiveTest){
+                        probObs += this.probObsPositiveTests;
+                    }else{
+                        probObs += (1-this.probObsPositiveTests);
+                    }
+                    if(isThereANegativeTest){
+                        probObs += this.probObsNegativeTests;
+                    }else{
+                        probObs += (1-this.probObsNegativeTests);
+                    }
+                    cumulativeRiskLevel-=Math.log(probObs);
                     var b = environmentArrayList.get(contact).replace("RISK_LEVEL", (float)Math.exp(cumulativeRiskLevel));
                     //var b = environmentArrayList.get(contact).replace("RISK_LEVEL", risk_level, (float) cumulativeRiskLevel);
                    // System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
@@ -298,6 +323,8 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
         }
         boolean showsSymptoms = false;
+        boolean isThereAPositiveTest = false;
+        boolean isThereANegativeTest = false;
         HashMap<String, Boolean> symptomaticSubjects = new HashMap<>();
         for(String subject : subjects_solutions.keySet()){
             symptomaticSubjects.put(subject, false);
@@ -336,6 +363,11 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                     if (contact_time.isBefore(test_time)) {
                         CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
                         //System.out.println("Covid CCC" + covidTest.getName());
+                        if(covidTest.isPositive()){
+                            isThereAPositiveTest = true;
+                        }else{
+                            isThereANegativeTest = true;
+                        }
                         double testEvidence = covidTest.isInfected(contact_time, test_time);
                         //System.out.println(testEvidence);
                         test_risk_level += Math.log(testEvidence);
@@ -347,15 +379,28 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
             //cumulativeRiskLevel2 = updateRiskLevel(contact_time); //fixme
             //System.out.println(cumulativeRiskLevel + " prima");
             clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
-            if (symptomsArrayList.size() > 0) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+            double probObs = 0;
+            if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+                probObs += this.probObsSymptoms;
                 //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
                 //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
             } else {
+                probObs += (1-this.probObsSymptoms);
+                //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
                 //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
-                 //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
                 //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
             }
-            //System.out.println(cumulativeRiskLevel + " dopo");
+            if(isThereAPositiveTest){
+                probObs += this.probObsPositiveTests;
+            }else{
+                probObs += (1-this.probObsPositiveTests);
+            }
+            if(isThereANegativeTest){
+                probObs += this.probObsNegativeTests;
+            }else{
+                probObs += (1-this.probObsNegativeTests);
+            }
+            cumulativeRiskLevel-=Math.log(probObs);
             var b = clusterSubjectsMet.get(contact).replace("RISK_LEVEL", risk_level, (float) Math.exp(cumulativeRiskLevel));
             //System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
 
@@ -502,11 +547,45 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         return cumulativeRiskLevel2;
     }
 
-    /*public double[] updateRiskLevel(LocalDateTime contact_time){
-        double[] cumulativeRiskLevel = new double[2];
+    public void updateProbObsSymptoms(ArrayList<String> subjects_String, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime t0) throws SQLException {
+        int symptomaticPeople = 0;
+        for (String person : subjects_String){
+            boolean symptomaticPersonInCluster = false;
+            for(HashMap<String, Object> observation : sympObs.get(person)){
+                if((((oracle.sql.TIMESTAMP)observation.get("START_DATE")).timestampValue()).toLocalDateTime().isAfter(t0)){
+                    symptomaticPersonInCluster = true;
+                }
+            }
+            if (symptomaticPersonInCluster)
+                symptomaticPeople++;
+        }
+        this.probObsSymptoms = (double) symptomaticPeople/subjects_String.size();
+    }
 
-        return cumulativeRiskLevel;
-    }*/
+    public void updateProbObsTest(ArrayList<String> subjects_String, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, LocalDateTime t0) throws SQLException {
+        int positiveTests = 0;
+        int negativeTests = 0;
+        for (String person : subjects_String){
+            boolean pTest = false;
+            boolean nTest = false;
+            for(HashMap<String, Object> observation : testObs.get(person)) {
+                    if ((((oracle.sql.TIMESTAMP) observation.get("START_DATE")).timestampValue()).toLocalDateTime().isAfter(t0)) {
+                        if (observation.get("isPositive") != null) {
+                            if ((boolean) observation.get("isPositive"))
+                                pTest = true;
+                            else
+                                nTest = true;
+                        }
+                    }
+                }
+            if (pTest)
+                positiveTests++;
+            if (nTest)
+                negativeTests++;
+        }
+        this.probObsPositiveTests = (double) positiveTests/subjects_String.size();
+        this.probObsNegativeTests = (double) negativeTests/subjects_String.size();
+    }
 
     public XYChart.Series buildSolution(ArrayList<HashMap<String, XYChart.Series<String,Float>>> pns, String fiscalCode) {
         XYChart.Series<String, Float> output = new XYChart.Series<>();

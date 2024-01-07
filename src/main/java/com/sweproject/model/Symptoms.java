@@ -39,8 +39,9 @@ public class Symptoms extends Type{
         int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
         if (delta < 0){
             delta = 0;
+        }else if(delta > s.getSolution().length){
+            return 0;
         }
-        double y = s.getSolution()[delta][r][0];
-        return y;
+        return s.getSolution()[delta][r][0];
     }
 }
