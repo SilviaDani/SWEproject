@@ -300,7 +300,7 @@ public class Simulator extends UIController {
 
     private void plotMRR(ArrayList<Double> mrr, int interval){
         List<Double>xValues = new ArrayList<>();
-        for (int i=0; i<mrr.size();i++){
+        for (int i=1; i<=mrr.size();i++){ //XXX controllare se funziona
             xValues.add((double) (interval * i));
         }
         Plot plt = Plot.create();
@@ -326,7 +326,7 @@ public class Simulator extends UIController {
     private void plotTopXaccuracy(ArrayList<ArrayList<Double>> topXaccuracies, int interval){
 
         List<Double>xValues = new ArrayList<>();
-        for (int i = 0; i< topXaccuracies.get(0).size(); i++){
+        for (int i = 1; i< topXaccuracies.get(0).size(); i++){ //XXX controllare se funziona
             xValues.add((double) (interval * i));
         }
         Plot plt = Plot.create();
@@ -353,7 +353,7 @@ public class Simulator extends UIController {
 
     private void plotMRR_comparison(ArrayList<Double> mrrw, ArrayList<Double>mrrwo, int interval){
         List<Double>xValues = new ArrayList<>();
-        for (int i=0; i<mrrw.size();i++){
+        for (int i=1; i<mrrw.size();i++){ //XXX controllare se funziona
             xValues.add((double) (interval * i));
         }
         Plot plt = Plot.create();
@@ -386,7 +386,7 @@ public class Simulator extends UIController {
     private void plotTopXaccuracy_comparison(ArrayList<ArrayList<Double>> topXaccuraciesw, ArrayList<ArrayList<Double>> topXaccuracieswo, int interval){
 
         List<Double>xValues = new ArrayList<>();
-        for (int i = 0; i< topXaccuraciesw.get(0).size(); i++){
+        for (int i = 1; i< topXaccuraciesw.get(0).size(); i++){ //XXX controllare se funziona
             xValues.add((double) (interval * i));
         }
         Plot plt = Plot.create();
