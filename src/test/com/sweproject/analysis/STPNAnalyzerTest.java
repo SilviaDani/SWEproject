@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import static com.sweproject.main.Main.DEBUG;
@@ -749,7 +750,7 @@ class STPNAnalyzerTest {
         timerOr.start();
         HashMap<String, HashMap<Integer, Double>> solutions_or = sim.buildSolution(pns_or, subjects_String, samples, 1);
         timerOr.stop();
-        System.out.println("T or: "+timerOr.elapsed().toNanos()/10e9+" s\nTime ext: "+timerExt.elapsed().toNanos()/10e9+" s");
+        System.out.println("T or: "+timerOr.elapsed(TimeUnit.NANOSECONDS)/10e9+" s\nTime ext: "+timerExt.elapsed(TimeUnit.NANOSECONDS)/10e9+" s");
         for(String s : subjects_String){
             for(int i : solutions.get(s).keySet()){
                 assertEquals(solutions_or.get(s).get(i), solutions.get(s).get(i), 10e-6);

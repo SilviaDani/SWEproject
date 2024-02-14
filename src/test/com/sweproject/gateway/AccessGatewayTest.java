@@ -95,6 +95,8 @@ public class AccessGatewayTest {
         try {
             connection = DriverManager.getConnection(url, user, password);
             statement = connection.createStatement();
+            //write code to check if the user is in the database/
+
             statement.execute("DELETE FROM USERS WHERE FISCALCODE = '" + fiscalCode.toUpperCase() + "'");
         } catch (Exception e) {
             fail("Si è verificato un problema durante la connessione al database.");

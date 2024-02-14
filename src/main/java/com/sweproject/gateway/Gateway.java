@@ -1,6 +1,6 @@
 package com.sweproject.gateway;
 
-import oracle.jdbc.pool.OracleDataSource;
+//import oracle.jdbc.pool.OracleDataSource;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.util.Properties;
 
 public class Gateway {
     //protected String url = "jdbc:mysql://tracingapp.cqftfh4tbbqi.eu-south-1.rds.amazonaws.com:3306/";
-    protected String url = "jdbc:oracle:thin:@dbchita_high";
+    protected String url = "";
     protected Connection connection;
     protected Statement statement;
     protected static String user;
@@ -23,7 +23,6 @@ public class Gateway {
             //connection = DriverManager.getConnection(this.url, this.user, this.password);
             try {
                 connection = DriverManager.getConnection(url, user, password);
-                //System.out.println("Connection established");
             }catch (Exception e){
                 System.out.println("Error");
             }
@@ -42,7 +41,7 @@ public class Gateway {
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
         url = prop.getProperty("db.url");
-        //System.out.println(url);
+        System.out.println(url);
         user = prop.getProperty("db.user");
         password = prop.getProperty("db.password");
         setConnection();
