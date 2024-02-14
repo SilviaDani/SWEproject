@@ -582,7 +582,7 @@ public class Simulator extends UIController {
             HashMap<String, ArrayList<HashMap<String, Object>>> testObs = new HashMap<>();
             HashMap<String, ArrayList<HashMap<String, Object>>> sympObs = new HashMap<>();
 
-            retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+            retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0); //FIXME
             //------------------------------------ESPERIMENTO---------------------------------------------------------
             while(currentNumberOfHours <= samples){
                 System.out.println("-----------"+ currentNumberOfHours + "-----------");
@@ -1215,6 +1215,86 @@ public class Simulator extends UIController {
         return cumulativeRiskLevel;
     }
 
+
+    private double updateRiskLevel(double riskLevel, LocalDateTime contact_time, ArrayList<Event> testsArrayList,ArrayList<Event> symptomsArrayList, Subject subject, int subjects, LocalDateTime t0, int timeLimitHours) throws Exception {
+        double symp_risk_level = 0;
+        double test_risk_level = 0;
+        boolean symp = false;
+        boolean test_Pos = false;
+        boolean test_Neg = false;
+        if (symptomsArrayList.size() > 0) {
+            for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
+                LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
+                if(symptom_date.isAfter(t0.plusHours(timeLimitHours))){
+                    break;
+                if (symptomsArrayList.get(symptom).getSubject().get(0).equals(subject)) {
+                    if (contact_time.isBefore(symptom_date)) {
+                        Symptoms symptoms = new Symptoms();
+                        double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, stpnAnalyzer.symptomSolution);
+                        symp_risk_level += Math.log(sympEvidence <= 0 ? 1 : sympEvidence); //XXX [CHECK IF IT'S CORRECT]
+                        //System.out.println("Symp " + sympEvidence);
+                        symp = true;
+                    }
+                }
+            }
+        }
+        if (testsArrayList.size() > 0) {
+            for (int test = 0; test < testsArrayList.size(); test++) {
+                LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
+                if(test_time.isAfter(t0.plusHours(timeLimitHours))){
+                    break;
+                if(testsArrayList.get(test).getSubject().get(0).equals(subject)) {
+                    if (contact_time.isBefore(test_time)) {
+                        CovidTestType covidTestType = CovidTestType.ANTIGEN;
+                        if (testsArrayList.get(test).getTestType().equals("MOLECULAR")) {
+                            covidTestType = CovidTestType.MOLECULAR;
+                        }
+                        CovidTest covidTest = new CovidTest(covidTestType, testsArrayList.get(test).getPositive());
+                        //System.out.println("Covid CCC " + covidTest.getName());
+                        double testEvidence = covidTest.isInfected(contact_time, test_time);
+                        //System.out.println(testEvidence);
+                        test_risk_level += Math.log(testEvidence);
+                        if(covidTest.isPositive()){
+                            test_Pos = true;
+                        }else{
+                            test_Neg = true;
+                        }
+                    }
+                }
+            }
+        }
+        double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(riskLevel);
+        double[] cumulativeRiskLevel2;
+        double probObs = 0;
+        //cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
+        //System.out.println(cumulativeRiskLevel + " - " + cumulativeRiskLevel2[0] + " " + cumulativeRiskLevel2[1]);
+        //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
+        if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+            probObs += updateProbObsSymptomsSimulator(subjects, symptomsArrayList, t0);
+            //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+            //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
+        } else {
+            probObs += (1-updateProbObsSymptomsSimulator(subjects, symptomsArrayList, t0));
+            //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+            //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
+            //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+        }
+        List<Double> probObsTests = updateProbObsTestsSimulator(subjects, testsArrayList, t0);
+        if (test_Pos){
+            probObs += probObsTests.get(0);
+        }else{
+            probObs += (1-probObsTests.get(0));
+        }
+        if(test_Neg){
+            probObs+=probObsTests.get(1);
+        }else{
+            probObs += (1-probObsTests.get(1));
+        }
+        //System.out.println("CRL: "+cumulativeRiskLevel);
+        return cumulativeRiskLevel;
+    }
+
+
     private float updateContObservation( Event event, LocalDateTime contact_time, ArrayList<Event> tests,ArrayList<Event> symptoms, ArrayList<Subject> ss) throws Exception {
         float risk_level = ((Contact) event.getType()).getRiskLevel();
         float symp_risk_level = 0;
@@ -1393,7 +1473,7 @@ public class Simulator extends UIController {
                         float d = r.nextFloat();
                         d = (float) Math.log(d);
                         double risk_level = ((Environment) event.getType()).getRiskLevel();
-                        risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject, subjects.size(), t0);
+                        risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject, subjects.size(), t0, timeLimitHours);
                         //System.out.println("Sim-e " + contact_time + " risk_l:" + risk_level+"\n");
                         if (d < risk_level) {
                             LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -1427,7 +1507,7 @@ public class Simulator extends UIController {
                             for (Subject subject : ss) {
                                 if (subject.getCurrentState() == 0) {
                                     double risk_level = ((Contact) event.getType()).getRiskLevel();
-                                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject, subjects.size(), t0);
+                                    risk_level = updateRiskLevel(risk_level, contact_time, tests, symptoms, subject, subjects.size(), t0, timeLimitHours);
                                     System.out.println("Sim-c " + contact_time + " risk_l:" + risk_level + "\n");
                                     if (d < risk_level) {
                                         LocalDateTime ldt = getSampleCC(event.getStartDate(), 12, 36);
@@ -1471,6 +1551,7 @@ public class Simulator extends UIController {
             }
         }
     }
+
     //retrieve observations from db
     void retrieveObservations(ArrayList<Subject> subjects, ArrayList<String> subjects_String, HashMap<String,ArrayList<HashMap<String, Object>>> clusterSubjectsMet, int max_iterations, HashMap<String, ArrayList<HashMap<String, Object>>> envObs, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime t0){
         for(Subject subject : subjects){
