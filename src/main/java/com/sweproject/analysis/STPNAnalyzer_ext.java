@@ -59,109 +59,6 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         symptomSolution = (TransientSolution<R, S>) TransientSolution.computeRewards(false, solution, symptomRates);
     }
 
-    /*public TransientSolution<R,S> makeModel(String fiscalCode, ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
-        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
-            String rawType = (String) testArrayList.get(testIndex).get("type");
-            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
-            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
-            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
-        }
-        LocalDateTime endInterval = LocalDateTime.now();
-        LocalDateTime now = endInterval.minusDays(6);
-        boolean showsSymptoms = false;
-        if (environmentArrayList.size() > 0){
-            for (int contact = 0; contact < environmentArrayList.size(); contact++){
-                showsSymptoms = false;
-                LocalDateTime contact_time = (LocalDateTime) environmentArrayList.get(contact).get("start_date");
-                float risk_level = (float) environmentArrayList.get(contact).get("risk_level");
-                double cumulativeRiskLevel = risk_level;
-                if (symptomsArrayList.size() > 0){
-                    for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++){
-                        LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).get("start_date");
-                        if (contact_time.isBefore(symptom_date)){
-                            Symptoms symptoms = new Symptoms();
-                            cumulativeRiskLevel += symptoms.updateEvidence(contact_time, symptom_date);
-                            showsSymptoms = true;
-                        }
-                    }
-                }
-                if (testArrayList.size() > 0){
-                    for (int test = 0; test < testArrayList.size(); test++){
-                        LocalDateTime test_time = (LocalDateTime) testArrayList.get(test).get("start_date");
-                        if (contact_time.isBefore(test_time)){
-                            CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
-                            System.out.println("Covid CCC" + covidTest.getName());
-                            double testEvidence = covidTest.isInfected(contact_time, test_time);
-                            System.out.println(testEvidence);
-                            cumulativeRiskLevel+=testEvidence;
-                        }
-                    }
-                }
-                cumulativeRiskLevel /= (symptomsArrayList.size() + testArrayList.size() + 1);
-                System.out.println(cumulativeRiskLevel + " prima");
-                cumulativeRiskLevel = updateRiskLevel(cumulativeRiskLevel, contact_time, showsSymptoms);
-                System.out.println(cumulativeRiskLevel + " dopo");
-                environmentArrayList.get(contact).replace("risk_level", risk_level, (float) cumulativeRiskLevel);
-            }
-            PetriNet net = new PetriNet();
-            Marking marking = new Marking();
-            //Generating Nodes
-            Place Contagio = net.addPlace("Contagio");
-            buildContagionEvolutionSection(net, marking, Contagio);
-            Place p1 = net.addPlace("Condizione iniziale");
-            Place p2 = net.addPlace("Primo incontro");
-            marking.setTokens(p1, 1);
-            Transition t0 = net.addTransition("t0");
-            Transition e0 = net.addTransition("effective0");
-            Transition u0 = net.addTransition("uneffective0");
-            float delta = (float) ChronoUnit.MINUTES.between(now, (LocalDateTime) environmentArrayList.get(0).get("start_date")) / 60.f;
-            float newRiskLevel = addTimeRelevance(delta, (float) environmentArrayList.get(0).get("risk_level"));
-            t0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-            e0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(newRiskLevel), net)));
-            u0.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - newRiskLevel), net)));
-            net.addPrecondition(p1, t0);
-            net.addPostcondition(t0, p2);
-            net.addPrecondition(p2, e0);
-            net.addPostcondition(e0, Contagio);
-            net.addPrecondition(p2, u0);
-
-            Transition lastTransition = u0;
-            for (int i = 1; i < environmentArrayList.size(); i++) {
-                Place p3 = net.addPlace("Dopo incontro " + i);
-                Place p4 = net.addPlace("Incontro " + (i + 1));
-                Transition t1 = net.addTransition("t " + i), e1 = net.addTransition("effective " + i), u1 = net.addTransition("uneffective " + i);
-                delta = (float) ChronoUnit.MINUTES.between((LocalDateTime) environmentArrayList.get(i - 1).get("start_date"), (LocalDateTime) environmentArrayList.get(i).get("start_date")) / 60.f;
-                newRiskLevel = addTimeRelevance(delta, (float) environmentArrayList.get(i).get("risk_level"));
-                t1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal(delta)));
-                e1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(newRiskLevel), net)));
-                u1.addFeature(StochasticTransitionFeature.newDeterministicInstance(new BigDecimal("0"), MarkingExpr.from(String.valueOf(1 - newRiskLevel), net)));
-                net.addPostcondition(lastTransition, p3);
-                net.addPrecondition(p3, t1);
-                net.addPostcondition(t1, p4);
-                net.addPrecondition(p4, e1);
-                net.addPostcondition(e1, Contagio);
-                net.addPrecondition(p4, u1);
-                lastTransition = u1;
-            }
-            // 144 -> 6 giorni
-            RegTransient analysis = RegTransient.builder()
-                    .greedyPolicy(new BigDecimal(samples), new BigDecimal("0.001"))
-                    .timeStep(new BigDecimal(step)).build();
-
-            //If(Contagioso>0&&Sintomatico==0,1,0);Contagioso;Sintomatico;If(Guarito+Isolato>0,1,0)
-            var rewardRates = TransientSolution.rewardRates("Contagioso");
-
-            TransientSolution<DeterministicEnablingState, Marking> solution =
-                    analysis.compute(net, marking);
-
-            var rewardedSolution = TransientSolution.computeRewards(false, solution, rewardRates);
-            return (TransientSolution<R, S>) rewardedSolution;
-        }else{
-            System.out.println("The subject has no 'Environment' observations of the last 6 days");
-            return makeFakeNet();
-        }
-    }
-   */
     public TransientSolution<R,S> makeModel(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList) throws Exception {
         for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
             String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
@@ -257,6 +154,109 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
         }
     }
 
+    //with time limit
+    public TransientSolution<R,S> makeModel(ArrayList<HashMap<String, Object>> environmentArrayList, ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList, int timeLimit) throws Exception {
+        for(int testIndex = 0; testIndex < testArrayList.size(); testIndex++){
+            String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
+            //.out.println("RAW TYPE " + rawType);
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR")? CovidTestType.MOLECULAR:CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+        boolean showsSymptoms;
+        boolean isThereAPositiveTest;
+        boolean isThereANegativeTest;
+        if (environmentArrayList.size() > 0){
+            for (int contact = 0; contact < environmentArrayList.size(); contact++){
+                showsSymptoms = false;
+                isThereAPositiveTest = false;
+                isThereANegativeTest = false;
+                //System.out.println("CONCTACT TIME" + environmentArrayList.get(contact).get("START_DATE"));
+                LocalDateTime contact_time = (((oracle.sql.TIMESTAMP)environmentArrayList.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
+                //System.out.println("CONTACT TIME " + contact_time);
+                float risk_level = ((BigDecimal)environmentArrayList.get(contact).get("RISK_LEVEL")).floatValue();
+                environmentArrayList.get(contact).replace("RISK_LEVEL", (float) risk_level);
+                float symp_risk_level = 0;
+                float test_risk_level = 0;
+                if(testArrayList.size() > 0 || symptomsArrayList.size() > 0) {
+                    //System.out.println("dentro");
+                    if (symptomsArrayList.size() > 0) {
+                        for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
+                            LocalDateTime symptom_date = (((oracle.sql.TIMESTAMP) symptomsArrayList.get(symptom).get("START_DATE")).timestampValue()).toLocalDateTime();
+                            if (symptom_date.isAfter(now.plusHours(timeLimit))) {
+                                break;
+                            } else {
+                                if (contact_time.isBefore(symptom_date) && !symptom_date.isAfter(now.minusHours(samples).plusHours(timeLimit))) {
+                                    Symptoms symptoms = new Symptoms();
+                                    double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
+                                    symp_risk_level += Math.log(sympEvidence <= 0 ? 1 : sympEvidence);
+                                    //System.out.println("Symp " + sympEvidence);
+                                    showsSymptoms = true;
+                                }
+                            }
+                        }
+                    }
+                    if (testArrayList.size() > 0) {
+                        for (int test = 0; test < testArrayList.size(); test++) {
+                            LocalDateTime test_time = (((oracle.sql.TIMESTAMP) testArrayList.get(test).get("START_DATE")).timestampValue()).toLocalDateTime();
+                            if (test_time.isAfter(now.minusHours(samples).plusHours(timeLimit))) {
+                                break;
+                            } else {
+                                if (contact_time.isBefore(test_time)) {
+                                    CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                                    //System.out.println("Covid CCC " + covidTest.getName());
+                                    if (covidTest.isPositive())
+                                        isThereAPositiveTest = true;
+                                    else
+                                        isThereANegativeTest = true;
+                                    double testEvidence = covidTest.isInfected(contact_time, test_time);
+                                    //System.out.println(testEvidence);
+                                    test_risk_level += Math.log(testEvidence);
+                                }
+                            }
+                        }
+                    }
+                    // il calcolo è fatto dando la stessa importanza al rischio attribuito, e alle varie osservazioni
+                    double cumulativeRiskLevel =  symp_risk_level + test_risk_level + Math.log(risk_level);
+                    double[] cumulativeRiskLevel2;
+                    //cumulativeRiskLevel2 = updateRiskLevel(contact_time); //fixme
+                    //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
+                    double probObs = 0;
+                    if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+                        probObs += this.probObsSymptoms;
+                        //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                        //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
+                    } else {
+                        probObs += (1-this.probObsSymptoms);
+                        //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
+                        //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                        //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                    }
+                    if(isThereAPositiveTest){
+                        probObs += this.probObsPositiveTests;
+                    }else{
+                        probObs += (1-this.probObsPositiveTests);
+                    }
+                    if(isThereANegativeTest){
+                        probObs += this.probObsNegativeTests;
+                    }else{
+                        probObs += (1-this.probObsNegativeTests);
+                    }
+                    cumulativeRiskLevel-=Math.log(probObs);
+                    var b = environmentArrayList.get(contact).replace("RISK_LEVEL", (float)Math.exp(cumulativeRiskLevel));
+                    //var b = environmentArrayList.get(contact).replace("RISK_LEVEL", risk_level, (float) cumulativeRiskLevel);
+                    // System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
+                }
+                /*
+                System.out.println(environmentArrayList.get(contact).get("risk_level") + " dopo");
+                */
+            }
+            return rewardedSolution;
+        }else{
+            System.out.println("The subject has no 'Environment' observations of the last 6 days");
+            return super.makeFakeNet();
+        }
+    }
     public HashMap<Integer, Double> computeAnalysis(TransientSolution<S, R> s, ArrayList<HashMap<String, Object>> eventsArrayList, LocalDateTime pastStartTime){
         HashMap<Integer, Double> output = new HashMap<>();
         double notInfectedYet = 1;
@@ -467,6 +467,175 @@ public class STPNAnalyzer_ext<R,S> extends STPNAnalyzer{
                 }
             }
         //System.out.println("STPNAnalyzer_ext, 552");
+        }else{
+            System.out.println("Non ci sono contatti con altre persone interne al cluster");
+        }
+        return output;
+    }
+
+    //with time limit
+    public HashMap<Integer, Double> makeClusterModel(LocalDateTime pastStartTime, HashMap<String, HashMap<Integer, Double>> subjects_solutions, ArrayList<HashMap<String, Object>> clusterSubjectsMet,
+                                                     ArrayList<HashMap<String, Object>> testArrayList, ArrayList<HashMap<String, Object>> symptomsArrayList, String nameOfPersonAskingForAnalysis, int timeLimit) throws Exception {
+
+        for (int testIndex = 0; testIndex < testArrayList.size(); testIndex++) {
+            String rawType = (String) testArrayList.get(testIndex).get("type".toUpperCase());
+            String[] extractedType = rawType.split("-"); // 0 -> Covid_test, 1 -> type of test, 2 -> outcome
+            testArrayList.get(testIndex).put("testType", extractedType[1].equals("MOLECULAR") ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN);
+            testArrayList.get(testIndex).put("isPositive", extractedType[2].equals("true"));
+        }
+        boolean showsSymptoms = false;
+        boolean isThereAPositiveTest = false;
+        boolean isThereANegativeTest = false;
+        HashMap<String, Boolean> symptomaticSubjects = new HashMap<>();
+        for(String subject : subjects_solutions.keySet()){
+            symptomaticSubjects.put(subject, false);
+        }
+        Double factorDueToSymptoms = null;
+        for (int contact = 0; contact < clusterSubjectsMet.size(); contact++) {
+            for (String subject : subjects_solutions.keySet()) {
+                symptomaticSubjects.replace(subject, false);
+            }
+            clusterSubjectsMet.get(contact).put("symptomaticSubjects", new HashMap<>(symptomaticSubjects));
+            LocalDateTime contact_time = (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(contact).get("START_DATE")).timestampValue()).toLocalDateTime();
+            var rl = clusterSubjectsMet.get(contact).get("RISK_LEVEL");
+            float risk_level = 0;
+            if (rl instanceof  BigDecimal){
+                risk_level = ((BigDecimal)clusterSubjectsMet.get(contact).get("RISK_LEVEL")).floatValue();
+            }else{
+                risk_level = (float) clusterSubjectsMet.get(contact).get("RISK_LEVEL");
+            }
+            clusterSubjectsMet.get(contact).replace("RISK_LEVEL", (float) risk_level);
+            float symp_risk_level = 0;
+            float test_risk_level = 0;
+            if (symptomsArrayList.size() > 0) {
+                for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
+                    LocalDateTime symptom_date = (((oracle.sql.TIMESTAMP) symptomsArrayList.get(symptom).get("START_DATE")).timestampValue()).toLocalDateTime();
+                    if (symptom_date.isAfter(now.minusHours(samples).plusHours(timeLimit))) {
+                        break;
+                    } else {
+                        if (contact_time.isBefore(symptom_date)) {
+                            Symptoms symptoms = new Symptoms();
+                            double sympEvidence = symptoms.updateEvidence(contact_time, symptom_date, symptomSolution);
+                            symp_risk_level += Math.log(sympEvidence <= 0 ? 1 : sympEvidence); //XXX [CHECK IF IT'S CORRECT]
+                            symptomaticSubjects.replace((String) symptomsArrayList.get(symptom).get("FISCALCODE"), true);
+                        }
+                    }
+                }
+            }
+            if (testArrayList.size() > 0) {
+                for (int test = 0; test < testArrayList.size(); test++) {
+                    LocalDateTime test_time = (((oracle.sql.TIMESTAMP) testArrayList.get(test).get("START_DATE")).timestampValue()).toLocalDateTime();
+                    if (test_time.isAfter(now.minusHours(samples).plusHours(timeLimit))) {
+                        break;
+                    } else {
+                        if (contact_time.isBefore(test_time)) {
+                            CovidTest covidTest = new CovidTest((CovidTestType) testArrayList.get(test).get("testType"), (boolean) testArrayList.get(test).get("isPositive"));
+                            //System.out.println("Covid CCC" + covidTest.getName());
+                            if (covidTest.isPositive()) {
+                                isThereAPositiveTest = true;
+                            } else {
+                                isThereANegativeTest = true;
+                            }
+                            double testEvidence = covidTest.isInfected(contact_time, test_time);
+                            //System.out.println(testEvidence);
+                            test_risk_level += Math.log(testEvidence);
+                        }
+                    }
+                }
+            }
+            double cumulativeRiskLevel = symp_risk_level + test_risk_level + Math.log(risk_level);
+            double[] cumulativeRiskLevel2;
+            //cumulativeRiskLevel2 = updateRiskLevel(contact_time); //fixme
+            //System.out.println(cumulativeRiskLevel + " prima");
+            clusterSubjectsMet.get(contact).replace("symptomaticSubjects", symptomaticSubjects);
+            double probObs = 0;
+            if (showsSymptoms) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+                probObs += this.probObsSymptoms;
+                //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
+                //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
+            } else {
+                probObs += (1-this.probObsSymptoms);
+                //cumulativeRiskLevel -= (Math.log(1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori negativissimi //fixme
+                //cumulativeRiskLevel /= (1 - cumulativeRiskLevel2[0] - cumulativeRiskLevel2[1]);
+                //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+            }
+            if(isThereAPositiveTest){
+                probObs += this.probObsPositiveTests;
+            }else{
+                probObs += (1-this.probObsPositiveTests);
+            }
+            if(isThereANegativeTest){
+                probObs += this.probObsNegativeTests;
+            }else{
+                probObs += (1-this.probObsNegativeTests);
+            }
+            cumulativeRiskLevel-=Math.log(probObs);
+            var b = clusterSubjectsMet.get(contact).replace("RISK_LEVEL", risk_level, (float) Math.exp(cumulativeRiskLevel));
+            //System.out.println("PN " + contact_time + " -> " + cumulativeRiskLevel + " -> " + b);
+
+        }
+
+        HashMap<Integer, Double> output = new HashMap<>();
+        int size = subjects_solutions.get(subjects_solutions.keySet().iterator().next()).size();
+        for (int i = 0; i < size; i++) {
+            output.put(i, 0.0);
+        }
+        if (clusterSubjectsMet.size() > 0) {
+            TransientSolution<S, R> s = (TransientSolution<S, R>) rewardedSolution;
+
+            int i = 0; //index of contact
+            int j = 0; //n. person met during contact counter
+            int r = s.getRegenerations().indexOf(s.getInitialRegeneration());
+            for (int m = 0; m < s.getColumnStates().size(); m++) {
+                int contactNumber = 0;
+                double notInfectedYet = 1;
+                while(i < clusterSubjectsMet.size()) { //itera sugli eventi
+                    j = 0;
+                    String[] meeting_subjects = new String[clusterSubjectsMet.size()];
+                    (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime();
+                    LocalDateTime meeting_time1 = LocalDateTime.from((((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime());
+                    if (pastStartTime.plusHours(samples).isAfter(meeting_time1)) {
+                        break;
+                    } else {
+                        while (i < clusterSubjectsMet.size() && (((oracle.sql.TIMESTAMP) clusterSubjectsMet.get(i).get("START_DATE")).timestampValue()).toLocalDateTime().equals(meeting_time1)) {
+                            meeting_subjects[j] = clusterSubjectsMet.get(i).get("FISCALCODE").toString();
+                            j++;
+                            i++;
+                        }
+                        //System.out.println("Print i " + i);
+                        double maxRisk = 0.0;
+                        int delta = (int) ChronoUnit.HOURS.between(pastStartTime, meeting_time1);
+                        for (int k = 0; k < j; k++) {
+                            double tmp = subjects_solutions.get(meeting_subjects[k]).get(delta);
+                            if (tmp > maxRisk) {
+                                maxRisk = tmp;
+                                //      System.out.println("risk increased!");
+                            }
+                        }
+                        double step = s.getStep().doubleValue();
+                        int index = 0;
+
+                        float risk = (float) clusterSubjectsMet.get(contactNumber).get("RISK_LEVEL");
+                        for (int jj = delta; jj < size; jj += (int) step) {
+                            double y = s.getSolution()[index][r][m] * maxRisk * risk;
+                            if (factorDueToSymptoms != null) { //XXX remove?
+                                if (((HashMap<String, Boolean>) clusterSubjectsMet.get(contactNumber).get("symptomaticSubjects")).get(nameOfPersonAskingForAnalysis)) {
+                                    y /= factorDueToSymptoms;
+                                } else {
+                                    y /= (1 - factorDueToSymptoms);
+                                    //il denominatore dovrebbe andare bene dal momento che i due eventi che sottraggo sono riguardo alla stesso campione ma sono eventi disgiunti
+                                }
+                            }
+                            double oldY = output.get(jj);
+                            output.replace(jj, notInfectedYet * y + oldY);
+                            index++;
+                        }
+                        notInfectedYet *= (1 - maxRisk * risk);
+                        contactNumber = i;
+                    }
+                }
+            }
+            //System.out.println("STPNAnalyzer_ext, 552");
         }else{
             System.out.println("Non ci sono contatti con altre persone interne al cluster");
         }

@@ -145,15 +145,15 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 168;
     int steps = 1;
-    final int maxReps = 1000;
+    final int maxReps = 100;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 5;
-    int nContact = 50; //this number should be high (?)
-    int max_nEnvironment = 14;
-    int min_nEnvironment = 5;
+    int nContact = 20; //this number should be high (?)
+    int max_nEnvironment = 20;
+    int min_nEnvironment = 10;
     int max_nSymptoms = 0; //fixme
     int min_nSymptoms = 0;
     int max_nCovTests = 0; //fixme
@@ -713,7 +713,7 @@ public class Simulator extends UIController {
                 retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
                 ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
                 stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
-                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0, currentNumberOfHours);
                 HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
                 //------------------------------------CALCOLO MRR---------------------------------------------------------
                 var rr = Utils.MRR(meanTrees, solutions, currentNumberOfHours);
@@ -1366,6 +1366,7 @@ public class Simulator extends UIController {
     private void runMainCycle
     (ArrayList<Subject> subjects, ArrayList<Event> eventsBackup, ArrayList<Event> testsBackup, ArrayList<Event> symptomsBackup, LocalDateTime
             t0, int rep, HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees) throws Exception {
+        r.setSeed(seed);
         ArrayList<Event> events = new ArrayList<>(eventsBackup);
         ArrayList<Event> tests = new ArrayList<>(testsBackup);
         ArrayList<Event> symptoms = new ArrayList<>(symptomsBackup);
@@ -1464,6 +1465,7 @@ public class Simulator extends UIController {
             (ArrayList<Subject> subjects, ArrayList<Event> eventsBackup, ArrayList<Event> testsBackup, ArrayList<Event> symptomsBackup, LocalDateTime
                     t0, int rep, HashMap<String, TreeMap<LocalDateTime, Double>> meanTrees, int timeLimitHours) throws
             Exception {
+        r.setSeed(seed);
         ArrayList<Event> events = new ArrayList<>(eventsBackup);
         ArrayList<Event> tests = new ArrayList<>(testsBackup);
         ArrayList<Event> symptoms = new ArrayList<>(symptomsBackup);
@@ -1625,6 +1627,40 @@ public class Simulator extends UIController {
                 } else {
                     try {
                         pits.put(member, stpnAnalyzer.makeClusterModel(t0, pns.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            pns.add(pits);
+        }
+    }
+
+    //run numerical analysis (with time limit)
+    private void runNumericalAnalysis
+    (ArrayList<HashMap<String, HashMap<Integer, Double>>> pns, ArrayList<String> subjects_String, HashMap<String, ArrayList<HashMap<String, Object>>> clusterSubjectsMet,
+     int max_iterations, HashMap<
+            String, ArrayList<HashMap<String, Object>>> envObs, HashMap<String, ArrayList<HashMap<String, Object>>> testObs, HashMap<String, ArrayList<HashMap<String, Object>>> sympObs, LocalDateTime
+             t0, int timeLimit) {
+        try {
+            stpnAnalyzer.updateProbObsSymptoms(subjects_String, sympObs, t0);
+            stpnAnalyzer.updateProbObsTest(subjects_String, testObs, t0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        for (int nIteration = 0; nIteration <= max_iterations; nIteration++) {
+            HashMap<String, HashMap<Integer, Double>> pits = new HashMap<>();//p^it_s
+            for (String member : subjects_String) {
+                if (nIteration == 0) {
+                    try {
+                        TransientSolution s = stpnAnalyzer.makeModel(envObs.get(member), testObs.get(member), sympObs.get(member), timeLimit);
+                        pits.put(member, stpnAnalyzer.computeAnalysis(s, envObs.get(member), t0));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        pits.put(member, stpnAnalyzer.makeClusterModel(t0, pns.get(nIteration - 1), clusterSubjectsMet.get(member), testObs.get(member), sympObs.get(member), member, timeLimit));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
