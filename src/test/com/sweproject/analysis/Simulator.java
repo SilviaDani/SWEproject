@@ -154,10 +154,10 @@ public class Simulator extends UIController {
     int nContact = 20; //this number should be high (?)
     int max_nEnvironment = 20;
     int min_nEnvironment = 10;
-    int max_nSymptoms = 0; //fixme
+    int max_nSymptoms = 2; //fixme
     int min_nSymptoms = 0;
-    int max_nCovTests = 0; //fixme
-    int min_nCovTests = 0;
+    int max_nCovTests = 2; //fixme
+    int min_nCovTests = 1;
     File execTimes;
     File confInt;
     File RMSE;
@@ -610,8 +610,8 @@ public class Simulator extends UIController {
                 sympObs = new HashMap<>();
                 retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
                 ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
-                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
-                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
+                stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
+                runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0, currentNumberOfHours);
                 HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
                 //------------------------------------CALCOLO MRR---------------------------------------------------------
                 var rr = Utils.MRR(meanTrees, solutions, currentNumberOfHours);
@@ -712,7 +712,7 @@ public class Simulator extends UIController {
                 sympObs = new HashMap<>();
                 retrieveObservations(subjects, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
                 ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
-                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
+                stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
                 runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0, currentNumberOfHours);
                 HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
                 //------------------------------------CALCOLO MRR---------------------------------------------------------
@@ -804,7 +804,7 @@ public class Simulator extends UIController {
                     sympObs.put(member, new ArrayList<>());
                 }
                 ArrayList<HashMap<String, HashMap<Integer, Double>>> pns = new ArrayList<>();
-                stpnAnalyzer = new STPNAnalyzer_ext(currentNumberOfHours, steps);
+                stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
                 runNumericalAnalysis(pns, subjects_String, clusterSubjectsMet, max_iterations, envObs, testObs, sympObs, t0);
                 HashMap<String, HashMap<Integer, Double>> solutions = buildSolution(pns, subjects_String, currentNumberOfHours, steps);
                 //------------------------------------CALCOLO MRR---------------------------------------------------------
