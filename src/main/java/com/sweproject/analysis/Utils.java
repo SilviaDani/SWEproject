@@ -135,6 +135,7 @@ public class Utils {
                 int accuracy = 0;
                 //for each position in orderedRankinkGT, check if the same position in orderedRankingAN contains the same person
                 //for each person in the ground truth, find their position in orderedRankingGT and orderedRankingAN
+                boolean found = false;
                 for(String s : groundTruth.keySet()){
                     int indexOfsInGT = -1;
                     int indexOfsInAN = -1;
@@ -159,7 +160,8 @@ public class Utils {
                     }
                 }
                 // System.out.println("According to the simulation, " + personMaxSim + " should be tested.\nAccording to the numerical analysis, " + personMaxAn + " should be tested.");
-                return (double)accuracy/x;
+
+                return Math.min((double) accuracy / x, 1.0);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -145,19 +145,19 @@ class ChangeStateEvent extends Event{
 public class Simulator extends UIController {
     int samples = 168;
     int steps = 1;
-    final int maxReps = 100;
+    final int maxReps = 1000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
     String PYTHON_PATH;
     static final int np = 5;
-    int nContact = 20; //this number should be high (?)
-    int max_nEnvironment = 10;
-    int min_nEnvironment = 7;
-    int max_nSymptoms = 2; //fixme
+    int nContact = 50; //this number should be high (?)
+    int max_nEnvironment = 14;
+    int min_nEnvironment = 5;
+    int max_nSymptoms = 0; //fixme
     int min_nSymptoms = 0;
-    int max_nCovTests = 2; //fixme
-    int min_nCovTests = 1;
+    int max_nCovTests = 0; //fixme
+    int min_nCovTests = 0;
     File execTimes;
     File confInt;
     File RMSE;
@@ -173,10 +173,14 @@ public class Simulator extends UIController {
     WeibullDistribution wSymp = new WeibullDistribution(2, 11);
     ExponentialDistribution eNotSymp = new ExponentialDistribution(25);
     ExponentialDistribution eSymp = new ExponentialDistribution(10);
-    long seed = 11;
+    long seed = 12;
 
 
     Simulator() {
+        //PYTHON_PATH = "C:\\Users\\super\\anaconda3\\python.exe";
+        var envVariables = System.getenv();
+        PYTHON_PATH = envVariables.get("PYTHON_PATH");
+        System.out.println("PythonPath: " + PYTHON_PATH);
         observationGateway = new ObservationGateway();
         stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
         timer = Stopwatch.createUnstarted();
@@ -342,6 +346,7 @@ public class Simulator extends UIController {
         plt.ylabel("Accuracy");
         plt.title("Top-X-accuracies");
         plt.legend();
+        plt.ylim(-0.1, 1.1);
 
         try {
             plt.show();
@@ -1141,7 +1146,7 @@ public class Simulator extends UIController {
         boolean symp = false;
         boolean test_Pos = false;
         boolean test_Neg = false;
-        if (symptomsArrayList.size() > 0) {
+        if (!symptomsArrayList.isEmpty()) {
             for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                 LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
                 if (symptomsArrayList.get(symptom).getSubject().get(0).equals(subject)) {
@@ -1155,7 +1160,7 @@ public class Simulator extends UIController {
                 }
             }
         }
-        if (testsArrayList.size() > 0) {
+        if (!testsArrayList.isEmpty()) {
             for (int test = 0; test < testsArrayList.size(); test++) {
                 LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
                 if (testsArrayList.get(test).getSubject().get(0).equals(subject)) {
@@ -1216,7 +1221,7 @@ public class Simulator extends UIController {
         boolean symp = false;
         boolean test_Pos = false;
         boolean test_Neg = false;
-        if (symptomsArrayList.size() > 0) {
+        if (!symptomsArrayList.isEmpty()) {
             for (int symptom = 0; symptom < symptomsArrayList.size(); symptom++) {
                 LocalDateTime symptom_date = (LocalDateTime) symptomsArrayList.get(symptom).getStartDate();
                 if (symptom_date.isAfter(t0.plusHours(timeLimitHours))) {
@@ -1234,7 +1239,7 @@ public class Simulator extends UIController {
                 }
             }
         }
-        if (testsArrayList.size() > 0) {
+        if (!testsArrayList.isEmpty()) {
             for (int test = 0; test < testsArrayList.size(); test++) {
                 LocalDateTime test_time = (LocalDateTime) testsArrayList.get(test).getStartDate();
                 if (test_time.isAfter(t0.plusHours(timeLimitHours))) {
