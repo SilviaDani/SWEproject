@@ -2,6 +2,7 @@ package com.sweproject.analysis;
 
 import com.sun.source.tree.Tree;
 import com.sweproject.model.Subject;
+import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -168,4 +169,35 @@ public class Utils {
         }
         return -1;
     }
+
+    public static double normalizedKendallTauDistance(ArrayList<Double> values1, ArrayList<Double> values2){
+        int n = values1.size();
+        assert n == values2.size();
+        int i, j, v = 0;
+        boolean a, b;
+        for(i = 0; i < n; i++){
+            for(j = i+1; j < n; j++){
+                a = values1.get(i) < values1.get(j) && values2.get(i) > values2.get(j);
+                b = values1.get(i) > values1.get(j) && values2.get(i) < values2.get(j);
+                if(a || b){
+                    v++;
+                }
+            }
+        }
+        int kt = Math.abs(v);
+        double nkt = (double) kt / (n * (n-1) / 2.0);
+        return nkt;
+    }
+
+    public static double spearmansCorrelation(ArrayList<Double> values1, ArrayList<Double> values2){
+        SpearmansCorrelation sc = new SpearmansCorrelation();
+        double[] v1 = new double[values1.size()];
+        double[] v2 = new double[values2.size()];
+        for(int i = 0; i < values1.size(); i++){
+            v1[i] = values1.get(i);
+            v2[i] = values2.get(i);
+        }
+        return sc.correlation(v1, v2);
+    }
+
 }

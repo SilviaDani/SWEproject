@@ -147,7 +147,7 @@ public class Simulator extends UIController {
     int steps = 1;
     int hoursBetweenTimestamps = 24;
     int topXlimit = 5;
-    final int maxReps = 100;
+    final int maxReps = 10000;
     boolean considerEnvironment = true;
     private static ObservationGateway observationGateway;
     public STPNAnalyzer_ext stpnAnalyzer;
@@ -680,7 +680,7 @@ public class Simulator extends UIController {
 
             System.out.println("Calculating MRR and top-X-accuracy with observations...");
 
-            var outputWithObs = runExperiment(subjects, events, symptoms, tests, t0, true);
+            var outputWithObs = runExperiment(subjects, events, symptoms, tests, t0, false);
             MRRs_withObs = outputWithObs.MRRs;
             topXaccuracies_withObs = outputWithObs.topXaccuracies;
 
@@ -691,7 +691,7 @@ public class Simulator extends UIController {
             tests = (ArrayList<Event>) tests_backup.clone();
             symptoms = (ArrayList<Event>) symptoms_backup.clone();
 
-            var outputWithoutObs = runExperiment(subjects, events, symptoms, tests, t0, false);
+            var outputWithoutObs = runExperiment(subjects, events, symptoms, tests, t0, true);
             MRRs_withoutObs = outputWithoutObs.MRRs;
             topXaccuracies_withoutObs = outputWithoutObs.topXaccuracies;
 
