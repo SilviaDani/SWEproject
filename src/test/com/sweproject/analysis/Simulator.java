@@ -1366,7 +1366,7 @@ public class Simulator extends UIController {
         //cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
         //System.out.println(cumulativeRiskLevel + " - " + cumulativeRiskLevel2[0] + " " + cumulativeRiskLevel2[1]);
         //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
-        if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+        if (symp) {
             probObs += updateProbObsSymptomsSimulator(subjects, symptomsArrayList, t0);
             //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
             //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
@@ -1449,7 +1449,7 @@ public class Simulator extends UIController {
         //cumulativeRiskLevel2 = updateRiskLevelSimulator(contact_time);
         //System.out.println(cumulativeRiskLevel + " - " + cumulativeRiskLevel2[0] + " " + cumulativeRiskLevel2[1]);
         //[0] Covid diagnosticati sulla popolazione, [1] Influenza sulla popolazione
-        if (symp) { //TODO VA FATTO PER TUTTI UGUALE O IN BASE A SE SI HANNO SINTOMI? IO PENSO SIA SENZA ELSE
+        if (symp) {
             probObs += updateProbObsSymptomsSimulator(subjects, symptomsArrayList, t0);
             //cumulativeRiskLevel /= (cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1]);
             //cumulativeRiskLevel -= (Math.log(cumulativeRiskLevel2[0] + cumulativeRiskLevel2[1])); //XXX io l'ho tolto perché se ce lo lascio questo fattore fa schizzare il valore a valori altissimi //fixme
