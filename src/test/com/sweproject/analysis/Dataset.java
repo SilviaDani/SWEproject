@@ -11,7 +11,7 @@ import java.util.*;
 
 import static com.sweproject.main.Main.DEBUG;
 
-public class Dataset {
+class Dataset {
     private int n_subjects;
     private int in_contacts;
     private int n_tests;
@@ -19,6 +19,10 @@ public class Dataset {
     private Random r = new Random();
     private int n_hours;
     private static ObservationGateway observationGateway;
+    private ArrayList<Event> events = new ArrayList<>();
+    private ArrayList<Event> tests = new ArrayList<>();
+    private ArrayList<Event> symptoms = new ArrayList<>();
+    private ArrayList<Subject> subjects = new ArrayList<>();
 
 
     public Dataset(int n_subjects, int in_contacts, int n_hours) {
@@ -28,6 +32,22 @@ public class Dataset {
         this.n_tests = r.nextInt(this.n_subjects/2);
         this.n_symptoms = r.nextInt(this.n_subjects/2);
         this.n_hours = n_hours;
+    }
+
+    public ArrayList<Event> getEvents() {
+        return events;
+    }
+
+    public ArrayList<Event> getTests() {
+        return tests;
+    }
+
+    public ArrayList<Event> getSymptoms() {
+        return symptoms;
+    }
+
+    public ArrayList<Subject> getSubjects() {
+        return subjects;
     }
 
     private ArrayList<LocalDateTime> generateDates(LocalDateTime t0, int nEvent, int samples) {
@@ -71,7 +91,6 @@ public class Dataset {
     //TODO fare dataset separati o metodo che pulisce il database
     public void createDataset() {
         LocalDateTime t0 = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusHours(n_hours);
-        ArrayList<Subject> subjects = new ArrayList<>();
         AccessGateway accessGateway = new AccessGateway();
         //creazione dei soggetti
         for (int p = 0; p < n_subjects; p++) {
@@ -107,7 +126,7 @@ public class Dataset {
                     s_String.add(sub.getName());
                 }
                 Type t = new Environment(out_masks[i], out_riskLevels[i], out_startDates[i], out_endDates[i]);
-                //events.add(new Event(startDates[i], endDates[i], t, s, null, null));
+                events.add(new Event(out_startDates[i], out_endDates[i], t, s, null, null));
 
                 observationGateway.insertObservation(s_String, t, out_startDates[i], out_endDates[i]);
             }
@@ -146,10 +165,10 @@ public class Dataset {
             }
             Type t = new Contact(s_String, in_masks[c], in_riskLevels[c], in_startDates[c], in_endDates[c]);
 
-            //events.add(new Event(in_startDates[c], in_endDates[c], t, partecipatingSubjects, null, null));
+            events.add(new Event(in_startDates[c], in_endDates[c], t, partecipatingSubjects, null, null));
             observationGateway.insertObservation(s_String, t, in_startDates[c], in_endDates[c]);
         }
-        //Collections.sort(events);
+        Collections.sort(events);
 
         //inizio generazione dei sintomi
 
@@ -172,7 +191,7 @@ public class Dataset {
             int person = r.nextInt(n_subjects);
             ArrayList<Subject> s = new ArrayList<>(Collections.singletonList(subjects.get(person)));
             Type t = new Symptoms();
-            //symptoms.add(new Event(startDates[nSymptom], endDates[nSymptom], t, s, null, null));
+            symptoms.add(new Event(startDates_symptoms[nSymptom], endDates_symptoms[nSymptom], t, s, null, null));
             ArrayList<String> s_String = new ArrayList<>();
             for (Subject sub : s) {
                 s_String.add(sub.getName());
@@ -200,7 +219,7 @@ public class Dataset {
             float randomTest = r.nextFloat();
             float randomPositive = r.nextFloat();
             Type t = new CovidTest(randomTest > 0.5f ? CovidTestType.MOLECULAR : CovidTestType.ANTIGEN, randomPositive > 0.5f);
-            //tests.add(new Event(startDates[nCovTest], null, t, s, randomPositive > 0.5f, randomTest > 0.5f ? "MOLECULAR" : "ANTIGEN"));
+            tests.add(new Event(startDates_tests[nCovTest], null, t, s, randomPositive > 0.5f, randomTest > 0.5f ? "MOLECULAR" : "ANTIGEN"));
             ArrayList<String> s_String = new ArrayList<>();
             for (Subject sub : s) {
                 s_String.add(sub.getName());
