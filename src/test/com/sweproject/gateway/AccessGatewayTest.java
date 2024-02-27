@@ -87,7 +87,7 @@ public class AccessGatewayTest {
             System.out.println("Impossibile trovare le credenziali per l'accesso al database");
         }
         url = prop.getProperty("db.url");
-        System.out.println(url);
+        //System.out.println(url);
         user = prop.getProperty("db.user");
         password = prop.getProperty("db.password");
         Connection connection = null;

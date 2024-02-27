@@ -1,8 +1,10 @@
 package com.sweproject.analysis;
 
 import com.sweproject.gateway.AccessGateway;
+import com.sweproject.gateway.AccessGatewayTest;
 import com.sweproject.gateway.ObservationGateway;
 import com.sweproject.analysis.Subject;
+import com.sweproject.gateway.ObservationGatewayTest;
 import com.sweproject.model.*;
 
 import java.time.LocalDateTime;
@@ -32,6 +34,9 @@ class Dataset {
         this.n_tests = r.nextInt(this.n_subjects/2);
         this.n_symptoms = r.nextInt(this.n_subjects/2);
         this.n_hours = n_hours;
+        observationGateway = new ObservationGateway();
+        System.out.println("N tests: " + n_tests);
+        System.out.println("N symptoms: " + n_symptoms);
     }
 
     public ArrayList<Event> getEvents() {
@@ -130,6 +135,7 @@ class Dataset {
 
                 observationGateway.insertObservation(s_String, t, out_startDates[i], out_endDates[i]);
             }
+            Utils.progressBar(p, n_subjects, "Creating contacts with the environment");
         }
 
         //creazione eventi nel cluster
@@ -152,6 +158,7 @@ class Dataset {
         in_riskLevels = generateRiskLevels(in_contacts);
         in_masks = generateMasks(in_contacts);
 
+
         for (int c = 0; c < in_contacts; c++) {
             ArrayList<String> s_String = new ArrayList<>();
             ArrayList<Subject> subjects_copy = new ArrayList<>(subjects);
@@ -167,6 +174,7 @@ class Dataset {
 
             events.add(new Event(in_startDates[c], in_endDates[c], t, partecipatingSubjects, null, null));
             observationGateway.insertObservation(s_String, t, in_startDates[c], in_endDates[c]);
+            Utils.progressBar(c, in_contacts, "Creating contacts within the cluster");
         }
         Collections.sort(events);
 
@@ -197,6 +205,7 @@ class Dataset {
                 s_String.add(sub.getName());
             }
             observationGateway.insertObservation(s_String, t, startDates_symptoms[nSymptom], endDates_symptoms[nSymptom]);
+            Utils.progressBar(nSymptom, n_symptoms, "Creating symptom observations");
         }
 
 
@@ -225,7 +234,23 @@ class Dataset {
                 s_String.add(sub.getName());
             }
             observationGateway.insertObservation(s_String, t, startDates_tests[nCovTest], null);
+            Utils.progressBar(nCovTest, n_tests, "Creating test observations");
         }
+    }
+
+    public void cleanDataset() {
+        int pBarProgress = 0;
+        String message = "Cleaning dataset";
+        for (Subject subject : subjects) {
+            Utils.progressBar(pBarProgress, subjects.size(), message);
+            ArrayList<HashMap<String, Object>> obs = observationGateway.getObservations(subject.getName());
+            for (int i = 0; i < obs.size(); i++) {
+                ObservationGatewayTest.deleteObservation(obs.get(i).get("ID").toString());
+            }
+            AccessGatewayTest.deleteUser(subject.getName());
+            Utils.progressBar(++pBarProgress, subjects.size(), message);
+        }
+        System.out.println("Dataset cleaned!");
     }
 }
 

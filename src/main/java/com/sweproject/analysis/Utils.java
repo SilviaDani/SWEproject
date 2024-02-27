@@ -1,13 +1,33 @@
 package com.sweproject.analysis;
 
-import com.sun.source.tree.Tree;
-import com.sweproject.model.Subject;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class Utils {
+
+    private static class PersonScorePair implements Comparable<PersonScorePair>{
+        private final String person;
+        private final double score;
+        private int index = 0; //it's not the rank!!!!
+
+        public PersonScorePair(String person, double score) {
+            this.person = person;
+            this.score = score;
+        }
+        public void setIndex(int index){
+            this.index = index;
+        }
+        public int getIndex(){
+            return index;
+        }
+
+        @Override
+        public int compareTo(PersonScorePair o) {
+            return Double.compare(this.score, o.score);
+        }
+    }
 
     public static HashMap<String, Double> MRR(HashMap<String, TreeMap<LocalDateTime, Double>> groundTruth, HashMap<String, HashMap<Integer, Double>> analysis, int timeLimit) {
         try {
@@ -170,34 +190,147 @@ public class Utils {
         return -1;
     }
 
-    public static double normalizedKendallTauDistance(ArrayList<Double> values1, ArrayList<Double> values2){
-        int n = values1.size();
-        assert n == values2.size();
-        int i, j, v = 0;
-        boolean a, b;
-        for(i = 0; i < n; i++){
-            for(j = i+1; j < n; j++){
-                a = values1.get(i) < values1.get(j) && values2.get(i) > values2.get(j);
-                b = values1.get(i) > values1.get(j) && values2.get(i) < values2.get(j);
-                if(a || b){
-                    v++;
+    public static double normalizedKendallTauDistance(HashMap<String, TreeMap<LocalDateTime, Double>> groundTruth, HashMap<String, HashMap<Integer, Double>> analysis, int timeLimit) {
+
+        if (groundTruth.keySet().size() != analysis.keySet().size()) {
+            throw new RuntimeException("Different cluster size between simulated solution and analytical one");
+        } else {
+            //ranking the subjects (Ground Truth)
+            LocalDateTime nearestLdt = LocalDateTime.of(1980, 1, 1, 0, 0);
+            int index = 0;
+            for (LocalDateTime ldt : groundTruth.get(groundTruth.keySet().toArray()[0]).keySet()) {
+                if (ldt.isAfter(nearestLdt) && index < timeLimit - 1) {
+                    nearestLdt = ldt;
+                    index++;
+                } else
+                    break;
+            }
+            List<PersonScorePair> rankingsGT = new ArrayList<>();
+            for (String person : groundTruth.keySet()) {
+                double currentValue = groundTruth.get(person).get(nearestLdt);
+                rankingsGT.add(new PersonScorePair(person, currentValue));
+            }
+
+            //ranking the subjects (Analysis)
+            int maxIndex = 0;
+            for (Integer i : analysis.get(analysis.keySet().toArray()[0]).keySet()) {
+                if (i > maxIndex) {
+                    maxIndex = i;
                 }
             }
+            List<PersonScorePair> rankingsAN = new ArrayList<>();
+            for (String person : analysis.keySet()) {
+                double currentValue = analysis.get(person).get(maxIndex);
+                rankingsAN.add(new PersonScorePair(person, currentValue));
+            }
+            //assign ranks
+            for (int i = 0; i < rankingsGT.size(); i++) {
+                rankingsGT.get(i).setIndex(i + 1);
+            }
+            for (int i = 0; i < rankingsAN.size(); i++) {
+                rankingsAN.get(i).setIndex(i + 1);
+            }
+
+            rankingsGT.sort(Collections.reverseOrder());
+            rankingsAN.sort(Collections.reverseOrder());
+
+            //print rankings
+            System.out.println("~~~~~~~~~~~");
+            for (PersonScorePair p : rankingsGT) {
+                System.out.println(p.person + " " + p.score + " " + p.index);
+            }
+            System.out.println("~~~~~~~~~~~");
+            for (PersonScorePair p : rankingsAN) {
+                System.out.println(p.person + " " + p.score + " " + p.index);
+            }
+            //Compute the Kendall Tau distance between the two rankings
+            int n = rankingsGT.size();
+            assert n == rankingsAN.size();
+            int i, j, v = 0;
+            boolean a, b;
+            for (i = 0; i < n; i++) {
+                for (j = i + 1; j < n; j++) {
+                    a = rankingsGT.get(i).index < rankingsGT.get(j).index && rankingsAN.get(i).index > rankingsAN.get(j).index;
+                    b = rankingsGT.get(i).index > rankingsGT.get(j).index && rankingsAN.get(i).index < rankingsAN.get(j).index;
+                    if (a || b) {
+                        v++;
+                    }
+                }
+            }
+            int kt = Math.abs(v);
+            double nkt = (double) kt / (n * (n - 1) / 2.0);
+            return nkt;
         }
-        int kt = Math.abs(v);
-        double nkt = (double) kt / (n * (n-1) / 2.0);
-        return nkt;
     }
 
-    public static double spearmansCorrelation(ArrayList<Double> values1, ArrayList<Double> values2){
-        SpearmansCorrelation sc = new SpearmansCorrelation();
-        double[] v1 = new double[values1.size()];
-        double[] v2 = new double[values2.size()];
-        for(int i = 0; i < values1.size(); i++){
-            v1[i] = values1.get(i);
-            v2[i] = values2.get(i);
+    public static double spearmansCorrelation(HashMap<String, TreeMap<LocalDateTime, Double>> groundTruth, HashMap<String, HashMap<Integer, Double>> analysis, int timeLimit) {
+
+        if (groundTruth.keySet().size() != analysis.keySet().size()) {
+            throw new RuntimeException("Different cluster size between simulated solution and analytical one");
+        } else {
+            //ranking the subjects (Ground Truth)
+            LocalDateTime nearestLdt = LocalDateTime.of(1980, 1, 1, 0, 0);
+            int index = 0;
+            for (LocalDateTime ldt : groundTruth.get(groundTruth.keySet().toArray()[0]).keySet()) {
+                if (ldt.isAfter(nearestLdt) && index < timeLimit - 1) {
+                    nearestLdt = ldt;
+                    index++;
+                } else
+                    break;
+            }
+            List<PersonScorePair> rankingsGT = new ArrayList<>();
+            for (String person : groundTruth.keySet()) {
+                double currentValue = groundTruth.get(person).get(nearestLdt);
+                rankingsGT.add(new PersonScorePair(person, currentValue));
+            }
+
+            //ranking the subjects (Analysis)
+            int maxIndex = 0;
+            for (Integer i : analysis.get(analysis.keySet().toArray()[0]).keySet()) {
+                if (i > maxIndex) {
+                    maxIndex = i;
+                }
+            }
+            List<PersonScorePair> rankingsAN = new ArrayList<>();
+            for (String person : analysis.keySet()) {
+                double currentValue = analysis.get(person).get(maxIndex);
+                rankingsAN.add(new PersonScorePair(person, currentValue));
+            }
+            //assign ranks
+            for (int i = 0; i < rankingsGT.size(); i++) {
+                rankingsGT.get(i).setIndex(i + 1);
+            }
+            for (int i = 0; i < rankingsAN.size(); i++) {
+                rankingsAN.get(i).setIndex(i + 1);
+            }
+
+            rankingsGT.sort(Collections.reverseOrder());
+            rankingsAN.sort(Collections.reverseOrder());
+
+            double[] rGT = new double[rankingsGT.size()];
+            double[] rAN = new double[rankingsAN.size()];
+            for (int i = 0; i < rankingsGT.size(); i++) {
+                rGT[i] = rankingsGT.get(i).index;
+                rAN[i] = rankingsAN.get(i).index;
+            }
+            SpearmansCorrelation sc = new SpearmansCorrelation();
+            return sc.correlation(rGT, rAN);
         }
-        return sc.correlation(v1, v2);
+    }
+
+    public static void progressBar(int currentStep, int totalSteps, String message){
+        int barLength = 20;
+        int progress = (int)(((double) currentStep / totalSteps) * barLength);
+        System.out.print(message + ": [");
+        for (int i = 0; i < barLength; i++) {
+            if (i < progress) {
+                System.out.print("=");
+            } else {
+                System.out.print(" ");
+            }
+        }
+
+        System.out.print("] " + (int)(((double) currentStep / totalSteps) * 100) + "%\r");
     }
 
 }

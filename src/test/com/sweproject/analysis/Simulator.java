@@ -427,6 +427,7 @@ public class Simulator extends UIController {
         }
     }
 
+
     @Test
     void simulate() {
         try {
@@ -655,6 +656,10 @@ public class Simulator extends UIController {
         ArrayList<ArrayList<Double>> topXaccuracies_withObs = new ArrayList<>();
         ArrayList<Double> MRRs_withoutObs = new ArrayList<>();
         ArrayList<ArrayList<Double>> topXaccuracies_withoutObs = new ArrayList<>();
+        ArrayList<Double> kendallTauDistances_withObs = new ArrayList<>();
+        ArrayList<Double> kendallTauDistances_withoutObs = new ArrayList<>();
+        ArrayList<Double> spearmanCoefficients_withObs = new ArrayList<>();
+        ArrayList<Double> spearmanCoefficients_withoutObs = new ArrayList<>();
         for (int i = 0; i < topXlimit; i++) {
             topXaccuracies_withObs.add(new ArrayList<Double>());
             topXaccuracies_withoutObs.add(new ArrayList<Double>());
@@ -683,6 +688,18 @@ public class Simulator extends UIController {
             var outputWithObs = runExperiment(subjects, events, symptoms, tests, t0, false);
             MRRs_withObs = outputWithObs.MRRs;
             topXaccuracies_withObs = outputWithObs.topXaccuracies;
+            kendallTauDistances_withObs = outputWithObs.kendallTauDistances;
+//print kendallTauDistances
+            for(int i = 0; i < kendallTauDistances_withObs.size(); i++){
+                System.out.println("Kendall Tau Distance at " + ((i+1)*hoursBetweenTimestamps) + " hours: " + kendallTauDistances_withObs.get(i));
+            }
+            spearmanCoefficients_withObs = outputWithObs.spearmanCoefficients;
+            //print spearmanCoefficients
+            for(int i = 0; i < spearmanCoefficients_withObs.size(); i++) {
+                System.out.println("Spearman Coefficient at " + ((i + 1) * hoursBetweenTimestamps) + " hours: " + spearmanCoefficients_withObs.get(i));
+            }
+
+
 
             System.out.println("Calculating MRR and top-X-accuracy without observations...");
             //##########################################WITHOUT OBSERVATIONS##########################################
@@ -694,6 +711,18 @@ public class Simulator extends UIController {
             var outputWithoutObs = runExperiment(subjects, events, symptoms, tests, t0, true);
             MRRs_withoutObs = outputWithoutObs.MRRs;
             topXaccuracies_withoutObs = outputWithoutObs.topXaccuracies;
+            kendallTauDistances_withoutObs = outputWithoutObs.kendallTauDistances;
+            //print kendallTauDistances
+            for (int i = 0; i < kendallTauDistances_withoutObs.size(); i++) {
+                System.out.println("Kendall Tau Distance at " + ((i + 1) * hoursBetweenTimestamps) + " hours: " + kendallTauDistances_withoutObs.get(i));
+            }
+            spearmanCoefficients_withoutObs = outputWithoutObs.spearmanCoefficients;
+            //print spearmanCoefficients
+            for(int i = 0; i < spearmanCoefficients_withoutObs.size(); i++) {
+                System.out.println("Spearman Coefficient at " + ((i + 1) * hoursBetweenTimestamps) + " hours: " + spearmanCoefficients_withoutObs.get(i));
+            }
+
+
 
             plotMRR_comparison(MRRs_withObs, MRRs_withoutObs, hoursBetweenTimestamps);
             plotTopXaccuracy_comparison(topXaccuracies_withObs, topXaccuracies_withoutObs, hoursBetweenTimestamps);
@@ -708,15 +737,26 @@ public class Simulator extends UIController {
     private static class Statistics {
         ArrayList<Double> MRRs;
         ArrayList<ArrayList<Double>> topXaccuracies;
+        ArrayList<Double> kendallTauDistances;
+        ArrayList<Double> spearmanCoefficients;
 
         public Statistics(ArrayList<Double> MRRs, ArrayList<ArrayList<Double>> topXaccuracies) {
             this.MRRs = MRRs;
             this.topXaccuracies = topXaccuracies;
         }
+
+        public Statistics(ArrayList<Double> MRRs, ArrayList<ArrayList<Double>> topXaccuracies, ArrayList<Double> kendallTauDistances, ArrayList<Double> spearmanCoefficients) {
+            this.MRRs = MRRs;
+            this.topXaccuracies = topXaccuracies;
+            this.kendallTauDistances = kendallTauDistances;
+            this.spearmanCoefficients = spearmanCoefficients;
+        }
     }
     private Statistics runExperiment(ArrayList<Subject> subjects, ArrayList<Event> events, ArrayList<Event> symptoms, ArrayList<Event> tests, LocalDateTime t0, boolean considerObservations) throws Exception {
         ArrayList<Double> MRRs = new ArrayList<>();
         ArrayList<ArrayList<Double>> topXaccuracies = new ArrayList<>();
+        ArrayList<Double> kendallTauDistances = new ArrayList<>();
+        ArrayList<Double> spearmanCoefficients = new ArrayList<>();
         for (int i = 0; i < topXlimit; i++) {
             topXaccuracies.add(new ArrayList<Double>());
         }
@@ -804,10 +844,16 @@ public class Simulator extends UIController {
                 topXaccuracies.get(i).add(accuracy);
                 System.out.println("Top-" + (i + 1) + " accuracy: " + accuracy);
             }
+            //------------------------------------CALCOLO KENDALL TAU DISTANCE---------------------------------------------------------
+
+            kendallTauDistances.add(Utils.normalizedKendallTauDistance(meanTrees, solutions, currentNumberOfHours));
+
+            //------------------------------------CALCOLO SPEARMAN'S RANK CORRELATION COEFFICIENT---------------------------------------------------------
+            spearmanCoefficients.add(Utils.spearmansCorrelation(meanTrees, solutions, currentNumberOfHours));
             currentNumberOfHours += hoursBetweenTimestamps;
         }
 
-        return new Statistics(MRRs, topXaccuracies);
+        return new Statistics(MRRs, topXaccuracies, kendallTauDistances, spearmanCoefficients);
     }
 
     @Test
