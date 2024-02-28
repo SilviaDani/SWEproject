@@ -182,6 +182,7 @@ public class Simulator extends UIController {
         var envVariables = System.getenv();
         PYTHON_PATH = envVariables.get("PYTHON_PATH");
         System.out.println("PythonPath: " + PYTHON_PATH);
+        PYTHON_PATH = "C:\\Users\\super\\anaconda3\\envs\\vid2e\\python.exe";
         observationGateway = new ObservationGateway();
         stpnAnalyzer = new STPNAnalyzer_ext(samples, steps);
         timer = Stopwatch.createUnstarted();
@@ -427,7 +428,69 @@ public class Simulator extends UIController {
         }
     }
 
+    private void plotKendallTauDistance_comparison(ArrayList<Double> kDistw, ArrayList<Double> kDistwo, int interval) {
+        List<Double> xValues = new ArrayList<>();
+        for (int i = 1; i <= kDistw.size(); i++) { //XXX controllare se funziona
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        plt.plot()
+                .add(xValues, kDistw)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("b")
+                .label("Kendall Tau Distance with observations");
 
+        plt.plot()
+                .add(xValues, kDistwo)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("r")
+                .label("Kendall Tau Distance without observations");
+
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("Kendall Tau Distance");
+        plt.title("Kendall Tau Distance");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void plotSpearmansCoefficient_comparison(ArrayList<Double> spearmanCw, ArrayList<Double> spearmanCwo, int interval) {
+        List<Double> xValues = new ArrayList<>();
+        for (int i = 1; i <= spearmanCw.size(); i++) { //XXX controllare se funziona
+            xValues.add((double) (interval * i));
+        }
+        Plot plt = Plot.create();
+        plt.plot()
+                .add(xValues, spearmanCw)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("b")
+                .label("Spearman's rank correlation coefficient with observations");
+
+        plt.plot()
+                .add(xValues, spearmanCwo)
+                .linestyle("-")
+                .linewidth(1.0)
+                .color("r")
+                .label("Spearman's rank correlation coefficient without observations");
+
+        plt.xlabel("Hours after the starting point");
+        plt.ylabel("Coefficient");
+        plt.title("Spearman's rank correlation coefficient");
+        plt.legend();
+
+        try {
+            plt.show();
+        } catch (PythonExecutionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
     @Test
     void simulate() {
         try {
@@ -726,6 +789,9 @@ public class Simulator extends UIController {
 
             plotMRR_comparison(MRRs_withObs, MRRs_withoutObs, hoursBetweenTimestamps);
             plotTopXaccuracy_comparison(topXaccuracies_withObs, topXaccuracies_withoutObs, hoursBetweenTimestamps);
+            plotKendallTauDistance_comparison(kendallTauDistances_withObs, kendallTauDistances_withoutObs, hoursBetweenTimestamps);
+            plotSpearmansCoefficient_comparison(spearmanCoefficients_withObs, spearmanCoefficients_withoutObs, hoursBetweenTimestamps);
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
