@@ -1,0 +1,2210 @@
+{
+    "events": [
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                6,
+                1
+            ],
+            "time": 13,
+            "risk_factor": 0.6558887332391162,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                2
+            ],
+            "time": 17,
+            "risk_factor": 0.37905206835865246,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                3,
+                12,
+                10,
+                6,
+                4
+            ],
+            "time": 22,
+            "risk_factor": 0.3460390060233516,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                14,
+                11,
+                4,
+                15,
+                6
+            ],
+            "time": 29,
+            "risk_factor": 0.9122876555959797,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                3,
+                2,
+                1,
+                11
+            ],
+            "time": 50,
+            "risk_factor": 0.9198319702472892,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                7,
+                9,
+                4,
+                3
+            ],
+            "time": 63,
+            "risk_factor": 0.08368203902719451,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                14,
+                7,
+                9
+            ],
+            "time": 68,
+            "risk_factor": 0.5583663727677552,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                8,
+                14
+            ],
+            "time": 81,
+            "risk_factor": 0.10901455010041439,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                14,
+                11,
+                13,
+                7
+            ],
+            "time": 87,
+            "risk_factor": 0.8121180426593997,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                1,
+                4,
+                12,
+                7
+            ],
+            "time": 111,
+            "risk_factor": 0.6211320719926745,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                7
+            ],
+            "time": 119,
+            "risk_factor": 0.7611647308278698,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                14,
+                5,
+                1,
+                10
+            ],
+            "time": 135,
+            "risk_factor": 0.8177799666980501,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                7
+            ],
+            "time": 142,
+            "risk_factor": 0.3094198864045601,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                14,
+                11,
+                10
+            ],
+            "time": 149,
+            "risk_factor": 0.09310364191841691,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                3,
+                14,
+                15,
+                1,
+                10
+            ],
+            "time": 158,
+            "risk_factor": 0.27784806830054376,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                14,
+                10,
+                4
+            ],
+            "time": 161,
+            "risk_factor": 0.26288572353302697,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                12,
+                7,
+                2
+            ],
+            "time": 193,
+            "risk_factor": 0.6934582971196519,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                3,
+                7,
+                9,
+                1,
+                12
+            ],
+            "time": 235,
+            "risk_factor": 0.8169864515957836,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                13,
+                12
+            ],
+            "time": 246,
+            "risk_factor": 0.47292294840640425,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                12
+            ],
+            "time": 247,
+            "risk_factor": 0.8672666091927096,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                14,
+                13,
+                1
+            ],
+            "time": 267,
+            "risk_factor": 0.9486866757145768,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                7,
+                10,
+                6,
+                11
+            ],
+            "time": 275,
+            "risk_factor": 0.9561270842338839,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                4,
+                12
+            ],
+            "time": 279,
+            "risk_factor": 0.9319067448995274,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                9
+            ],
+            "time": 281,
+            "risk_factor": 0.8056344615338086,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                11,
+                6,
+                10,
+                15
+            ],
+            "time": 290,
+            "risk_factor": 0.16573603895633426,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                12,
+                14,
+                7,
+                13,
+                9
+            ],
+            "time": 294,
+            "risk_factor": 0.18177653836748053,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                3
+            ],
+            "time": 296,
+            "risk_factor": 0.5588951191187971,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                13
+            ],
+            "time": 315,
+            "risk_factor": 0.6425572252076756,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                4
+            ],
+            "time": 326,
+            "risk_factor": 0.9791085148076547,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                2
+            ],
+            "time": 330,
+            "risk_factor": 0.7810548930756307,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                12,
+                7
+            ],
+            "time": 341,
+            "risk_factor": 0.12525315031372652,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                5,
+                12,
+                13,
+                9
+            ],
+            "time": 382,
+            "risk_factor": 0.2793577185043036,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                1,
+                11,
+                5,
+                13,
+                6
+            ],
+            "time": 392,
+            "risk_factor": 0.6589023857110204,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                2
+            ],
+            "time": 405,
+            "risk_factor": 0.54850427728021,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                12,
+                1,
+                3,
+                8,
+                11
+            ],
+            "time": 416,
+            "risk_factor": 0.7195767063829499,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                1,
+                2
+            ],
+            "time": 424,
+            "risk_factor": 0.04690807357323201,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                7,
+                4,
+                12,
+                2,
+                15
+            ],
+            "time": 448,
+            "risk_factor": 0.646812642577452,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                13,
+                1,
+                8,
+                14
+            ],
+            "time": 454,
+            "risk_factor": 0.13582304976248638,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                5,
+                15,
+                3,
+                10
+            ],
+            "time": 468,
+            "risk_factor": 0.4425424198738185,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                12,
+                4,
+                6,
+                5,
+                2
+            ],
+            "time": 471,
+            "risk_factor": 0.4686747307165676,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                2
+            ],
+            "time": 495,
+            "risk_factor": 0.9732091028264134,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                7,
+                12,
+                3
+            ],
+            "time": 506,
+            "risk_factor": 0.0683418844197482,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                11,
+                6
+            ],
+            "time": 507,
+            "risk_factor": 0.11358299224711277,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                3,
+                2,
+                10,
+                1
+            ],
+            "time": 515,
+            "risk_factor": 0.1432020299464818,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                12,
+                3
+            ],
+            "time": 519,
+            "risk_factor": 0.23621798417784678,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                11,
+                5,
+                15
+            ],
+            "time": 526,
+            "risk_factor": 0.4862051801216335,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                14,
+                9,
+                13,
+                8,
+                7
+            ],
+            "time": 527,
+            "risk_factor": 0.40260564919452435,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                12,
+                10,
+                3
+            ],
+            "time": 544,
+            "risk_factor": 0.2849274074995768,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                2,
+                15,
+                6
+            ],
+            "time": 561,
+            "risk_factor": 0.6298591486885903,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                14,
+                4
+            ],
+            "time": 578,
+            "risk_factor": 0.679533325370676,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                7,
+                6,
+                5
+            ],
+            "time": 580,
+            "risk_factor": 0.2783925501354344,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                9,
+                13,
+                4,
+                8,
+                12
+            ],
+            "time": 592,
+            "risk_factor": 0.9949558713319386,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                11,
+                2,
+                3
+            ],
+            "time": 607,
+            "risk_factor": 0.6469491413301108,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                15,
+                8
+            ],
+            "time": 614,
+            "risk_factor": 0.5365814429916906,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                15,
+                4,
+                10,
+                7,
+                8,
+                12
+            ],
+            "time": 620,
+            "risk_factor": 0.5293727017491268,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                9,
+                12,
+                14,
+                11,
+                8
+            ],
+            "time": 643,
+            "risk_factor": 0.9805654714233369,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                7,
+                2
+            ],
+            "time": 645,
+            "risk_factor": 0.9160749436835409,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                6
+            ],
+            "time": 647,
+            "risk_factor": 0.6267922330323847,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                13,
+                3,
+                5,
+                1,
+                7,
+                8
+            ],
+            "time": 649,
+            "risk_factor": 0.912653274841969,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                12,
+                10
+            ],
+            "time": 669,
+            "risk_factor": 0.425530730652549,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                1
+            ],
+            "time": 297,
+            "risk_factor": 0.4595067895914434,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                1
+            ],
+            "time": 465,
+            "risk_factor": 0.8923568305685852,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                2
+            ],
+            "time": 43,
+            "risk_factor": 0.21296983438646155,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                2
+            ],
+            "time": 88,
+            "risk_factor": 0.32640469585867216,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                2
+            ],
+            "time": 616,
+            "risk_factor": 0.9833604058604138,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                3
+            ],
+            "time": 114,
+            "risk_factor": 0.9947522692628625,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                3
+            ],
+            "time": 175,
+            "risk_factor": 0.35484363199754454,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                3
+            ],
+            "time": 447,
+            "risk_factor": 0.8657731488631769,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 33,
+            "risk_factor": 0.5543080404536035,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 171,
+            "risk_factor": 0.6881222576324293,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 181,
+            "risk_factor": 0.6509132864774566,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 260,
+            "risk_factor": 0.3437399759894969,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                5
+            ],
+            "time": 510,
+            "risk_factor": 0.33296154092227115,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                6
+            ],
+            "time": 235,
+            "risk_factor": 0.7007075578643911,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                6
+            ],
+            "time": 388,
+            "risk_factor": 0.4487666147817633,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                7
+            ],
+            "time": 84,
+            "risk_factor": 0.028602468156371796,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                7
+            ],
+            "time": 525,
+            "risk_factor": 0.7820814835770153,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                7
+            ],
+            "time": 664,
+            "risk_factor": 0.8549988629162644,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 260,
+            "risk_factor": 0.356695096472218,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 308,
+            "risk_factor": 0.8265673280745856,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 376,
+            "risk_factor": 0.5989016069094324,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 379,
+            "risk_factor": 0.5868455156383127,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                9
+            ],
+            "time": 50,
+            "risk_factor": 0.7483947944871789,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                9
+            ],
+            "time": 106,
+            "risk_factor": 0.12328683874941126,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                9
+            ],
+            "time": 387,
+            "risk_factor": 0.3257791421325048,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                9
+            ],
+            "time": 596,
+            "risk_factor": 0.2903458511844824,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                11
+            ],
+            "time": 136,
+            "risk_factor": 0.6188019510236905,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                11
+            ],
+            "time": 281,
+            "risk_factor": 0.4518395590003036,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                11
+            ],
+            "time": 330,
+            "risk_factor": 0.560797209810239,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                11
+            ],
+            "time": 428,
+            "risk_factor": 0.4036073046280053,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                12
+            ],
+            "time": 70,
+            "risk_factor": 0.17134751133445658,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                12
+            ],
+            "time": 293,
+            "risk_factor": 0.05080757294629157,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                12
+            ],
+            "time": 379,
+            "risk_factor": 0.49985126517626755,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                12
+            ],
+            "time": 440,
+            "risk_factor": 0.6109273422359193,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                13
+            ],
+            "time": 130,
+            "risk_factor": 0.2897607103025487,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                15
+            ],
+            "time": 406,
+            "risk_factor": 0.6529960231343256,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                15
+            ],
+            "time": 499,
+            "risk_factor": 0.28523774375298117,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 152,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 405,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 407,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 505,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 534,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                2
+            ],
+            "time": 529,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 65,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 133,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 183,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 252,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 384,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 609,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 27,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 163,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 203,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 235,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 305,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 355,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 407,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 668,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 46,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 176,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 267,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 593,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 601,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                8
+            ],
+            "time": 466,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 30,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 124,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 172,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 188,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 296,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 352,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 556,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 579,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 81,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 220,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 306,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 470,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 498,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 527,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 550,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                10
+            ],
+            "time": 551,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                11
+            ],
+            "time": 10,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                11
+            ],
+            "time": 571,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                11
+            ],
+            "time": 632,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                12
+            ],
+            "time": 61,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                12
+            ],
+            "time": 373,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                12
+            ],
+            "time": 471,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                12
+            ],
+            "time": 555,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                12
+            ],
+            "time": 669,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 45,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 52,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 247,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 313,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 463,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                13
+            ],
+            "time": 489,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                14
+            ],
+            "time": 119,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                14
+            ],
+            "time": 458,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                14
+            ],
+            "time": 612,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 166,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 219,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 264,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 425,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 460,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 497,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 587,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                15
+            ],
+            "time": 664,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                1
+            ],
+            "time": 278,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                1
+            ],
+            "time": 461,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                2
+            ],
+            "time": 379,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 14,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 304,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 362,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 415,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 499,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 509,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 569,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 580,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 28,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 75,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 127,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 224,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 393,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 619,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 650,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 657,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                6
+            ],
+            "time": 478,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 74,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 177,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 232,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 399,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 507,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                7
+            ],
+            "time": 605,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 122,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 398,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 472,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 479,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 503,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 602,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 659,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                9
+            ],
+            "time": 41,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                9
+            ],
+            "time": 276,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                9
+            ],
+            "time": 390,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                9
+            ],
+            "time": 527,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 389,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 408,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 417,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 423,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 565,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 656,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 108,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 124,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 219,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 224,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 244,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 259,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 273,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                11
+            ],
+            "time": 362,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                13
+            ],
+            "time": 149,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                13
+            ],
+            "time": 175,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                13
+            ],
+            "time": 321,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                13
+            ],
+            "time": 438,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                14
+            ],
+            "time": 184,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                14
+            ],
+            "time": 346,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                14
+            ],
+            "time": 379,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                14
+            ],
+            "time": 607,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                15
+            ],
+            "time": 188,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                15
+            ],
+            "time": 281,
+            "risk_factor": null,
+            "result": "to be defined"
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                15
+            ],
+            "time": 444,
+            "risk_factor": null,
+            "result": "to be defined"
+        }
+    ],
+    "n_subjects": 15,
+    "time_limit": 28,
+    "n_contacts": 60
+}

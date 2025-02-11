@@ -1,0 +1,1139 @@
+{
+    "events": [
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 1,
+            "risk_factor": 0.08864750307736169,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 5,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                1,
+                9,
+                7
+            ],
+            "time": 11,
+            "risk_factor": 0.2580032934328035,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                4
+            ],
+            "time": 13,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                9
+            ],
+            "time": 23,
+            "risk_factor": 0.46221061133706187,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                8,
+                9
+            ],
+            "time": 24,
+            "risk_factor": 0.7721750990106813,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 24,
+            "risk_factor": 0.9056850253889531,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                4
+            ],
+            "time": 30,
+            "risk_factor": 0.6950952454097408,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                8
+            ],
+            "time": 31,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 33,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                4
+            ],
+            "time": 35,
+            "risk_factor": 0.3408556439352717,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                2
+            ],
+            "time": 37,
+            "risk_factor": 0.9483278770363539,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 40,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                7,
+                4,
+                10
+            ],
+            "time": 42,
+            "risk_factor": 0.9155729487410629,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 43,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                4,
+                6
+            ],
+            "time": 51,
+            "risk_factor": 0.9237665659414276,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 53,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                9
+            ],
+            "time": 55,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                9
+            ],
+            "time": 61,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                3
+            ],
+            "time": 65,
+            "risk_factor": 0.5214531784242676,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                1,
+                4
+            ],
+            "time": 67,
+            "risk_factor": 0.0822714279265987,
+            "result": null
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                2
+            ],
+            "time": 68,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                2
+            ],
+            "time": 70,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                2
+            ],
+            "time": 75,
+            "risk_factor": 0.9189599153943974,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 79,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                8,
+                4,
+                3
+            ],
+            "time": 82,
+            "risk_factor": 0.4889701035042078,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                6
+            ],
+            "time": 96,
+            "risk_factor": 0.4510403183018682,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                10,
+                7
+            ],
+            "time": 97,
+            "risk_factor": 0.4818910063701419,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                2
+            ],
+            "time": 98,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                3
+            ],
+            "time": 98,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                2,
+                10
+            ],
+            "time": 102,
+            "risk_factor": 0.31529062432068367,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                1,
+                10,
+                8,
+                5
+            ],
+            "time": 104,
+            "risk_factor": 0.2517884498585016,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                6
+            ],
+            "time": 105,
+            "risk_factor": 0.3609421792285331,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 107,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 107,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                2,
+                8,
+                6,
+                3
+            ],
+            "time": 112,
+            "risk_factor": 0.42561721896421245,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                2
+            ],
+            "time": 113,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 113,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                10
+            ],
+            "time": 114,
+            "risk_factor": 0.5118439751305834,
+            "result": null
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                6
+            ],
+            "time": 116,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                10
+            ],
+            "time": 118,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 120,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                10
+            ],
+            "time": 123,
+            "risk_factor": 0.5712806553636216,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                2,
+                7
+            ],
+            "time": 128,
+            "risk_factor": 0.8994190398395709,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                9
+            ],
+            "time": 133,
+            "risk_factor": 0.10591242768521847,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                9,
+                6
+            ],
+            "time": 134,
+            "risk_factor": 0.7923315622131565,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                4
+            ],
+            "time": 135,
+            "risk_factor": 0.15159909277942285,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                7
+            ],
+            "time": 137,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                4
+            ],
+            "time": 138,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                5
+            ],
+            "time": 148,
+            "risk_factor": 0.4851483439191251,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 149,
+            "risk_factor": 0.18175364233686242,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                6
+            ],
+            "time": 158,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                10
+            ],
+            "time": 160,
+            "risk_factor": 0.12664190353643578,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                1,
+                2,
+                8
+            ],
+            "time": 162,
+            "risk_factor": 0.5665683393270918,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                3,
+                1
+            ],
+            "time": 163,
+            "risk_factor": 0.9985570590298154,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                3
+            ],
+            "time": 173,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                7
+            ],
+            "time": 176,
+            "risk_factor": 0.10324109357184241,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 177,
+            "risk_factor": 0.5097767377177207,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 184,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                9,
+                7
+            ],
+            "time": 187,
+            "risk_factor": 0.1963748955197384,
+            "result": null
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                5
+            ],
+            "time": 187,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 191,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                5,
+                8
+            ],
+            "time": 193,
+            "risk_factor": 0.7000876219368962,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                2
+            ],
+            "time": 195,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                2,
+                9
+            ],
+            "time": 198,
+            "risk_factor": 0.8501750823860417,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                6,
+                8,
+                2
+            ],
+            "time": 204,
+            "risk_factor": 0.20100550918632332,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                6,
+                5,
+                10
+            ],
+            "time": 209,
+            "risk_factor": 0.7844917759325216,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                4
+            ],
+            "time": 209,
+            "risk_factor": 0.9267667942350815,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                2,
+                3
+            ],
+            "time": 213,
+            "risk_factor": 0.6181987157162159,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                2,
+                10
+            ],
+            "time": 218,
+            "risk_factor": 0.9769487845634663,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                4,
+                1,
+                2,
+                9
+            ],
+            "time": 219,
+            "risk_factor": 0.4126591505324596,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 219,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                4,
+                6
+            ],
+            "time": 223,
+            "risk_factor": 0.2249009367468855,
+            "result": null
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                8
+            ],
+            "time": 224,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                4
+            ],
+            "time": 224,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                1,
+                3
+            ],
+            "time": 225,
+            "risk_factor": 0.5441408284039368,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                3
+            ],
+            "time": 225,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                1,
+                6,
+                8
+            ],
+            "time": 228,
+            "risk_factor": 0.5617108600214519,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                10,
+                6,
+                1
+            ],
+            "time": 233,
+            "risk_factor": 0.011152528888404123,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 235,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                2
+            ],
+            "time": 236,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                9
+            ],
+            "time": 237,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 238,
+            "risk_factor": 0.44541752699794823,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 239,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                4
+            ],
+            "time": 239,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                1
+            ],
+            "time": 241,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                3,
+                10,
+                6,
+                4
+            ],
+            "time": 243,
+            "risk_factor": 0.059159026550523075,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                3
+            ],
+            "time": 244,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                6
+            ],
+            "time": 250,
+            "risk_factor": 0.8270416081896123,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                9,
+                2
+            ],
+            "time": 270,
+            "risk_factor": 0.7650142383445335,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                8,
+                10
+            ],
+            "time": 271,
+            "risk_factor": 0.006748627998128809,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 277,
+            "risk_factor": 0.22163362521788765,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                6
+            ],
+            "time": 281,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                5
+            ],
+            "time": 286,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                5
+            ],
+            "time": 288,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                6,
+                10
+            ],
+            "time": 294,
+            "risk_factor": 0.5008391624855975,
+            "result": null
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                9,
+                4,
+                6
+            ],
+            "time": 303,
+            "risk_factor": 0.7846507901669689,
+            "result": null
+        },
+        {
+            "type": "Develop_Symptoms",
+            "involved_subjects": [
+                8
+            ],
+            "time": 303,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                8
+            ],
+            "time": 309,
+            "risk_factor": 0.9946357956322951,
+            "result": null
+        },
+        {
+            "type": "Infectious",
+            "involved_subjects": [
+                8
+            ],
+            "time": 311,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "External",
+            "involved_subjects": [
+                3
+            ],
+            "time": 317,
+            "risk_factor": 0.7221481829785872,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                7
+            ],
+            "time": 319,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Test",
+            "involved_subjects": [
+                3
+            ],
+            "time": 319,
+            "risk_factor": null,
+            "result": false
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                2,
+                6,
+                3,
+                10
+            ],
+            "time": 321,
+            "risk_factor": 0.3696804208155421,
+            "result": null
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                4
+            ],
+            "time": 322,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Symptoms",
+            "involved_subjects": [
+                2
+            ],
+            "time": 330,
+            "risk_factor": null,
+            "result": true
+        },
+        {
+            "type": "Internal",
+            "involved_subjects": [
+                7,
+                1
+            ],
+            "time": 331,
+            "risk_factor": 0.8738427611263421,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                8
+            ],
+            "time": 374,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                9
+            ],
+            "time": 397,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                2
+            ],
+            "time": 489,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                4
+            ],
+            "time": 582,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                6
+            ],
+            "time": 594,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                4
+            ],
+            "time": 595,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                6
+            ],
+            "time": 618,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                8
+            ],
+            "time": 652,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Enter_Isolation",
+            "involved_subjects": [
+                5
+            ],
+            "time": 691,
+            "risk_factor": null,
+            "result": null
+        },
+        {
+            "type": "Exit_Isolation",
+            "involved_subjects": [
+                5
+            ],
+            "time": 691,
+            "risk_factor": null,
+            "result": null
+        }
+    ],
+    "n_subjects": 10,
+    "time_limit": 14,
+    "n_contacts": 40
+}
