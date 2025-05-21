@@ -1,7 +1,12 @@
 package com.sweproject.analysis2;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Tracks {
     HashMap<String, Double[]> tracks;
@@ -43,5 +48,14 @@ public class Tracks {
             if (!Arrays.equals(copy.tracks.get(name), this.tracks.get(name))) throw new AssertionError("Track values are different :(");
         }
         return copy;
+    }
+
+    public JsonObject toJson() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().serializeSpecialFloatingPointValues().create();
+        JsonObject jsonObject = new JsonObject();
+        for (Map.Entry<String, Double[]> entry : tracks.entrySet()) {
+            jsonObject.add(entry.getKey(), gson.toJsonTree(entry.getValue()));
+        }
+        return jsonObject;
     }
 }
